@@ -62,8 +62,26 @@ onMounted(async () => {
 
 .ct-main {
   padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
+  margin: 0;
+}
+
+@media (min-width: 1400px) {
+  .ct-main {
+    padding: 3rem;
+  }
+}
+
+@media (min-width: 992px) and (max-width: 1399px) {
+  .ct-main {
+    padding: 2.5rem;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 991px) {
+  .ct-main {
+    padding: 1.5rem;
+  }
 }
 
 @media (max-width: 768px) {
