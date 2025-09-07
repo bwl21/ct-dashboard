@@ -150,8 +150,9 @@
                   <a
                     :href="getGroupUrl(group.id)"
                     target="_blank"
+                    rel="noopener noreferrer"
                     class="ct-btn ct-btn-sm ct-btn-outline"
-                    title="Gruppe öffnen"
+                    title="Gruppe in ChurchTools öffnen"
                   >
                     Öffnen
                   </a>
@@ -418,9 +419,10 @@ const formatDate = (dateString: string | null) => {
 };
 
 const getGroupUrl = (groupId: number) => {
-  // Construct URL to ChurchTools group dynamic settings page
-  const baseUrl = window.location.origin;
-  return `${baseUrl}/groups/${groupId}/settings/dynamic-group`;
+  // Construct URL to ChurchTools instance group dynamic settings page
+  // Use the ChurchTools base URL from the client configuration
+  const churchtoolsBaseUrl = import.meta.env.VITE_BASE_URL || window.location.origin;
+  return `${churchtoolsBaseUrl}/groups/${groupId}/settings/dynamic-group`;
 };
 
 const loadMockData = () => {
