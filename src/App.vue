@@ -12,7 +12,23 @@
 
     <!-- Main Content -->
     <div class="ct-main">
-      <Start />
+      <div class="navigation-tabs">
+        <button 
+          @click="activeTab = 'dashboard'" 
+          :class="['tab-button', { active: activeTab === 'dashboard' }]"
+        >
+          Dashboard
+        </button>
+        <button 
+          @click="activeTab = 'automatic-groups'" 
+          :class="['tab-button', { active: activeTab === 'automatic-groups' }]"
+        >
+          Automatische Gruppen
+        </button>
+      </div>
+      
+      <Start v-if="activeTab === 'dashboard'" />
+      <AutomaticGroupsAdmin v-if="activeTab === 'automatic-groups'" />
     </div>
   </div>
 </template>
@@ -20,11 +36,13 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import Start from './components/Start.vue';
+import AutomaticGroupsAdmin from './components/AutomaticGroupsAdmin.vue';
 import { churchtoolsClient } from '@churchtools/churchtools-client';
 import type { Person } from './ct-types';
 
 const userDisplayName = ref<string>('');
 const isDevelopment = ref<boolean>(false);
+const activeTab = ref<'dashboard' | 'automatic-groups'>('dashboard');
 
 onMounted(async () => {
   isDevelopment.value = import.meta.env.MODE === 'development';
@@ -84,6 +102,35 @@ onMounted(async () => {
   }
 }
 
+.navigation-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.tab-button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  background: none;
+  color: #6c757d;
+  cursor: pointer;
+  font-weight: 500;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.tab-button:hover {
+  color: #495057;
+  background-color: #f8f9fa;
+}
+
+.tab-button.active {
+  color: #007bff;
+  border-bottom-color: #007bff;
+  background-color: #f8f9fa;
+}
+
 @media (max-width: 768px) {
   .ct-main {
     padding: 1rem;
@@ -93,6 +140,21 @@ onMounted(async () => {
     padding: 1rem;
     flex-direction: column;
     gap: 0.5rem;
+  }
+  
+  .navigation-tabs {
+    flex-direction: column;
+    gap: 0;
+  }
+  
+  .tab-button {
+    text-align: left;
+    border-bottom: 1px solid #e9ecef;
+    border-radius: 0;
+  }
+  
+  .tab-button.active {
+    border-bottom-color: #007bff;
   }
 }
 </style>

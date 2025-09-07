@@ -16,7 +16,11 @@ churchtoolsClient.setBaseUrl(baseUrl);
 const username = import.meta.env.VITE_USERNAME;
 const password = import.meta.env.VITE_PASSWORD;
 if (import.meta.env.MODE === 'development' && username && password) {
-    await churchtoolsClient.post('/login', { username, password });
+    try {
+        await churchtoolsClient.post('/login', { username, password });
+    } catch (error) {
+        console.warn('ChurchTools login failed in development mode:', error);
+    }
 }
 
 const KEY = import.meta.env.VITE_KEY;
