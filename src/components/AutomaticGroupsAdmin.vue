@@ -96,57 +96,67 @@
                   </span>
                   <div class="resize-handle" @mousedown="startResize($event, 0)"></div>
                 </th>
-                <th @click="sortBy('name')" class="sortable resizable" :style="{ width: columnWidths[1] + 'px' }">
-                  Name
-                  <span class="sort-indicator" v-if="sortField === 'name'">
+                <th @click="sortBy('groupTypeId')" class="sortable resizable" :style="{ width: columnWidths[1] + 'px' }">
+                  Gruppentyp
+                  <span class="sort-indicator" v-if="sortField === 'groupTypeId'">
                     {{ sortDirection === 'asc' ? '↑' : '↓' }}
                   </span>
                   <div class="resize-handle" @mousedown="startResize($event, 1)"></div>
                 </th>
-                <th @click="sortBy('dynamicGroupStatus')" class="sortable resizable" :style="{ width: columnWidths[2] + 'px' }">
-                  Konfiguration
-                  <span class="sort-indicator" v-if="sortField === 'dynamicGroupStatus'">
+                <th @click="sortBy('name')" class="sortable resizable" :style="{ width: columnWidths[2] + 'px' }">
+                  Name
+                  <span class="sort-indicator" v-if="sortField === 'name'">
                     {{ sortDirection === 'asc' ? '↑' : '↓' }}
                   </span>
                   <div class="resize-handle" @mousedown="startResize($event, 2)"></div>
                 </th>
-                <th @click="sortBy('lastExecution')" class="sortable resizable" :style="{ width: columnWidths[3] + 'px' }">
-                  Letzte Ausführung
-                  <span class="sort-indicator" v-if="sortField === 'lastExecution'">
+                <th @click="sortBy('dynamicGroupStatus')" class="sortable resizable" :style="{ width: columnWidths[3] + 'px' }">
+                  Konfiguration
+                  <span class="sort-indicator" v-if="sortField === 'dynamicGroupStatus'">
                     {{ sortDirection === 'asc' ? '↑' : '↓' }}
                   </span>
                   <div class="resize-handle" @mousedown="startResize($event, 3)"></div>
                 </th>
-                <th @click="sortBy('executionStatus')" class="sortable resizable" :style="{ width: columnWidths[4] + 'px' }">
-                  Status
-                  <span class="sort-indicator" v-if="sortField === 'executionStatus'">
+                <th @click="sortBy('lastExecution')" class="sortable resizable" :style="{ width: columnWidths[4] + 'px' }">
+                  Letzte Ausführung
+                  <span class="sort-indicator" v-if="sortField === 'lastExecution'">
                     {{ sortDirection === 'asc' ? '↑' : '↓' }}
                   </span>
                   <div class="resize-handle" @mousedown="startResize($event, 4)"></div>
                 </th>
-                <th :style="{ width: columnWidths[5] + 'px' }">Aktionen</th>
+                <th @click="sortBy('executionStatus')" class="sortable resizable" :style="{ width: columnWidths[5] + 'px' }">
+                  Status
+                  <span class="sort-indicator" v-if="sortField === 'executionStatus'">
+                    {{ sortDirection === 'asc' ? '↑' : '↓' }}
+                  </span>
+                  <div class="resize-handle" @mousedown="startResize($event, 5)"></div>
+                </th>
+                <th :style="{ width: columnWidths[6] + 'px' }">Aktionen</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="group in filteredGroups" :key="group.id" class="group-row">
                 <td class="group-id" :style="{ width: columnWidths[0] + 'px' }">{{ group.id }}</td>
-                <td class="group-name" :style="{ width: columnWidths[1] + 'px' }">
+                <td class="group-type" :style="{ width: columnWidths[1] + 'px' }">
+                  {{ group.groupTypeId || 'N/A' }}
+                </td>
+                <td class="group-name" :style="{ width: columnWidths[2] + 'px' }">
                   <strong>{{ group.name }}</strong>
                 </td>
-                <td class="group-config" :style="{ width: columnWidths[2] + 'px' }">
+                <td class="group-config" :style="{ width: columnWidths[3] + 'px' }">
                   <span class="status-badge" :class="getConfigStatusClass(group.dynamicGroupStatus)">
                     {{ getConfigStatusText(group.dynamicGroupStatus) }}
                   </span>
                 </td>
-                <td class="last-execution" :style="{ width: columnWidths[3] + 'px' }">
+                <td class="last-execution" :style="{ width: columnWidths[4] + 'px' }">
                   {{ formatDate(group.lastExecution) }}
                 </td>
-                <td class="execution-status" :style="{ width: columnWidths[4] + 'px' }">
+                <td class="execution-status" :style="{ width: columnWidths[5] + 'px' }">
                   <span class="status-badge" :class="getExecutionStatusClass(group.executionStatus)">
                     {{ getExecutionStatusText(group.executionStatus) }}
                   </span>
                 </td>
-                <td class="actions" :style="{ width: columnWidths[5] + 'px' }">
+                <td class="actions" :style="{ width: columnWidths[6] + 'px' }">
                   <a
                     :href="getGroupUrl(group.id)"
                     target="_blank"
@@ -174,6 +184,7 @@ import type { Group, DynamicGroupStatus } from '../ct-types';
 interface AutomaticGroup {
   id: number;
   name: string;
+  groupType: string;
   dynamicGroupStatus: DynamicGroupStatus;
   lastExecution: string | null;
   executionStatus: 'success' | 'error' | 'running' | 'pending' | 'unknown';
@@ -191,7 +202,7 @@ const isDevelopment = ref(import.meta.env.MODE === 'development');
 
 // Column resizing
 const tableRef = ref<HTMLTableElement>();
-const columnWidths = ref([100, 200, 150, 180, 120, 100]); // Default widths
+const columnWidths = ref([100, 150, 250, 150, 180, 120, 100]); // Default widths
 const isResizing = ref(false);
 const resizingColumn = ref(-1);
 const startX = ref(0);
@@ -249,7 +260,7 @@ const refreshGroups = async () => {
     while (hasMore) {
       console.log(`Fetching page ${page} with limit ${limit}...`);
       
-      const response = await churchtoolsClient.get(`/groups?include=settings&limit=${limit}&page=${page}`);
+      const response = await churchtoolsClient.get(`/groups?include=settings,information&limit=${limit}&page=${page}`);
 
       console.log(`API Response for page ${page}:`, response);
       console.log('Response type:', typeof response);
@@ -315,6 +326,7 @@ const refreshGroups = async () => {
       .map(group => ({
         id: group.id,
         name: group.name || `Gruppe ${group.id}`,
+        groupTypeId: group.information?.groupTypeId || null,
         dynamicGroupStatus: group.settings?.dynamicGroupStatus || 'none',
         lastExecution: group.settings?.dynamicGroupUpdateFinished || null,
         executionStatus: determineExecutionStatus(group),
@@ -431,6 +443,7 @@ const loadMockData = () => {
     {
       id: 1,
       name: 'Jugendgruppe Automatisch',
+      information: { groupTypeId: 3 },
       dynamicGroupStatus: 'active',
       lastExecution: '2025-09-07T10:30:00Z',
       executionStatus: 'success',
@@ -440,6 +453,7 @@ const loadMockData = () => {
     {
       id: 2,
       name: 'Neue Mitglieder',
+      information: { groupTypeId: 1 },
       dynamicGroupStatus: 'active',
       lastExecution: '2025-09-07T08:15:00Z',
       executionStatus: 'success',
@@ -449,6 +463,7 @@ const loadMockData = () => {
     {
       id: 3,
       name: 'Inaktive Mitglieder',
+      information: { groupTypeId: 1 },
       dynamicGroupStatus: 'inactive',
       lastExecution: '2025-09-06T22:00:00Z',
       executionStatus: 'error',
@@ -458,6 +473,7 @@ const loadMockData = () => {
     {
       id: 4,
       name: 'Geburtstage diese Woche',
+      information: { groupTypeId: 5 },
       dynamicGroupStatus: 'active',
       lastExecution: null,
       executionStatus: 'pending',
@@ -467,6 +483,7 @@ const loadMockData = () => {
     {
       id: 5,
       name: 'Mitarbeiter Gottesdienst',
+      information: { groupTypeId: 2 },
       dynamicGroupStatus: 'manual',
       lastExecution: '2025-09-07T11:45:00Z',
       executionStatus: 'running',
