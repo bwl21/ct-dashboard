@@ -12,23 +12,17 @@
 
     <!-- Main Content -->
     <div class="ct-main">
-      <div class="navigation-tabs">
-        <button 
-          @click="activeTab = 'dashboard'" 
-          :class="['tab-button', { active: activeTab === 'dashboard' }]"
-        >
-          Dashboard
-        </button>
-        <button 
-          @click="activeTab = 'automatic-groups'" 
-          :class="['tab-button', { active: activeTab === 'automatic-groups' }]"
-        >
-          Automatische Gruppen
-        </button>
+      <div v-if="currentView === 'dashboard'">
+        <Start @navigate-to-admin="currentView = 'automatic-groups'" />
       </div>
-      
-      <Start v-if="activeTab === 'dashboard'" />
-      <AutomaticGroupsAdmin v-if="activeTab === 'automatic-groups'" />
+      <div v-else-if="currentView === 'automatic-groups'">
+        <div class="admin-header">
+          <button @click="currentView = 'dashboard'" class="ct-btn ct-btn-outline back-btn">
+            ← Zurück zum Dashboard
+          </button>
+        </div>
+        <AutomaticGroupsAdmin />
+      </div>
     </div>
   </div>
 </template>
@@ -42,7 +36,7 @@ import type { Person } from './ct-types';
 
 const userDisplayName = ref<string>('');
 const isDevelopment = ref<boolean>(false);
-const activeTab = ref<'dashboard' | 'automatic-groups'>('dashboard');
+const currentView = ref<'dashboard' | 'automatic-groups'>('dashboard');
 
 onMounted(async () => {
   isDevelopment.value = import.meta.env.MODE === 'development';
@@ -102,33 +96,28 @@ onMounted(async () => {
   }
 }
 
-.navigation-tabs {
-  display: flex;
-  gap: 0.5rem;
+.admin-header {
   margin-bottom: 2rem;
-  border-bottom: 1px solid #e9ecef;
 }
 
-.tab-button {
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  border: none;
-  background: none;
-  color: #6c757d;
-  cursor: pointer;
+  border: 1px solid #007bff;
+  background: transparent;
+  color: #007bff;
+  text-decoration: none;
+  border-radius: 4px;
   font-weight: 500;
-  border-bottom: 2px solid transparent;
+  cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.tab-button:hover {
-  color: #495057;
-  background-color: #f8f9fa;
-}
-
-.tab-button.active {
-  color: #007bff;
-  border-bottom-color: #007bff;
-  background-color: #f8f9fa;
+.back-btn:hover {
+  background-color: #007bff;
+  color: white;
 }
 
 @media (max-width: 768px) {
@@ -142,19 +131,9 @@ onMounted(async () => {
     gap: 0.5rem;
   }
   
-  .navigation-tabs {
-    flex-direction: column;
-    gap: 0;
-  }
-  
-  .tab-button {
-    text-align: left;
-    border-bottom: 1px solid #e9ecef;
-    border-radius: 0;
-  }
-  
-  .tab-button.active {
-    border-bottom-color: #007bff;
+  .back-btn {
+    width: 100%;
+    justify-content: center;
   }
 }
 </style>
