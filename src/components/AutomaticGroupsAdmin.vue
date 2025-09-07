@@ -418,9 +418,9 @@ const formatDate = (dateString: string | null) => {
 };
 
 const getGroupUrl = (groupId: number) => {
-  // Construct URL to ChurchTools group page
+  // Construct URL to ChurchTools group dynamic settings page
   const baseUrl = window.location.origin;
-  return `${baseUrl}/?q=churchgroup&id=${groupId}`;
+  return `${baseUrl}/groups/${groupId}/settings/dynamic-group`;
 };
 
 const loadMockData = () => {
