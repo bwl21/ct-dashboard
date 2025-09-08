@@ -22,6 +22,9 @@
           <div class="feature-value">{{ feature.value }}</div>
         </div>
       </div>
+      
+      <!-- Automatische Gruppen Karte -->
+      <AutomaticGroupsCard @navigate-to-admin="$emit('navigate-to-admin')" />
     </div>
 
     <!-- Interactive Test Section -->
@@ -47,6 +50,12 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue';
+import AutomaticGroupsCard from './AutomaticGroupsCard.vue';
+
+// Emit für Navigation
+defineEmits<{
+  'navigate-to-admin': []
+}>();
 
 const testCounter = ref<number>(0);
 
