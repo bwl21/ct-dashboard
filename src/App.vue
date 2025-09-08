@@ -12,7 +12,17 @@
 
     <!-- Main Content -->
     <div class="ct-main">
-      <Start />
+      <div v-if="currentView === 'dashboard'">
+        <Start @navigate-to-admin="currentView = 'automatic-groups'" />
+      </div>
+      <div v-else-if="currentView === 'automatic-groups'">
+        <div class="admin-header">
+          <button @click="currentView = 'dashboard'" class="ct-btn ct-btn-outline back-btn">
+            ← Zurück zum Dashboard
+          </button>
+        </div>
+        <AutomaticGroupsAdmin />
+      </div>
     </div>
   </div>
 </template>
@@ -20,11 +30,13 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import Start from './components/Start.vue';
+import AutomaticGroupsAdmin from './components/AutomaticGroupsAdmin.vue';
 import { churchtoolsClient } from '@churchtools/churchtools-client';
 import type { Person } from './ct-types';
 
 const userDisplayName = ref<string>('');
 const isDevelopment = ref<boolean>(false);
+const currentView = ref<'dashboard' | 'automatic-groups'>('dashboard');
 
 onMounted(async () => {
   isDevelopment.value = import.meta.env.MODE === 'development';
@@ -84,6 +96,30 @@ onMounted(async () => {
   }
 }
 
+.admin-header {
+  margin-bottom: 2rem;
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: 1px solid #007bff;
+  background: transparent;
+  color: #007bff;
+  text-decoration: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.back-btn:hover {
+  background-color: #007bff;
+  color: white;
+}
+
 @media (max-width: 768px) {
   .ct-main {
     padding: 1rem;
@@ -93,6 +129,11 @@ onMounted(async () => {
     padding: 1rem;
     flex-direction: column;
     gap: 0.5rem;
+  }
+  
+  .back-btn {
+    width: 100%;
+    justify-content: center;
   }
 }
 </style>
