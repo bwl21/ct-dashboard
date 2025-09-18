@@ -3,99 +3,122 @@
     <!-- Header Card -->
     <div class="ct-card header-card">
       <div class="ct-card-header">
-        <h1 class="ct-card-title">Churchtools Dashboard</h1>
+        <h1 class="ct-card-title">ChurchTools Dashboard</h1>
       </div>
       <div class="ct-card-body">
-        <p class="description">Dieses Modul hilft, das ChurchTools System zu überwachen</p>
+        <p class="description">Zentrale Übersicht für ChurchTools Module</p>
       </div>
     </div>
 
-    <!-- Features Grid -->
+    <!-- Modules Grid -->
     <div class="features-grid">
-      <div class="ct-card feature-card" v-for="feature in features" :key="feature.id">
-        <div class="ct-card-header">
-          <h3 class="ct-card-title">{{ feature.title }}</h3>
-        </div>
-        <div class="ct-card-body">
-          <div class="feature-icon">{{ feature.icon }}</div>
-          <p class="feature-description">{{ feature.description }}</p>
-          <div class="feature-value">{{ feature.value }}</div>
-        </div>
-      </div>
-      
-      <!-- Automatische Gruppen Karte -->
-      <AutomaticGroupsCard @navigate-to-admin="$emit('navigate-to-admin')" />
-    </div>
-
-    <!-- Interactive Test Section -->
-    <div class="ct-card test-card">
-      <div class="ct-card-header">
-        <h3 class="ct-card-title">System Test</h3>
-      </div>
-      <div class="ct-card-body">
-        <p>Teste die Dashboard-Funktionalität:</p>
-        <button 
-          class="ct-btn ct-btn-primary test-button" 
-          @click="incrementCounter"
-        >
-          Test ausführen ({{ testCounter }})
-        </button>
-        <div v-if="testCounter > 0" class="test-result">
-          ✅ Test erfolgreich ausgeführt {{ testCounter }} Mal
-        </div>
+      <div 
+        v-for="module in modules" 
+        :key="module.id"
+        class="module-wrapper"
+        @click="$emit('navigate', module.id)"
+      >
+        <component 
+          :is="module.cardComponent" 
+          :module="module"
+          class="feature-card"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
-import AutomaticGroupsCard from './AutomaticGroupsCard.vue';
+import type { PropType } from 'vue';
+import type { DashboardModule } from '../types/modules';
 
-// Emit für Navigation
-defineEmits<{
-  'navigate-to-admin': []
-}>();
-
-const testCounter = ref<number>(0);
-
-const features = reactive([
-  {
-    id: 1,
-    title: 'Anzahl User',
-    icon: '👥',
-    description: 'Überwachung der registrierten Benutzer im System',
-    value: '1,234 Benutzer'
-  },
-  {
-    id: 2,
-    title: 'Hauptaktivitäten',
-    icon: '📊',
-    description: 'Monitoring der wichtigsten Systemaktivitäten',
-    value: '89 Aktivitäten heute'
-  },
-  {
-    id: 3,
-    title: 'Fehler',
-    icon: '⚠️',
-    description: 'Überwachung von Systemfehlern und Problemen',
-    value: '2 offene Fehler'
-  },
-  {
-    id: 4,
-    title: 'System Status',
-    icon: '🟢',
-    description: 'Allgemeiner Gesundheitsstatus des Systems',
-    value: 'Alle Systeme online'
+defineProps({
+  modules: {
+    type: Array as PropType<DashboardModule[]>,
+    required: true
   }
-]);
+});
 
-const incrementCounter = () => {
-  testCounter.value++;
-};
+defineEmits<{
+  (e: 'navigate', moduleId: string): void
+}>();
 </script>
 
 <style scoped>
+.dashboard-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.header-card {
+  text-align: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  margin-bottom: 2rem;
+}
+
+.header-card .ct-card-title {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.description {
+  font-size: 1.2rem;
+  opacity: 0.9;
+  margin: 0;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.module-wrapper {
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.module-wrapper:hover {
+  transform: translateY(-4px);
+}
+
+.feature-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.feature-icon {
+  font-size: 3rem;
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.feature-description {
+  color: #666;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+  flex-grow: 1;
+}
+
+@media (max-width: 768px) {
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .header-card .ct-card-title {
+    font-size: 2rem;
+  }
+  
+  .description {
+    font-size: 1rem;
+  }
+}
+
 .dashboard-container {
   display: flex;
   flex-direction: column;

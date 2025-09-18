@@ -1,10 +1,21 @@
 <template>
   <div class="ct-card feature-card automatic-groups-card" :class="{ loading: loading }">
     <div class="ct-card-header">
-      <h3 class="ct-card-title">Automatische Gruppen</h3>
+      <h3 class="ct-card-title">
+        <span class="card-icon">{{ module.icon }}</span>
+        {{ module.title }}
+      </h3>
+      <div class="ct-card-actions">
+        <button class="ct-btn-icon" @click.stop="$emit('navigate', module.id)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 16 16 12 12 8"></polyline>
+            <line x1="8" y1="12" x2="16" y2="12"></line>
+          </svg>
+        </button>
+      </div>
     </div>
     <div class="ct-card-body">
-      <div class="feature-icon">⚙️</div>
       
       <div v-if="loading" class="loading-content">
         <div class="loading-spinner"></div>
@@ -78,6 +89,11 @@
 import { ref, computed, onMounted } from 'vue';
 import { churchtoolsClient } from '@churchtools/churchtools-client';
 import type { Group, DynamicGroupStatus } from '../ct-types';
+import type { DashboardModule } from '../types/modules';
+
+defineProps<{
+  module: DashboardModule;
+}>();
 
 // Emit für Navigation
 defineEmits<{
@@ -274,21 +290,51 @@ onMounted(() => {
 
 <style scoped>
 .automatic-groups-card {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s, box-shadow 0.2s;
+  overflow: hidden;
 }
 
 .automatic-groups-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-/* Override default card padding for better spacing */
 .automatic-groups-card .ct-card-header {
-  padding: 2rem 2rem 1.5rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 72px;
+  padding: 0 1.5rem;
+  border-bottom: 1px solid #f0f2f5;
+  background-color: #f8f9fa;
+  box-sizing: border-box;
 }
 
-.automatic-groups-card .ct-card-body {
-  padding: 1.5rem 2rem 2rem 2rem;
+.automatic-groups-card .ct-card-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2c3e50;
+  display: flex;
+  align-items: center;
+  line-height: 1.2;
+  padding: 1.25rem 0;
+}
+
+.automatic-groups-card .card-icon {
+  margin-right: 0.75rem;
+  font-size: 1.25rem;
+  color: #4a6cf7;
+}
+
+.automatic-groups-card .ct-card-actions {
+  margin-left: 0.5rem;
 }
 
 .automatic-groups-card.loading {
@@ -304,7 +350,10 @@ onMounted(() => {
 .loading-content,
 .error-content {
   text-align: center;
-  padding: 1rem 0;
+  padding: 1.5rem;
+  margin: -1.5rem -1.5rem 0 -1.5rem;
+  width: calc(100% + 3rem);
+  box-sizing: border-box;
 }
 
 .loading-spinner {
@@ -330,10 +379,17 @@ onMounted(() => {
 
 .groups-stats {
   text-align: center;
+  padding: 0 1.5rem;
+  margin: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .main-stat {
-  margin-bottom: 1.5rem;
+  margin: 0 -1.5rem 1.5rem -1.5rem;
+  padding: 0 1.5rem;
+  width: calc(100% + 3rem);
+  box-sizing: border-box;
 }
 
 .stat-number {
@@ -352,7 +408,10 @@ onMounted(() => {
 .status-breakdown {
   display: flex;
   justify-content: space-around;
-  margin-bottom: 1rem;
+  margin: 0 -1.5rem 1.5rem -1.5rem;
+  padding: 0 1.5rem;
+  width: calc(100% + 3rem);
+  box-sizing: border-box;
   gap: 0.5rem;
 }
 

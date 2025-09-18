@@ -180,6 +180,11 @@
 import { ref, computed, onMounted } from 'vue';
 import { churchtoolsClient } from '@churchtools/churchtools-client';
 import type { Group, DynamicGroupStatus } from '../ct-types';
+import type { DashboardModule } from '../types/modules';
+
+defineProps<{
+  module: DashboardModule;
+}>();
 
 interface AutomaticGroup {
   id: number;
