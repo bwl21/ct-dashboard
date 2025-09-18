@@ -1,6 +1,5 @@
 <template>
   <div class="cts">
-    <!-- Development Navbar -->
     <nav class="ct-navbar" v-if="isDevelopment">
       <div class="ct-navbar-brand">
         <span class="ct-navbar-title">ChurchTools Development</span>
@@ -10,33 +9,70 @@
       </div>
     </nav>
 
-    <!-- Main Content -->
     <div class="ct-main">
       <div v-if="currentView === 'dashboard'">
-        <Start @navigate-to-admin="currentView = 'automatic-groups'" />
+        <Start 
+          :modules="modules" 
+          @navigate="navigateToModule" 
+        />
       </div>
-      <div v-else-if="currentView === 'automatic-groups'">
+      
+      <div v-else>
         <div class="admin-header">
           <button @click="currentView = 'dashboard'" class="ct-btn ct-btn-outline back-btn">
             ← Zurück zum Dashboard
           </button>
+          <h2>{{ currentModule?.title || 'Admin' }}</h2>
         </div>
-        <AutomaticGroupsAdmin />
+        <component :is="currentModule?.adminComponent" v-if="currentModule" :module="currentModule" />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import Start from './components/Start.vue';
-import AutomaticGroupsAdmin from './components/AutomaticGroupsAdmin.vue';
+import { ref, computed, onMounted } from 'vue';
 import { churchtoolsClient } from '@churchtools/churchtools-client';
 import type { Person } from './ct-types';
+import type { DashboardModule } from './types/modules';
+import Start from './components/Start.vue';
+import AutomaticGroupsCard from './components/AutomaticGroupsCard.vue';
+import AutomaticGroupsAdmin from './components/AutomaticGroupsAdmin.vue';
+import ExpiringAppointmentsCard from './components/ExpiringAppointmentsCard.vue';
+import ExpiringAppointmentsAdmin from './components/ExpiringAppointmentsAdmin.vue';
+
+const modules: DashboardModule[] = [
+  {
+    id: 'automatic-groups',
+    title: 'Automatische Gruppen',
+    icon: '🔄',
+    description: 'Verwaltung automatischer Gruppen',
+    cardComponent: AutomaticGroupsCard,
+    adminComponent: AutomaticGroupsAdmin
+  },
+  {
+    id: 'expiring-appointments',
+    title: 'Ablaufende Serientermine',
+    icon: '📅',
+    description: 'Verwaltung von ablaufenden Serienterminen',
+    cardComponent: ExpiringAppointmentsCard,
+    adminComponent: ExpiringAppointmentsAdmin
+  }
+];
 
 const userDisplayName = ref<string>('');
 const isDevelopment = ref<boolean>(false);
-const currentView = ref<'dashboard' | 'automatic-groups'>('dashboard');
+const currentView = ref<'dashboard' | string>('dashboard');
+const currentModuleId = ref<string>('');
+
+const currentModule = computed(() => 
+  modules.find(m => m.id === currentModuleId.value)
+);
+
+const navigateToModule = (moduleId: string) => {
+  currentModuleId.value = moduleId;
+  currentView.value = moduleId;
+};
 
 onMounted(async () => {
   isDevelopment.value = import.meta.env.MODE === 'development';
