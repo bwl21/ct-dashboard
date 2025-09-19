@@ -1,7 +1,7 @@
 <template>
   <div class="expiring-appointments-admin">
     <!-- Header Card -->
-    <div class="ct-card header-card" style="width: 100%; border-radius: 0;">
+    <div class="ct-card header-card">
       <div class="ct-card-header">
         <h1 class="ct-card-title">Auslaufende Termine - Admin Panel</h1>
       </div>
@@ -22,94 +22,40 @@
       </div>
     </div>
 
-    <div class="content-container">
-      <!-- Controls Card -->
-      <div class="ct-card controls-card">
-        <div class="ct-card-body">
-          <div class="controls-row">
-            <div class="button-group">
-              <button
-                @click="refreshData"
-                class="ct-btn ct-btn-primary refresh-btn"
-                :disabled="isLoading"
-              >
-                {{ isLoading ? 'Lädt...' : 'Aktualisieren' }}
-              </button>
-            </div>
+    <!-- Controls Card -->
+    <div class="ct-card controls-card">
+      <div class="ct-card-body">
+        <div class="controls-row">
+          <div class="search-container">
+            <input
+              v-model="searchTerm"
+              type="text"
+              placeholder="Termine durchsuchen..."
+              class="ct-input search-input"
+            />
+          </div>
+          <div class="button-group">
+            <button
+              @click="refreshData"
+              class="ct-btn ct-btn-primary refresh-btn"
+              :disabled="isLoading"
+            >
+              {{ isLoading ? 'Lädt...' : 'Aktualisieren' }}
+            </button>
+            <button
+              @click="loadMockData"
+              class="ct-btn ct-btn-outline mock-btn"
+              :disabled="isLoading"
+              title="Lädt Beispieldaten zum Testen der Oberfläche"
+            >
+              Mock-Daten
+            </button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Loading state -->
-    <div v-if="isLoading && appointments.length === 0" class="loading">
-      <div class="spinner"></div>
-      <p>Lade Termine...</p>
-    </div>
-
-    <!-- Error state -->
-    <div v-else-if="error" class="error">
-      <p>{{ error }}</p>
-      <button @click="fetchData" class="btn btn-primary">
-        Erneut versuchen
-      </button>
-    </div>
-
-    <!-- Content -->
-    <div v-else class="content">
-      <!-- Stats Summary -->
-      <div class="ct-card stats-card">
-        <div class="ct-card-body">
-          <div class="stats-summary">
-            <div class="stat-card">
-              <div class="stat-value">{{ filteredAppointments.length }}</div>
-              <div class="stat-label">Gesamte Termine</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-value">{{ getCountByStatus('expiring') }}</div>
-              <div class="stat-label">Laufen bald ab</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-value">{{ getCountByStatus('expired') }}</div>
-              <div class="stat-label">Abgelaufen</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Filters -->
-      <div class="ct-card filters-card">
-        <div class="ct-card-body">
-          <div class="filter-group">
-            <div class="filter-item">
-              <label>Status:</label>
-              <select v-model="selectedStatus" class="ct-select">
-                <option
-                  v-for="option in statusOptions"
-                  :key="option.value"
-                  :value="option.value"
-                >
-                  {{ option.label }}
-                </option>
-              </select>
-            </div>
-            <div class="filter-item">
-              <label>Kalender:</label>
-              <select v-model="selectedCalendar" class="ct-select">
-                <option
-                  v-for="option in calendarOptions"
-                  :key="option.value"
-                  :value="option.value"
-                >
-                  {{ option.label }}
-                </option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Appointments Table -->
+    <!-- Appointments Table Card -->
     <div class="ct-card table-card">
       <div class="ct-card-header">
         <h3 class="ct-card-title">
@@ -117,149 +63,135 @@
         </h3>
       </div>
       <div class="ct-card-body">
-        <div v-if="filteredAppointments.length === 0" class="empty-state">
-          <p>Keine Termine gefunden</p>
+        <div v-if="isLoading" class="loading-state">
+          <div class="loading-spinner"></div>
+          <p>Lade auslaufende Termine...</p>
         </div>
         
+        <div v-else-if="error" class="error-state">
+          <p class="error-message">❌ {{ error }}</p>
+          <div class="error-actions">
+            <button @click="refreshData" class="ct-btn ct-btn-secondary">
+              Erneut versuchen
+            </button>
+            <button @click="loadMockData" class="ct-btn ct-btn-outline">
+              Mock-Daten laden
+            </button>
+          </div>
+          <div v-if="isDevelopment" class="dev-info">
+            <p><strong>Entwicklungsmodus:</strong></p>
+            <p>Überprüfen Sie die Browser-Konsole für detaillierte Fehlermeldungen.</p>
+            <p>Stellen Sie sicher, dass die ChurchTools-Verbindung konfiguriert ist.</p>
+          </div>
+        </div>
+
+        <div v-else-if="filteredAppointments.length === 0" class="empty-state">
+          <p>Keine auslaufenden Termine gefunden.</p>
+          <div class="empty-actions">
+            <button @click="refreshData" class="ct-btn ct-btn-primary">
+              Erneut laden
+            </button>
+            <button @click="loadMockData" class="ct-btn ct-btn-secondary">
+              Mock-Daten laden (für Demo)
+            </button>
+          </div>
+        </div>
+
         <div v-else class="table-container">
-          <table>
-              <thead>
-                <tr>
-                    <th 
-                    @click="handleSort('title')" 
-                    class="sortable resizable"
-                    :class="{ active: sortBy === 'title' }"
-                    :style="{ width: columnWidths[0] + 'px' }"
+          <table class="appointments-table" ref="tableRef">
+            <thead>
+              <tr>
+                <th @click="sortBy('title')" class="sortable resizable" :style="{ width: columnWidths[0] + 'px' }">
+                  Titel
+                  <span class="sort-indicator" v-if="sortField === 'title'">
+                    {{ sortDirection === 'asc' ? '↑' : '↓' }}
+                  </span>
+                  <div class="resize-handle" @mousedown="startResize($event, 0)"></div>
+                </th>
+                <th @click="sortBy('calendar')" class="sortable resizable" :style="{ width: columnWidths[1] + 'px' }">
+                  Kalender
+                  <span class="sort-indicator" v-if="sortField === 'calendar'">
+                    {{ sortDirection === 'asc' ? '↑' : '↓' }}
+                  </span>
+                  <div class="resize-handle" @mousedown="startResize($event, 1)"></div>
+                </th>
+                <th @click="sortBy('startDate')" class="sortable resizable" :style="{ width: columnWidths[2] + 'px' }">
+                  Nächstes Vorkommen
+                  <span class="sort-indicator" v-if="sortField === 'startDate'">
+                    {{ sortDirection === 'asc' ? '↑' : '↓' }}
+                  </span>
+                  <div class="resize-handle" @mousedown="startResize($event, 2)"></div>
+                </th>
+                <th @click="sortBy('repeatUntil')" class="sortable resizable" :style="{ width: columnWidths[3] + 'px' }">
+                  Letztes Vorkommen
+                  <span class="sort-indicator" v-if="sortField === 'repeatUntil'">
+                    {{ sortDirection === 'asc' ? '↑' : '↓' }}
+                  </span>
+                  <div class="resize-handle" @mousedown="startResize($event, 3)"></div>
+                </th>
+                <th @click="sortBy('status')" class="sortable resizable" :style="{ width: columnWidths[4] + 'px' }">
+                  Status
+                  <span class="sort-indicator" v-if="sortField === 'status'">
+                    {{ sortDirection === 'asc' ? '↑' : '↓' }}
+                  </span>
+                  <div class="resize-handle" @mousedown="startResize($event, 4)"></div>
+                </th>
+                <th :style="{ width: columnWidths[5] + 'px' }">Aktionen</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="appointment in filteredAppointments" :key="appointment.id" class="appointment-row">
+                <td class="appointment-title" :style="{ width: columnWidths[0] + 'px' }">
+                  <strong>{{ truncateText(appointment.base.title, 40) }}</strong>
+                </td>
+                <td class="calendar-cell" :style="{ width: columnWidths[1] + 'px' }">
+                  <div 
+                    class="calendar-info"
+                    :style="{
+                      borderLeft: `3px solid ${appointment.base.calendar?.color || '#cccccc'}`,
+                      paddingLeft: '8px'
+                    }"
                   >
-                    <div class="header-content">
-                      <span>Titel</span>
-                      <span v-if="sortBy === 'title'" class="sort-indicator">
-                        {{ sortOrder === 'asc' ? '↑' : '↓' }}
-                      </span>
-                    </div>
-                    <div class="resize-handle" @mousedown="startResize($event, 0)"></div>
-                  </th>
-                  <th 
-                    @click="handleSort('calendar')" 
-                    class="sortable resizable"
-                    :class="{ active: sortBy === 'calendar' }"
-                    :style="{ width: columnWidths[1] + 'px' }"
-                  >
-                    <div class="header-content">
-                      <span>Kalender</span>
-                      <span v-if="sortBy === 'calendar'" class="sort-indicator">
-                        {{ sortOrder === 'asc' ? '↑' : '↓' }}
-                      </span>
-                    </div>
-                    <div class="resize-handle" @mousedown="startResize($event, 1)"></div>
-                  </th>
-                  <th 
-                    @click="handleSort('startDate')" 
-                    class="sortable resizable"
-                    :class="{ active: sortBy === 'startDate' }"
-                    :style="{ width: columnWidths[2] + 'px' }"
-                  >
-                    <div class="header-content">
-                      <span>Nächstes Vorkommen</span>
-                      <span v-if="sortBy === 'startDate'" class="sort-indicator">
-                        {{ sortOrder === 'asc' ? '↑' : '↓' }}
-                      </span>
-                    </div>
-                    <div class="resize-handle" @mousedown="startResize($event, 2)"></div>
-                  </th>
-                  <th 
-                    @click="handleSort('repeatUntil')" 
-                    class="sortable resizable"
-                    :class="{ active: sortBy === 'repeatUntil' }"
-                    :style="{ width: columnWidths[3] + 'px' }"
-                  >
-                    <div class="header-content">
-                      <span>Letztes Vorkommen</span>
-                      <span v-if="sortBy === 'repeatUntil'" class="sort-indicator">
-                        {{ sortOrder === 'asc' ? '↑' : '↓' }}
-                      </span>
-                    </div>
-                    <div class="resize-handle" @mousedown="startResize($event, 3)"></div>
-                  </th>
-                  <th 
-                    @click="handleSort('status')" 
-                    class="sortable resizable"
-                    :class="{ active: sortBy === 'status' }"
-                    :style="{ width: columnWidths[4] + 'px' }"
-                  >
-                    <div class="header-content">
-                      <span>Status</span>
-                      <span v-if="sortBy === 'status'" class="sort-indicator">
-                        {{ sortOrder === 'asc' ? '↑' : '↓' }}
-                      </span>
-                    </div>
-                    <div class="resize-handle" @mousedown="startResize($event, 4)"></div>
-                  </th>
-                  <th class="actions-header" :style="{ width: columnWidths[5] + 'px' }">
-                    <div class="header-content">
-                      <span>Aktionen</span>
-                    </div>
-                    <div class="resize-handle" @mousedown="startResize($event, 5)"></div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="appointment in filteredAppointments" :key="appointment.id" class="appointment-row">
-                  <td class="appointment-title" :style="{ width: columnWidths[0] + 'px' }">
-                    <strong>{{ truncateText(appointment.base.title, 40) }}</strong>
-                  </td>
-                  <td class="calendar-cell" :style="{ width: columnWidths[1] + 'px' }">
-                    <div 
-                      class="calendar-info"
-                      :style="{
-                        borderLeft: `3px solid ${appointment.base.calendar?.color || '#cccccc'}`,
-                        paddingLeft: '8px'
-                      }"
-                    >
-                      <span class="calendar-name">
-                        {{ appointment.base.calendar?.name || 'Unbekannter Kalender' }}
-                      </span>
-                    </div>
-                  </td>
-                  <td class="date-cell" :style="{ width: columnWidths[2] + 'px' }">
-                    {{ formatDate(appointment.base.startDate) }}
-                  </td>
-                  <td class="date-cell" :style="{ width: columnWidths[3] + 'px' }">
-                    {{ appointment.base.repeatUntil ? formatDate(appointment.base.repeatUntil) : 'Kein Enddatum' }}
-                  </td>
-                  <td class="status-cell" :style="{ width: columnWidths[4] + 'px' }">
-                    <span :class="['status-badge', getStatusClass(appointment)]">
-                      {{ getStatusText(getAppointmentStatus(appointment)) }}
+                    <span class="calendar-name">
+                      {{ appointment.base.calendar?.name || 'Unbekannter Kalender' }}
                     </span>
-                  </td>
-                  <td class="actions">
-                    <button 
-                      class="btn-icon extend" 
-                      title="Termin verlängern" 
-                      @click="extendSeries(appointment)"
-                    >
-                      <font-awesome-icon icon="calendar-plus" />
-                    </button>
-                    <button 
-                      class="btn-icon view" 
-                      title="Details anzeigen" 
-                      @click="viewDetails(appointment)"
-                    >
-                      <font-awesome-icon icon="eye" />
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
+                  </div>
+                </td>
+                <td class="date-cell" :style="{ width: columnWidths[2] + 'px' }">
+                  {{ formatDate(appointment.base.startDate) }}
+                </td>
+                <td class="date-cell" :style="{ width: columnWidths[3] + 'px' }">
+                  {{ appointment.base.repeatUntil ? formatDate(appointment.base.repeatUntil) : 'Kein Enddatum' }}
+                </td>
+                <td class="status-cell" :style="{ width: columnWidths[4] + 'px' }">
+                  <span :class="['status-badge', getStatusClass(appointment)]">
+                    {{ getStatusText(getAppointmentStatus(appointment)) }}
+                  </span>
+                </td>
+                <td class="actions" :style="{ width: columnWidths[5] + 'px' }">
+                  <a
+                    :href="getAppointmentUrl(appointment.id)"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="ct-btn ct-btn-sm ct-btn-outline"
+                    title="Termin in ChurchTools öffnen"
+                  >
+                    Öffnen
+                  </a>
+                </td>
+              </tr>
+            </tbody>
             </table>
           </div>
         </div>
       </div>
     </div>
-  </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
+import { churchtoolsClient } from '@churchtools/churchtools-client';
+import type { DashboardModule } from '../types/modules';
 import { 
   fetchCalendars,
   fetchAppointments,
@@ -267,7 +199,11 @@ import {
   identifyCalendars,
   type Appointment,
   type Calendar
-} from '@/services/churchtools'; 
+} from '@/services/churchtools';
+
+defineProps<{
+  module: DashboardModule;
+}>(); 
 
 interface CalendarMapEntry {
   name: string;
@@ -277,12 +213,14 @@ interface CalendarMapEntry {
 // State
 const isLoading = ref(true);
 const error = ref<string | null>(null);
-const selectedStatus = ref<string>('all');
-const selectedCalendar = ref<string>('all');
-const sortBy = ref('endDate');
+const searchTerm = ref('');
+const sortField = ref<keyof Appointment>('title');
+const sortDirection = ref<'asc' | 'desc'>('asc');
+const isDevelopment = ref(import.meta.env.MODE === 'development');
 
 // Column resizing
-const columnWidths = ref<number[]>([200, 180, 160, 160, 120, 100]);
+const tableRef = ref<HTMLTableElement>();
+const columnWidths = ref([350, 200, 180, 180, 120, 120]); // Pixel-Breiten für Drag&Drop
 const isResizing = ref(false);
 const resizingColumn = ref(-1);
 const startX = ref(0);
@@ -323,7 +261,7 @@ const stopResize = () => {
   document.body.style.cursor = '';
   document.body.style.userSelect = '';
 };
-const sortOrder = ref('asc');
+
 const daysInAdvance = ref(60);
 
 // Data
@@ -332,86 +270,54 @@ const calendarMap = ref<Map<number, {name: string, isGroup: boolean}>>(new Map()
 
 // Computed properties
 const filteredAppointments = computed(() => {
-  let result = [...appointments.value];
-  
-  // Apply status filter
-  if (selectedStatus.value !== 'all') {
-    result = result.filter(appointment => 
-      getAppointmentStatus(appointment) === selectedStatus.value
+  let filtered = appointments.value;
+
+  // Filter by search term
+  if (searchTerm.value) {
+    const term = searchTerm.value.toLowerCase();
+    filtered = filtered.filter(appointment =>
+      appointment.base.title.toLowerCase().includes(term) ||
+      appointment.base.calendar?.name?.toLowerCase().includes(term) ||
+      appointment.id.toString().includes(term)
     );
   }
-  
-  // Apply calendar filter
-  if (selectedCalendar.value !== 'all') {
-    result = result.filter(appointment => 
-      appointment.base.calendar?.id?.toString() === selectedCalendar.value
-    );
-  }
-  
-  // Apply sorting
-  if (sortBy.value) {
-    result.sort((a, b) => {
-      let valueA, valueB;
-      
-      if (sortBy.value === 'calendar') {
-        valueA = a.base.calendar?.name?.toLowerCase() || '';
-        valueB = b.base.calendar?.name?.toLowerCase() || '';
-      } else if (sortBy.value === 'title') {
-        valueA = a.base.title.toLowerCase();
-        valueB = b.base.title.toLowerCase();
-      } else if (sortBy.value === 'startDate') {
-        valueA = new Date(a.base.startDate).getTime();
-        valueB = new Date(b.base.startDate).getTime();
-      } else if (sortBy.value === 'repeatUntil') {
-        valueA = a.base.repeatUntil ? new Date(a.base.repeatUntil).getTime() : 0;
-        valueB = b.base.repeatUntil ? new Date(b.base.repeatUntil).getTime() : 0;
-      } else if (sortBy.value === 'status') {
-        valueA = getAppointmentStatus(a);
-        valueB = getAppointmentStatus(b);
-      }
-      
-      if (typeof valueA === 'string' && typeof valueB === 'string') {
-        return sortOrder.value === 'asc' 
-          ? valueA.localeCompare(valueB)
-          : valueB.localeCompare(valueA);
-      }
-      
-      return sortOrder.value === 'asc' 
-        ? (valueA < valueB ? -1 : valueA > valueB ? 1 : 0)
-        : (valueA > valueB ? -1 : valueA < valueB ? 1 : 0);
-    });
-  }
-  
-  return result;
+
+  // Sort
+  filtered.sort((a, b) => {
+    const aVal = a[sortField.value];
+    const bVal = b[sortField.value];
+    
+    let comparison = 0;
+    if (aVal < bVal) comparison = -1;
+    if (aVal > bVal) comparison = 1;
+    
+    return sortDirection.value === 'asc' ? comparison : -comparison;
+  });
+
+  return filtered;
 });
 
-// Available filters
-const statusOptions = [
-  { value: 'all', label: 'Alle Status' },
-  { value: 'active', label: 'Aktiv' },
-  { value: 'expiring', label: 'Läuft bald ab' },
-  { value: 'expired', label: 'Abgelaufen' },
-];
+const sortBy = (field: keyof Appointment) => {
+  if (sortField.value === field) {
+    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortField.value = field;
+    sortDirection.value = 'asc';
+  }
+};
 
-const calendarOptions = [
-  { value: 'all', label: 'Alle Kalender' },
-  { value: 'church', label: 'Gemeindekalender' },
-  { value: 'groups', label: 'Gruppenkalender' },
-];
-
-// Fetch data from ChurchTools API
-const fetchData = async () => {
+const refreshData = async () => {
   isLoading.value = true;
   error.value = null;
-  
+
   try {
+    console.log('Fetching expiring appointments from ChurchTools API...');
+    
     // First, identify all calendars
     const { publicCalendars } = await identifyCalendars();
     
     // Create calendar map for quick lookups
     publicCalendars.forEach(cal => {
-      // Annahme: Gruppenkalender können anhand des Namens oder anderer Eigenschaften identifiziert werden
-      // Hier müssen wir die Logik anpassen, falls es ein anderes Kriterium gibt
       const isGroup = cal.name.includes('Gruppe') || cal.name.includes('Team');
       calendarMap.value.set(cal.id, { name: cal.name, isGroup });
     });
@@ -419,9 +325,8 @@ const fetchData = async () => {
     // Fetch expiring series
     const expiringSeries = await findExpiringSeries(daysInAdvance.value);
     
-    // Bereinige die Daten, um sicherzustellen, dass alle erforderlichen Felder vorhanden sind
+    // Clean up the data to ensure all required fields are present
     appointments.value = expiringSeries.map(appointment => {
-      // Stelle sicher, dass das base-Objekt existiert
       if (!appointment.base) {
         appointment.base = {
           ...appointment,
@@ -432,142 +337,442 @@ const fetchData = async () => {
       return appointment;
     });
     
-  } catch (err) {
-    console.error('Error fetching appointments:', err);
-    error.value = 'Fehler beim Laden der Termine. Bitte versuchen Sie es später erneut.';
+    console.log('Expiring appointments found:', appointments.value.length);
+  } catch (err: any) {
+    console.error('Fehler beim Laden der auslaufenden Termine:', err);
+    
+    let errorMessage = 'Fehler beim Laden der auslaufenden Termine.';
+    
+    if (err.response) {
+      errorMessage += ` HTTP ${err.response.status}: ${err.response.statusText}`;
+      if (err.response.status === 401) {
+        errorMessage += ' (Nicht authentifiziert)';
+      } else if (err.response.status === 403) {
+        errorMessage += ' (Keine Berechtigung)';
+      }
+    } else if (err.message) {
+      errorMessage += ` ${err.message}`;
+    }
+    
+    error.value = errorMessage;
   } finally {
     isLoading.value = false;
   }
 };
 
-// View appointment details
-const viewDetails = (appointment: Appointment) => {
-  // Hier können Sie eine Detailansicht öffnen oder eine Aktion ausführen
-  console.log('View details for appointment:', appointment);
-  
-  // Erstelle eine detaillierte Meldung mit den verfügbaren Informationen
-  const details = [
-    `Titel: ${appointment.base.title || appointment.title || 'Kein Titel'}`,
-    `Start: ${formatDate(appointment.startDate)} um ${formatTime(appointment.startDate)}`,
-    `Ende: ${formatDate(appointment.endDate)} um ${formatTime(appointment.endDate)}`,
-    `Kalender: ${appointment.base.calendar?.name || 'Unbekannt'}`,
-    `Wiederholung: ${appointment.series ? 'Ja' : 'Nein'}`,
-    `Läuft ab: ${appointment.base.repeatUntil ? formatDate(appointment.base.repeatUntil) : 'Kein Enddatum'}`,
-    `Notiz: ${appointment.base.note || 'Keine Notiz'}`
-  ].join('\n');
-  
-  alert(details);
+const getAppointmentUrl = (appointmentId: number) => {
+  // Construct URL to ChurchTools instance appointment page
+  const churchtoolsBaseUrl = import.meta.env.VITE_BASE_URL || window.location.origin;
+  return `${churchtoolsBaseUrl}/calendar/appointments/${appointmentId}`;
 };
 
-// Extend appointment series
-const extendSeries = async (appointment: Appointment) => {
-  if (!confirm('Möchten Sie diese Terminserie wirklich verlängern?')) {
-    return;
-  }
+const loadMockData = () => {
+  console.log('Loading mock data...');
+  appointments.value = [
+    {
+      id: 1,
+      base: {
+        title: 'Jugendgottesdienst Serie',
+        startDate: '2025-09-20T10:00:00Z',
+        repeatUntil: '2025-09-25T10:00:00Z',
+        calendar: { id: 1, name: 'Hauptkalender', color: '#007bff' }
+      }
+    },
+    {
+      id: 2,
+      base: {
+        title: 'Bibelstunde Wöchentlich',
+        startDate: '2025-09-22T19:00:00Z',
+        repeatUntil: '2025-09-28T19:00:00Z',
+        calendar: { id: 2, name: 'Gruppenkalender', color: '#28a745' }
+      }
+    },
+    {
+      id: 3,
+      base: {
+        title: 'Gebetskreis',
+        startDate: '2025-09-18T18:30:00Z',
+        repeatUntil: '2025-09-15T18:30:00Z',
+        calendar: { id: 3, name: 'Gemeindekalender', color: '#dc3545' }
+      }
+    }
+  ] as Appointment[];
+};
+
+const formatDate = (dateString: string | null) => {
+  if (!dateString) return 'Nie';
   
   try {
-    // Hier würden Sie die Logik zum Verlängern der Terminserie implementieren
-    // Zum Beispiel einen API-Aufruf an ChurchTools
-    console.log('Extending series for appointment:', appointment);
-    
-    // Simuliere eine API-Antwort
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    alert('Terminserie wurde erfolgreich verlängert (Simulation).');
-    
-    // Daten aktualisieren
-    await fetchData();
-  } catch (err) {
-    console.error('Error extending series:', err);
-    alert('Fehler beim Verlängern der Terminserie. Bitte versuchen Sie es später erneut.');
+    const date = new Date(dateString);
+    return date.toLocaleString('de-DE', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch {
+    return 'Ungültiges Datum';
   }
 };
 
-// Get status of an appointment
-const getAppointmentStatus = (appointment: Appointment): string => {
-  // Verwende repeatUntil aus series oder base, je nachdem was verfügbar ist
-  const repeatUntil = appointment.series?.repeatUntil || appointment.base?.repeatUntil;
+const truncateText = (text: string, maxLength: number) => {
+  if (!text) return '';
+  return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+};
+
+const getAppointmentStatus = (appointment: Appointment) => {
+  if (!appointment.base.repeatUntil) return 'active';
   
-  // Wenn es keine Wiederholung gibt, ist der Termin aktiv
-  if (!repeatUntil) return 'active';
+  const now = new Date();
+  const endDate = new Date(appointment.base.repeatUntil);
+  const daysUntilEnd = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
   
-  const endDate = new Date(repeatUntil);
-  const today = new Date();
-  const daysUntilEnd = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-  
-  if (endDate < today) return 'expired';
-  if (daysUntilEnd <= 30) return 'expiring';
+  if (daysUntilEnd < 0) return 'expired';
+  if (daysUntilEnd <= 7) return 'expiring';
   return 'active';
 };
 
-// Get count of appointments by status
-const getCountByStatus = (status: string): number => {
-  if (status === 'all') return appointments.value.length;
-  return appointments.value.filter(appointment => {
-    return getAppointmentStatus(appointment) === status;
-  }).length;
-};
-
-// Get status display text
-const getStatusText = (status: string): string => {
-  switch (status) {
-    case 'active':
-      return 'Aktiv';
-    case 'expiring':
-      return 'Läuft bald ab';
-    case 'expired':
-      return 'Abgelaufen';
-    default:
-      return status;
-  }
-};
-
-// Format date for display
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString();
-};
-
-// Format time for display
-const formatTime = (dateString: string) => {
-  return new Date(dateString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-};
-
-// Truncate text to a specified length and add ellipsis if needed
-const truncateText = (text: string | undefined, maxLength: number): string => {
-  if (!text) return '';
-  if (text.length <= maxLength) return text;
-  return text.substring(0, maxLength) + '...';
-};
-
-// Get status class
 const getStatusClass = (appointment: Appointment) => {
   const status = getAppointmentStatus(appointment);
-  return `status-${status}`;
-};
-
-// Handle sort
-const handleSort = (column: string) => {
-  if (sortBy.value === column) {
-    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
-  } else {
-    sortBy.value = column;
-    sortOrder.value = 'asc';
+  switch (status) {
+    case 'expired': return 'status-error';
+    case 'expiring': return 'status-warning';
+    case 'active': return 'status-success';
+    default: return 'status-unknown';
   }
 };
 
-// Refresh data
-const refreshData = () => {
-  fetchData();
+const getStatusText = (status: string) => {
+  switch (status) {
+    case 'expired': return 'Abgelaufen';
+    case 'expiring': return 'Läuft bald ab';
+    case 'active': return 'Aktiv';
+    default: return 'Unbekannt';
+  }
 };
 
-// Initialize component
 onMounted(() => {
-  fetchData();
+  refreshData();
 });
 </script>
 
 <style scoped>
-/* Table resizing */
+.expiring-appointments-admin {
+  padding: 0;
+  width: 100%;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  color: var(--ct-text-primary, #2c3e50);
+  line-height: 1.5;
+}
+
+/* Header Card */
+.header-card {
+  background: var(--ct-bg-primary, #ffffff);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+  transition: all 0.3s ease;
+}
+
+.header-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.ct-card-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--ct-border-color, #e0e0e0);
+  background: var(--ct-bg-secondary, #f8f9fa);
+}
+
+.ct-card-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--ct-text-primary, #2c3e50);
+}
+
+.ct-card-body {
+  padding: 1.5rem;
+}
+
+.description {
+  margin: 0 0 1rem 0;
+  color: var(--ct-text-secondary, #6c757d);
+  font-size: 0.95rem;
+}
+
+.days-in-advance {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--ct-bg-secondary, #f8f9fa);
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin-top: 1rem;
+  max-width: fit-content;
+}
+
+.days-in-advance label {
+  font-size: 0.9rem;
+  color: var(--ct-text-secondary, #6c757d);
+  margin: 0;
+}
+
+.days-in-advance input {
+  width: 80px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--ct-border-color, #e0e0e0);
+  border-radius: 4px;
+  background: var(--ct-bg-primary, #ffffff);
+  color: var(--ct-text-primary, #2c3e50);
+  text-align: center;
+}
+
+.days-in-advance input:focus {
+  outline: none;
+  border-color: var(--ct-primary, #3498db);
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+}
+
+/* Controls Card */
+.controls-card {
+  background: var(--ct-bg-primary, #ffffff);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+  transition: all 0.3s ease;
+}
+
+.controls-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.controls-row {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.search-container {
+  flex: 1;
+  min-width: 280px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--ct-border-color, #e0e0e0);
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background: var(--ct-bg-primary, #ffffff);
+  color: var(--ct-text-primary, #2c3e50);
+  transition: all 0.2s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--ct-primary, #3498db);
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+}
+
+.button-group {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+/* Buttons */
+.ct-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+.ct-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ct-btn-primary {
+  background-color: var(--ct-primary, #3498db);
+  color: white;
+}
+
+.ct-btn-primary:hover:not(:disabled) {
+  background-color: var(--ct-primary-dark, #2980b9);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.ct-btn-secondary {
+  background-color: var(--ct-secondary, #6c757d);
+  color: white;
+}
+
+.ct-btn-secondary:hover:not(:disabled) {
+  background-color: var(--ct-secondary-dark, #5a6268);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.ct-btn-outline {
+  background: transparent;
+  border: 1px solid var(--ct-primary, #3498db);
+  color: var(--ct-primary, #3498db);
+}
+
+.ct-btn-outline:hover:not(:disabled) {
+  background-color: rgba(52, 152, 219, 0.1);
+}
+
+.ct-btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+}
+
+/* Table Card */
+.table-card {
+  background: var(--ct-bg-primary, #ffffff);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  min-height: 500px;
+}
+
+.table-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Loading, Error, and Empty States */
+.loading-state, .error-state, .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+  background: var(--ct-bg-secondary, #f8f9fa);
+  border-radius: 8px;
+  min-height: 200px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(52, 152, 219, 0.2);
+  border-radius: 50%;
+  border-top-color: var(--ct-primary, #3498db);
+  animation: spin 1s ease-in-out infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.error-message {
+  color: #dc3545;
+  margin-bottom: 1rem;
+}
+
+.error-actions, .empty-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.dev-info {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: rgba(52, 152, 219, 0.1);
+  border-radius: 6px;
+  border-left: 4px solid var(--ct-primary, #3498db);
+  text-align: left;
+  max-width: 500px;
+}
+
+.dev-info p {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+/* Table Container */
+.table-container {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  border-radius: 8px;
+  background: var(--ct-bg-primary, #ffffff);
+  margin-bottom: 0;
+  -webkit-overflow-scrolling: touch;
+  display: block;
+  flex: 1;
+  min-height: 400px;
+}
+
+.table-container table {
+  width: 100%;
+  min-width: 1150px; /* Mindestbreite für alle Spalten */
+}
+
+/* Table */
+.appointments-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin: 0;
+  padding: 0;
+}
+
+.appointments-table th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ct-text-secondary, #6c757d);
+  background-color: var(--ct-bg-secondary, #f8f9fa);
+  white-space: nowrap;
+  position: relative;
+  letter-spacing: 0.02em;
+  overflow: visible;
+  box-sizing: border-box;
+}
+
+.appointments-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+}
+
+.appointments-table th.sortable:hover {
+  background-color: var(--ct-bg-tertiary, #e9ecef);
+}
+
+.sort-indicator {
+  margin-left: 0.5rem;
+  font-weight: bold;
+  display: inline-block;
+  color: var(--ct-primary, #3498db);
+}
+
 .resize-handle {
   position: absolute;
   top: 0;
@@ -649,6 +854,13 @@ th, td {
   gap: 0.5rem;
   justify-content: flex-end;
   padding: 0.5rem;
+  min-width: 100px !important;
+  white-space: nowrap;
+}
+
+td.actions {
+  min-width: 120px !important;
+  width: 10% !important;
 }
 
 /* Empty state */
@@ -661,21 +873,10 @@ th, td {
 /* Responsive table */
 @media (max-width: 1200px) {
   .table-container {
-    width: 100%;
-    max-width: 100%;
     overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    display: block;
-    padding: 0 1rem;
-    margin: 0 -1rem;
-  }
-  
-  table {
-    width: 100%;
   }
 }
 
-/* ===== Reusable Table Styles ===== */
 /* Table container */
 .table-container {
   width: 100%;
@@ -996,7 +1197,7 @@ error {
 }
 .expiring-appointments-admin {
   padding: 0;
-  max-width: 100%;
+  width: 100%;
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   color: var(--ct-text-primary, #2c3e50);
