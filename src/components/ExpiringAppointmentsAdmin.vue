@@ -2,17 +2,17 @@
   <div class="expiring-appointments-admin">
     <div class="header">
       <div class="header-content">
-        <h1>{{ $t('expiringAppointments') }}</h1>
-        <button @click="refreshData" class="btn btn-icon" :title="$t('refresh')">
+        <h1>Auslaufende Termine</h1>
+        <button @click="refreshData" class="btn btn-icon" title="Aktualisieren">
           <i class="fas fa-sync-alt" :class="{ 'fa-spin': isLoading }"></i>
         </button>
       </div>
       <p class="subtitle">
-        {{ $t('manageExpiringAppointments') }}
+        Verwalten Sie auslaufende Terminserien
       </p>
       
       <div class="days-in-advance">
-        <label>{{ $t('showAppointmentsEndingIn') }}:</label>
+        <label>Zeige Termine, die in den nächsten:</label>
         <input 
           type="number" 
           v-model.number="daysInAdvance" 
@@ -20,21 +20,21 @@
           max="365"
           @change="refreshData"
         />
-        <span>{{ $t('days') }}</span>
+        <span>Tagen enden</span>
       </div>
     </div>
 
     <!-- Loading state -->
     <div v-if="isLoading && appointments.length === 0" class="loading">
       <div class="spinner"></div>
-      <p>{{ $t('loadingAppointments') }}</p>
+      <p>Lade Termine...</p>
     </div>
 
     <!-- Error state -->
     <div v-else-if="error" class="error">
       <p>{{ error }}</p>
       <button @click="fetchData" class="btn btn-primary">
-        {{ $t('retry') }}
+        Erneut versuchen
       </button>
     </div>
 
@@ -44,15 +44,15 @@
       <div class="stats-summary">
         <div class="stat-card">
           <div class="stat-value">{{ filteredAppointments.length }}</div>
-          <div class="stat-label">{{ $t('totalAppointments') }}</div>
+          <div class="stat-label">Gesamte Termine</div>
         </div>
         <div class="stat-card">
           <div class="stat-value">{{ getCountByStatus('expiring') }}</div>
-          <div class="stat-label">{{ $t('expiringSoon') }}</div>
+          <div class="stat-label">Laufen bald ab</div>
         </div>
         <div class="stat-card">
           <div class="stat-value">{{ getCountByStatus('expired') }}</div>
-          <div class="stat-label">{{ $t('expired') }}</div>
+          <div class="stat-label">Abgelaufen</div>
         </div>
       </div>
 
@@ -62,7 +62,7 @@
           <input
             v-model="searchQuery"
             type="text"
-            :placeholder="$t('searchAppointments')"
+            placeholder="Termine durchsuchen..."
           />
           <span class="search-icon">
             <i class="fas fa-search"></i>
@@ -70,7 +70,7 @@
         </div>
 
         <div class="filter-group">
-          <label>{{ $t('status') }}:</label>
+          <label>Status:</label>
           <select v-model="selectedStatus">
             <option
               v-for="option in statusOptions"
@@ -83,7 +83,7 @@
         </div>
 
         <div class="filter-group">
-          <label>{{ $t('calendar') }}:</label>
+          <label>Kalender:</label>
           <select v-model="selectedCalendar">
             <option
               v-for="option in calendarOptions"
@@ -99,76 +99,72 @@
       <!-- Appointments Table -->
       <div class="appointments-table">
         <div v-if="filteredAppointments.length === 0" class="no-results">
-          {{ $t('noAppointmentsFound') }}
+          Keine Termine gefunden
         </div>
         
         <table v-else>
           <thead>
             <tr>
               <th @click="handleSort('title')">
-                {{ $t('title') }}
+                Titel
                 <i
                   v-if="sortBy === 'title'"
                   :class="['sort-icon', sortOrder === 'asc' ? 'asc' : 'desc']"
                 ></i>
               </th>
               <th @click="handleSort('calendar')">
-                {{ $t('calendar') }}
+                Kalender
                 <i
                   v-if="sortBy === 'calendar'"
                   :class="['sort-icon', sortOrder === 'asc' ? 'asc' : 'desc']"
                 ></i>
               </th>
               <th @click="handleSort('endDate')">
-                {{ $t('nextOccurrence') }}
+                Nächstes Vorkommen
                 <i
                   v-if="sortBy === 'endDate'"
                   :class="['sort-icon', sortOrder === 'asc' ? 'asc' : 'desc']"
                 ></i>
               </th>
               <th @click="handleSort('lastOccurrence')">
-                {{ $t('lastOccurrence') }}
+                Letztes Vorkommen
                 <i
                   v-if="sortBy === 'lastOccurrence'"
                   :class="['sort-icon', sortOrder === 'asc' ? 'asc' : 'desc']"
                 ></i>
               </th>
-              <th>{{ $t('status') }}</th>
-              <th>{{ $t('actions') }}</th>
+              <th>Status</th>
+              <th>Aktionen</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="appointment in filteredAppointments" :key="appointment.id">
               <td>
                 <div class="appointment-title">
-                  <strong>{{ appointment.title }}</strong>
-                  <div class="appointment-time">
-                    {{ formatTime(appointment.base.startDate) }} - {{ formatTime(appointment.endDate) }}
-                  </div>
-                  <div v-if="appointment.base.title" class="appointment-note" :title="appointment.base.title">
-                    <i class="fas fa-info-circle"></i> {{ truncateText(appointment.note, 40) }}
-                  </div>
+                  <strong>{{ appointment.base.title }}</strong>
+
+
                 </div>
               </td>
               <td>
                 <div class="calendar-info">
-                  <span class="calendar-color" :style="{ backgroundColor: appointment.base.calendar.color }"></span>
-                  {{ appointment.calendar.name }}
+                  <span class="calendar-color" :style="{ backgroundColor: appointment.base.calendar?.color || '#cccccc' }"></span>
+                  {{ appointment.base.calendar?.name || 'Unbekannter Kalender' }}
                 </div>
               </td>
-              <td>{{ formatDate(appointment.startDate) }}</td>
-              <td>{{ appointment.series?.repeatUntil ? formatDate(appointment.base.repeatUntil) : $t('noEndDate') }}</td>
+              <td>{{ formatDate(appointment.base.startDate) }}</td>
+              <td>{{ appointment.base.repeatUntil ? formatDate(appointment.base.repeatUntil) : 'Kein Enddatum' }}</td>
               <td>
                 <span :class="['status-badge', getStatusClass(appointment)]">
                   {{ getStatusText(getAppointmentStatus(appointment)) }}
                 </span>
               </td>
               <td class="actions">
-                <button class="btn-icon" :title="$t('extend')" @click="extendSeries(appointment)">
-                  <i class="fas fa-calendar-plus"></i>
+                <button class="btn-icon extend" title="Termin verlängern" @click="extendSeries(appointment)">
+                  <font-awesome-icon icon="calendar-plus" />
                 </button>
-                <button class="btn-icon" :title="$t('viewDetails')" @click="viewDetails(appointment)">
-                  <i class="fas fa-eye"></i>
+                <button class="btn-icon view" title="Details anzeigen" @click="viewDetails(appointment)">
+                  <font-awesome-icon icon="eye" />
                 </button>
               </td>
             </tr>
@@ -181,10 +177,19 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { findExpiringSeries, identifyCalendars, type Appointment } from '@/services/churchtools';
+import { 
+  fetchCalendars,
+  fetchAppointments,
+  findExpiringSeries,
+  identifyCalendars,
+  type Appointment,
+  type Calendar
+} from '@/services/churchtools'; 
 
-const { t } = useI18n();
+interface CalendarMapEntry {
+  name: string;
+  isGroup: boolean;
+}
 
 // State
 const isLoading = ref(true);
@@ -257,16 +262,16 @@ const filteredAppointments = computed(() => {
 
 // Available filters
 const statusOptions = [
-  { value: 'all', label: t('allStatuses') },
-  { value: 'active', label: t('active') },
-  { value: 'expiring', label: t('expiring') },
-  { value: 'expired', label: t('expired') },
+  { value: 'all', label: 'Alle Status' },
+  { value: 'active', label: 'Aktiv' },
+  { value: 'expiring', label: 'Läuft bald ab' },
+  { value: 'expired', label: 'Abgelaufen' },
 ];
 
 const calendarOptions = [
-  { value: 'all', label: t('allCalendars') },
-  { value: 'church', label: t('churchCalendar') },
-  { value: 'groups', label: t('groupCalendars') },
+  { value: 'all', label: 'Alle Kalender' },
+  { value: 'church', label: 'Gemeindekalender' },
+  { value: 'groups', label: 'Gruppenkalender' },
 ];
 
 // Fetch data from ChurchTools API
@@ -276,34 +281,92 @@ const fetchData = async () => {
   
   try {
     // First, identify all calendars
-    const { churchCalendars, groupCalendars } = await identifyCalendars();
+    const { publicCalendars } = await identifyCalendars();
     
     // Create calendar map for quick lookups
-    churchCalendars.forEach(cal => {
-      calendarMap.value.set(cal.id, { name: cal.name, isGroup: false });
-    });
-    groupCalendars.forEach(cal => {
-      calendarMap.value.set(cal.id, { name: cal.name, isGroup: true });
+    publicCalendars.forEach(cal => {
+      // Annahme: Gruppenkalender können anhand des Namens oder anderer Eigenschaften identifiziert werden
+      // Hier müssen wir die Logik anpassen, falls es ein anderes Kriterium gibt
+      const isGroup = cal.name.includes('Gruppe') || cal.name.includes('Team');
+      calendarMap.value.set(cal.id, { name: cal.name, isGroup });
     });
     
     // Fetch expiring series
     const expiringSeries = await findExpiringSeries(daysInAdvance.value);
-
-    appointments.value = expiringSeries;
+    
+    // Bereinige die Daten, um sicherzustellen, dass alle erforderlichen Felder vorhanden sind
+    appointments.value = expiringSeries.map(appointment => {
+      // Stelle sicher, dass das base-Objekt existiert
+      if (!appointment.base) {
+        appointment.base = {
+          ...appointment,
+          calendar: appointment.calendar || { id: 0, name: 'Unbekannt', color: '#cccccc' },
+          repeatUntil: appointment.series?.repeatUntil
+        };
+      }
+      return appointment;
+    });
     
   } catch (err) {
     console.error('Error fetching appointments:', err);
-    error.value = t('errorLoadingAppointments');
+    error.value = 'Fehler beim Laden der Termine. Bitte versuchen Sie es später erneut.';
   } finally {
     isLoading.value = false;
   }
 };
 
+// View appointment details
+const viewDetails = (appointment: Appointment) => {
+  // Hier können Sie eine Detailansicht öffnen oder eine Aktion ausführen
+  console.log('View details for appointment:', appointment);
+  
+  // Erstelle eine detaillierte Meldung mit den verfügbaren Informationen
+  const details = [
+    `Titel: ${appointment.base.title || appointment.title || 'Kein Titel'}`,
+    `Start: ${formatDate(appointment.startDate)} um ${formatTime(appointment.startDate)}`,
+    `Ende: ${formatDate(appointment.endDate)} um ${formatTime(appointment.endDate)}`,
+    `Kalender: ${appointment.base.calendar?.name || 'Unbekannt'}`,
+    `Wiederholung: ${appointment.series ? 'Ja' : 'Nein'}`,
+    `Läuft ab: ${appointment.base.repeatUntil ? formatDate(appointment.base.repeatUntil) : 'Kein Enddatum'}`,
+    `Notiz: ${appointment.base.note || 'Keine Notiz'}`
+  ].join('\n');
+  
+  alert(details);
+};
+
+// Extend appointment series
+const extendSeries = async (appointment: Appointment) => {
+  if (!confirm('Möchten Sie diese Terminserie wirklich verlängern?')) {
+    return;
+  }
+  
+  try {
+    // Hier würden Sie die Logik zum Verlängern der Terminserie implementieren
+    // Zum Beispiel einen API-Aufruf an ChurchTools
+    console.log('Extending series for appointment:', appointment);
+    
+    // Simuliere eine API-Antwort
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    alert('Terminserie wurde erfolgreich verlängert (Simulation).');
+    
+    // Daten aktualisieren
+    await fetchData();
+  } catch (err) {
+    console.error('Error extending series:', err);
+    alert('Fehler beim Verlängern der Terminserie. Bitte versuchen Sie es später erneut.');
+  }
+};
+
 // Get status of an appointment
 const getAppointmentStatus = (appointment: Appointment): string => {
-  if (!appointment.series?.repeatUntil) return 'active';
+  // Verwende repeatUntil aus series oder base, je nachdem was verfügbar ist
+  const repeatUntil = appointment.series?.repeatUntil || appointment.base?.repeatUntil;
   
-  const endDate = new Date(appointment.series.repeatUntil);
+  // Wenn es keine Wiederholung gibt, ist der Termin aktiv
+  if (!repeatUntil) return 'active';
+  
+  const endDate = new Date(repeatUntil);
   const today = new Date();
   const daysUntilEnd = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   
@@ -312,15 +375,23 @@ const getAppointmentStatus = (appointment: Appointment): string => {
   return 'active';
 };
 
+// Get count of appointments by status
+const getCountByStatus = (status: string): number => {
+  if (status === 'all') return appointments.value.length;
+  return appointments.value.filter(appointment => {
+    return getAppointmentStatus(appointment) === status;
+  }).length;
+};
+
 // Get status display text
 const getStatusText = (status: string): string => {
   switch (status) {
     case 'active':
-      return t('active');
+      return 'Aktiv';
     case 'expiring':
-      return t('expiring');
+      return 'Läuft bald ab';
     case 'expired':
-      return t('expired');
+      return 'Abgelaufen';
     default:
       return status;
   }
@@ -334,6 +405,13 @@ const formatDate = (dateString: string) => {
 // Format time for display
 const formatTime = (dateString: string) => {
   return new Date(dateString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
+
+// Truncate text to a specified length and add ellipsis if needed
+const truncateText = (text: string | undefined, maxLength: number): string => {
+  if (!text) return '';
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength) + '...';
 };
 
 // Get status class
@@ -364,6 +442,391 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* Action buttons */
+.actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding: 8px;
+  visibility: visible;
+  opacity: 1;
+}
+
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+  color: white;
+  font-size: 16px;
+}
+
+.btn-icon.view {
+  background-color: #4caf50; /* Green */
+}
+
+.btn-icon.extend {
+  background-color: #f44336; /* Red */
+}
+
+.btn-icon:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.btn-icon:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* Ensure icons are visible */
+.btn-icon i {
+  color: white;
+  font-size: 16px;
+}
+
+/* Tooltip */
+.btn-icon[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  background: #333;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 1000;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  pointer-events: none;
+}
+
+/* Base styles */
+.expiring-appointments-admin {
+  padding: 1.5rem;
+  background-color: var(--ct-bg-primary, #ffffff);
+  color: var(--ct-text-primary, #2c3e50);
+  min-height: 100%;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Header styles */
+.header {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: var(--ct-bg-secondary, #f8f9fa);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.75rem;
+  color: var(--ct-primary, #3498db);
+}
+
+.subtitle {
+  margin: 0.5rem 0 1.5rem;
+  color: var(--ct-text-secondary, #7f8c8d);
+}
+
+/* Stats summary */
+.stats-summary {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.stat-card {
+  flex: 1;
+  min-width: 150px;
+  padding: 1.5rem;
+  background: var(--ct-bg-secondary, #f8f9fa);
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--ct-primary, #3498db);
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  color: var(--ct-text-secondary, #7f8c8d);
+  font-size: 0.9rem;
+}
+
+/* Filters */
+.filters {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 1rem;
+  background: var(--ct-bg-secondary, #f8f9fa);
+  border-radius: 8px;
+}
+
+.search-box {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 0.5rem 1rem 0.5rem 2.5rem;
+  border: 1px solid var(--ct-border-color, #e0e0e0);
+  border-radius: 4px;
+  font-size: 0.9rem;
+  background-color: var(--ct-bg-primary, #ffffff);
+  color: var(--ct-text-primary, #2c3e50);
+}
+
+.search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ct-text-secondary, #7f8c8d);
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filter-group label {
+  font-size: 0.9rem;
+  color: var(--ct-text-secondary, #7f8c8d);
+}
+
+.filter-group select,
+.filter-group input[type="number"] {
+  padding: 0.5rem;
+  border: 1px solid var(--ct-border-color, #e0e0e0);
+  border-radius: 4px;
+  background-color: var(--ct-bg-primary, #ffffff);
+  color: var(--ct-text-primary, #2c3e50);
+}
+
+/* Table styles */
+.appointments-table {
+  background: var(--ct-bg-primary, #ffffff);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-top: 1.5rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--ct-border-color, #e0e0e0);
+}
+
+th {
+  background-color: var(--ct-bg-secondary, #f8f9fa);
+  font-weight: 600;
+  color: var(--ct-text-primary, #2c3e50);
+  cursor: pointer;
+  user-select: none;
+}
+
+th:hover {
+  background-color: var(--ct-bg-hover, #f0f0f0);
+}
+
+th .sort-icon {
+  margin-left: 0.5rem;
+  color: var(--ct-primary, #3498db);
+}
+
+th .sort-icon.asc::after {
+  content: '↑';
+}
+
+th .sort-icon.desc::after {
+  content: '↓';
+}
+
+tr:hover {
+  background-color: var(--ct-bg-hover, #f8f9fa);
+}
+
+/* Status badges */
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.status-expiring {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status-expired {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.status-ok {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+/* Calendar color indicator */
+.calendar-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.calendar-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* Buttons */
+.ct-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.ct-btn-primary {
+  background-color: var(--ct-primary, #3498db);
+  color: white;
+}
+
+.ct-btn-primary:hover {
+  background-color: var(--ct-primary-dark, #2980b9);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.ct-btn-outline {
+  background: transparent;
+  border: 1px solid var(--ct-primary, #3498db);
+  color: var(--ct-primary, #3498db);
+}
+
+.ct-btn-outline:hover {
+  background-color: rgba(52, 152, 219, 0.1);
+}
+
+/* Loading and error states */
+.loading, .error, .no-results {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+  background: var(--ct-bg-secondary, #f8f9fa);
+  border-radius: 8px;
+  min-height: 200px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(52, 152, 219, 0.2);
+  border-radius: 50%;
+  border-top-color: var(--ct-primary, #3498db);
+  animation: spin 1s ease-in-out infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+error {
+  color: #dc3545;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .filter-group {
+    width: 100%;
+  }
+  
+  .search-box {
+    width: 100%;
+  }
+  
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .expiring-appointments-admin {
+    --ct-bg-primary: #1e1e2d;
+    --ct-bg-secondary: #2a2a3c;
+    --ct-text-primary: #f0f0f0;
+    --ct-text-secondary: #a0a0a0;
+    --ct-border-color: #3a3a4a;
+    --ct-bg-hover: #2f2f3f;
+  }
+  
+  .appointments-table {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  }
+  
+  input, select {
+    background-color: #2a2a3c !important;
+    border-color: #3a3a4a !important;
+    color: #f0f0f0 !important;
+  }
+}
 .expiring-appointments-admin {
   max-width: 1400px;
   margin: 0 auto;
