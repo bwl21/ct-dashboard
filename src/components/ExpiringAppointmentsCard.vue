@@ -81,30 +81,27 @@
                   <h4 class="appointment-title" :title="appointment.title">
                     {{ appointment.title }}
                   </h4>
-                  <span class="calendar-tag" :style="{ backgroundColor: appointment.calendar.color }">
-                    {{ appointment.calendar.name }}
+                  <span v-if="getCalendarName(appointment)" class="calendar-tag" :style="{ backgroundColor: getCalendarColor(appointment) }">
+                    {{ getCalendarName(appointment) }}
                   </span>
                 </div>
                 
                 <div class="appointment-details">
                   <div class="detail-row">
                     <i class="fas fa-calendar-alt"></i>
-                    <span>{{ formatDate(appointment.startDate) }}</span>
-                    <span class="time">{{ formatTime(appointment.startDate) }} - {{ formatTime(appointment.endDate) }}</span>
-                  </div>
+                    <span>{{ formatDate(appointment.base.startDate) }}</span>
+                    {{ appointment.base.title}}
+                    </div>
                   
-                  <div v-if="appointment.series?.repeatUntil" class="detail-row">
+                  <div v-if="appointment.base?.repeatUntil" class="detail-row">
                     <i class="fas fa-flag-checkered"></i>
-                    <span>Endet am {{ formatDate(appointment.series.repeatUntil) }}</span>
-                    <span class="days-left">
-                      <i class="fas" :class="getDaysLeftIcon(appointment)"></i>
-                      {{ getDaysLeftText(appointment) }}
-                    </span>
+                    <span>Endet am {{ formatDate(appointment.base.repeatUntil) }}</span>
+
                   </div>
                   
-                  <div v-if="appointment.note" class="appointment-note">
+                  <div v-if="appointment.base.title" class="appointment-note">
                     <i class="fas fa-info-circle"></i>
-                    <span>{{ truncateText(appointment.note, 60) }}</span>
+                    <span>{{ truncateText(appointment.base.title, 60) }}</span>
                   </div>
                 </div>
                 
@@ -172,6 +169,26 @@ const visibleAppointments = computed(() => {
   return showAll.value ? appointments.value : appointments.value.slice(0, 3);
 });
 
+// Safe calendar accessors
+const getCalendarName = (appointment: Appointment) => {
+  if ('base' in appointment) {
+    return appointment.base.calendar?.name || 'Unbekannter Kalender';
+  }
+  return appointment.calendar?.name || 'Unbekannter Kalender';
+};
+
+const getCalendarColor = (appointment: Appointment) => {
+  let color = '#cccccc'; // Default gray color
+  
+  if ('base' in appointment) {
+    color = appointment.base.calendar?.color || color;
+  } else {
+    color = appointment.calendar?.color || color;
+  }
+  
+  return color;
+};
+
 const hasMore = computed(() => {
   return appointments.value.length > 3;
 });
@@ -186,9 +203,9 @@ const expiredCount = computed(() => {
 
 // Get status of an appointment
 const getAppointmentStatus = (appointment: Appointment): string => {
-  if (!appointment.series?.repeatUntil) return 'active';
+  if (!appointment.base?.repeatUntil) return 'active';
   
-  const endDate = new Date(appointment.series.repeatUntil);
+  const endDate = new Date(appointment.base.repeatUntil);
   const today = new Date();
   const daysUntilEnd = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   
@@ -199,9 +216,9 @@ const getAppointmentStatus = (appointment: Appointment): string => {
 
 // Get days left until the appointment series ends
 const getDaysLeft = (appointment: Appointment): number => {
-  if (!appointment.series?.repeatUntil) return 999;
+  if (!appointment.base?.repeatUntil) return 999;
   
-  const endDate = new Date(appointment.series.repeatUntil);
+  const endDate = new Date(appointment.base.repeatUntil);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
@@ -216,7 +233,15 @@ const fetchData = async () => {
   
   try {
     const expiringSeries = await findExpiringSeries(daysInAdvance.value);
+    
+    // Log the first few appointments to debug date issues
+    console.log('Fetched appointments:', expiringSeries);
+    if (expiringSeries.length > 0) {
+      console.log('First appointment structure:', JSON.parse(JSON.stringify(expiringSeries[0])));
+    }
+
     appointments.value = expiringSeries;
+
   } catch (err) {
     console.error('Error fetching appointments:', err);
     error.value = 'Fehler beim Laden der Termine. Bitte versuchen Sie es erneut.';
@@ -226,8 +251,31 @@ const fetchData = async () => {
 };
 
 // Format date for display
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString();
+const formatDate = (dateString: string | undefined | null): string => {
+  if (!dateString) {
+    console.warn('formatDate received undefined or null dateString');
+    return 'Ungültiges Datum';
+  }
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) {
+    console.warn('Invalid date string in formatDate:', dateString);
+    return 'Ungültiges Datum';
+  }
+  return date.toLocaleDateString();
+};
+
+// Format time for display
+const formatTime = (dateString: string | undefined | null): string => {
+  if (!dateString) {
+    console.warn('formatTime received undefined or null dateString');
+    return '--:--';
+  }
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) {
+    console.warn('Invalid date string in formatTime:', dateString);
+    return '--:--';
+  }
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
 
 // Get status class
@@ -258,6 +306,13 @@ const toggleShowAll = () => {
 // Refresh data
 const refreshData = () => {
   fetchData();
+};
+
+// Text truncation utility
+const truncateText = (text: string, maxLength: number): string => {
+  if (!text) return '';
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength) + '...';
 };
 
 // Initialize component
@@ -597,6 +652,9 @@ onMounted(() => {
   font-size: 0.7rem;
   font-weight: 600;
   color: white;
+  background-color: #cccccc; /* Fallback color */
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
   padding: 0.2rem 0.6rem;
   border-radius: 12px;
   white-space: nowrap;
