@@ -143,21 +143,21 @@
                 <div class="appointment-title">
                   <strong>{{ appointment.title }}</strong>
                   <div class="appointment-time">
-                    {{ formatTime(appointment.startDate) }} - {{ formatTime(appointment.endDate) }}
+                    {{ formatTime(appointment.base.startDate) }} - {{ formatTime(appointment.endDate) }}
                   </div>
-                  <div v-if="appointment.note" class="appointment-note" :title="appointment.note">
+                  <div v-if="appointment.base.title" class="appointment-note" :title="appointment.base.title">
                     <i class="fas fa-info-circle"></i> {{ truncateText(appointment.note, 40) }}
                   </div>
                 </div>
               </td>
               <td>
                 <div class="calendar-info">
-                  <span class="calendar-color" :style="{ backgroundColor: appointment.calendar.color }"></span>
+                  <span class="calendar-color" :style="{ backgroundColor: appointment.base.calendar.color }"></span>
                   {{ appointment.calendar.name }}
                 </div>
               </td>
               <td>{{ formatDate(appointment.startDate) }}</td>
-              <td>{{ appointment.series?.repeatUntil ? formatDate(appointment.series.repeatUntil) : $t('noEndDate') }}</td>
+              <td>{{ appointment.series?.repeatUntil ? formatDate(appointment.base.repeatUntil) : $t('noEndDate') }}</td>
               <td>
                 <span :class="['status-badge', getStatusClass(appointment)]">
                   {{ getStatusText(getAppointmentStatus(appointment)) }}
@@ -288,6 +288,7 @@ const fetchData = async () => {
     
     // Fetch expiring series
     const expiringSeries = await findExpiringSeries(daysInAdvance.value);
+
     appointments.value = expiringSeries;
     
   } catch (err) {

@@ -18,39 +18,16 @@ export interface Calendar {
   };
 }
 
-export interface Appointment {
-  id: number;
-  title: string;
-  startDate: string;
-  endDate: string;
-  allDay: boolean;
-  note: string;
-  appointmentType: {
-    id: number;
-    name: string;
-    nameTranslated: string;
-  };
-  baseAppointmentId: number | null;
-  series: {
-    id: number;
-    repeatId: number;
-    repeatFrequency: string;
-    repeatUntil: string | null;
-    repeatOption: any;
-  } | null;
-  calendar: {
-    id: number;
-    name: string;
-    nameTranslated: string;
-  };
-}
+import type { AppointmentBase, AppointmentCalculated } from '../ct-types';
+
+type Appointment = AppointmentBase | AppointmentCalculated;
 
 /**
  * Fetches all calendars from ChurchTools
  */
 export async function fetchCalendars(): Promise<Calendar[]> {
-  const response = await churchtoolsClient.get('/calendars');
-  return response.data || [];
+    const response = await churchtoolsClient.get<Calendar[]>('/calendars');
+    return response || [];
 }
 
 /**
@@ -63,44 +40,31 @@ export async function fetchAppointments(
 ): Promise<Appointment[]> {
   const start = startDate.toISOString().split('T')[0];
   const end = endDate.toISOString().split('T')[0];
-  
-  const response = await churchtoolsClient.get('/calendars/appointments', {
-    params: {
-      from: start,
-      to: end,
-      calendar_ids: calendarIds.join(',')
-    }
-  });
-  
-  return response.data || [];
+
+  const response = await churchtoolsClient.get<Appointment[]>('/calendars/appointments',
+      {
+        from: start,
+        to: end,
+        'calendar_ids[]': calendarIds
+      });
+
+  // Ensure we always return an array of Appointment objects
+  return Array.isArray(response) ? response : [];
 }
 
 /**
  * Identifies church and group calendars
  */
 export async function identifyCalendars(): Promise<{
-  churchCalendars: Calendar[];
-  groupCalendars: Calendar[];
+  publicCalendars: Calendar[]
 }> {
-  const calendars = await fetchCalendars();
-  
+  const calendars = await   fetchCalendars();
   // Filter out private calendars and sort by name
   const publicCalendars = calendars
     .filter(cal => !cal.isPrivate)
     .sort((a, b) => a.name.localeCompare(b.name));
-  
-  // This is a simple heuristic - adjust based on your ChurchTools setup
-  const churchCalendars = publicCalendars.filter(cal => 
-    !cal.name.toLowerCase().includes('gruppe') && 
-    !cal.name.toLowerCase().includes('team')
-  );
-  
-  const groupCalendars = publicCalendars.filter(cal => 
-    cal.name.toLowerCase().includes('gruppe') || 
-    cal.name.toLowerCase().includes('team')
-  );
-  
-  return { churchCalendars, groupCalendars };
+
+  return { publicCalendars};
 }
 
 /**
@@ -110,35 +74,45 @@ export async function findExpiringSeries(daysInAdvance: number = 60): Promise<Ap
   const now = new Date();
   const endDate = new Date();
   endDate.setDate(now.getDate() + daysInAdvance);
-  
+
   // Get all relevant calendars
-  const { churchCalendars, groupCalendars } = await identifyCalendars();
+  const { publicCalendars } = await identifyCalendars();
+
+  // Ensure we have calendar IDs
+  if (!publicCalendars.length ) {
+    console.warn('No calendars found');
+    return [];
+  }
+
+  // Get all calendar IDs including the default (0) calendar
   const allCalendarIds = [
-    ...churchCalendars.map(c => c.id),
-    ...groupCalendars.map(c => c.id)
-  ];
-  
+    ...publicCalendars.map(c => c.id),
+  ].filter((v, i, a) => a.indexOf(v) === i); // Remove duplicates
+
+  console.log('Fetching appointments for calendar IDs:', allCalendarIds);
   // Fetch appointments
   const appointments = await fetchAppointments(allCalendarIds, now, endDate);
-  
+
   // Find recurring appointments that are ending soon
   const expiringSeries = appointments.filter(appointment => {
-    // Only consider recurring appointments
-    if (!appointment.series) return false;
+    // Handle both AppointmentBase and AppointmentCalculated types
+    const base = 'base' in appointment ? appointment.base : appointment;
     
+    // Only consider recurring appointments with a repeatUntil date
+    if (!base.repeatUntil) return false;
+
     // Check if the series has an end date that's within our time frame
-    if (appointment.series.repeatUntil) {
-      const repeatUntil = new Date(appointment.series.repeatUntil);
-      return repeatUntil >= now && repeatUntil <= endDate;
-    }
-    
-    return false;
+    const endDateObj = new Date(base.repeatUntil);
+    return endDateObj >= now ;
   });
-  
+
   // Remove duplicates (multiple instances of the same series)
   const uniqueSeries = Array.from(new Map(
-    expiringSeries.map(item => [item.series?.id, item])
+    expiringSeries.map(item => {
+      const base = 'base' in item ? item.base : item;
+      return [base.id, item]; // Using base.id as the unique identifier
+    })
   ).values());
-  
+debugger;
   return uniqueSeries;
 }
