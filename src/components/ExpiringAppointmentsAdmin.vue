@@ -1,26 +1,43 @@
 <template>
   <div class="expiring-appointments-admin">
-    <div class="header">
-      <div class="header-content">
-        <h1>Auslaufende Termine</h1>
-        <button @click="refreshData" class="btn btn-icon" title="Aktualisieren">
-          <i class="fas fa-sync-alt" :class="{ 'fa-spin': isLoading }"></i>
-        </button>
+    <!-- Header Card -->
+    <div class="ct-card header-card" style="width: 100%; border-radius: 0;">
+      <div class="ct-card-header">
+        <h1 class="ct-card-title">Auslaufende Termine - Admin Panel</h1>
       </div>
-      <p class="subtitle">
-        Verwalten Sie auslaufende Terminserien
-      </p>
-      
-      <div class="days-in-advance">
-        <label>Zeige Termine, die in den nächsten:</label>
-        <input 
-          type="number" 
-          v-model.number="daysInAdvance" 
-          min="1" 
-          max="365"
-          @change="refreshData"
-        />
-        <span>Tagen enden</span>
+      <div class="ct-card-body">
+        <p class="description">Überwachung und Verwaltung aller auslaufenden Terminserien</p>
+        <div class="days-in-advance">
+          <label>Zeige Serientermine, die in den nächsten:</label>
+          <input 
+            type="number" 
+            v-model.number="daysInAdvance" 
+            min="1" 
+            max="365"
+            @change="refreshData"
+            class="ct-input"
+          />
+          <span>Tagen enden</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-container">
+      <!-- Controls Card -->
+      <div class="ct-card controls-card">
+        <div class="ct-card-body">
+          <div class="controls-row">
+            <div class="button-group">
+              <button
+                @click="refreshData"
+                class="ct-btn ct-btn-primary refresh-btn"
+                :disabled="isLoading"
+              >
+                {{ isLoading ? 'Lädt...' : 'Aktualisieren' }}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -41,135 +58,201 @@
     <!-- Content -->
     <div v-else class="content">
       <!-- Stats Summary -->
-      <div class="stats-summary">
-        <div class="stat-card">
-          <div class="stat-value">{{ filteredAppointments.length }}</div>
-          <div class="stat-label">Gesamte Termine</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">{{ getCountByStatus('expiring') }}</div>
-          <div class="stat-label">Laufen bald ab</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">{{ getCountByStatus('expired') }}</div>
-          <div class="stat-label">Abgelaufen</div>
+      <div class="ct-card stats-card">
+        <div class="ct-card-body">
+          <div class="stats-summary">
+            <div class="stat-card">
+              <div class="stat-value">{{ filteredAppointments.length }}</div>
+              <div class="stat-label">Gesamte Termine</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">{{ getCountByStatus('expiring') }}</div>
+              <div class="stat-label">Laufen bald ab</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">{{ getCountByStatus('expired') }}</div>
+              <div class="stat-label">Abgelaufen</div>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- Filters -->
-      <div class="filters">
-        <div class="search-box">
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Termine durchsuchen..."
-          />
-          <span class="search-icon">
-            <i class="fas fa-search"></i>
-          </span>
-        </div>
-
-        <div class="filter-group">
-          <label>Status:</label>
-          <select v-model="selectedStatus">
-            <option
-              v-for="option in statusOptions"
-              :key="option.value"
-              :value="option.value"
-            >
-              {{ option.label }}
-            </option>
-          </select>
-        </div>
-
-        <div class="filter-group">
-          <label>Kalender:</label>
-          <select v-model="selectedCalendar">
-            <option
-              v-for="option in calendarOptions"
-              :key="option.value"
-              :value="option.value"
-            >
-              {{ option.label }}
-            </option>
-          </select>
+      <div class="ct-card filters-card">
+        <div class="ct-card-body">
+          <div class="filter-group">
+            <div class="filter-item">
+              <label>Status:</label>
+              <select v-model="selectedStatus" class="ct-select">
+                <option
+                  v-for="option in statusOptions"
+                  :key="option.value"
+                  :value="option.value"
+                >
+                  {{ option.label }}
+                </option>
+              </select>
+            </div>
+            <div class="filter-item">
+              <label>Kalender:</label>
+              <select v-model="selectedCalendar" class="ct-select">
+                <option
+                  v-for="option in calendarOptions"
+                  :key="option.value"
+                  :value="option.value"
+                >
+                  {{ option.label }}
+                </option>
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- Appointments Table -->
-      <div class="appointments-table">
-        <div v-if="filteredAppointments.length === 0" class="no-results">
-          Keine Termine gefunden
+    <div class="ct-card table-card">
+      <div class="ct-card-header">
+        <h3 class="ct-card-title">
+          Auslaufende Termine ({{ filteredAppointments.length }})
+        </h3>
+      </div>
+      <div class="ct-card-body">
+        <div v-if="filteredAppointments.length === 0" class="empty-state">
+          <p>Keine Termine gefunden</p>
         </div>
         
-        <table v-else>
-          <thead>
-            <tr>
-              <th @click="handleSort('title')">
-                Titel
-                <i
-                  v-if="sortBy === 'title'"
-                  :class="['sort-icon', sortOrder === 'asc' ? 'asc' : 'desc']"
-                ></i>
-              </th>
-              <th @click="handleSort('calendar')">
-                Kalender
-                <i
-                  v-if="sortBy === 'calendar'"
-                  :class="['sort-icon', sortOrder === 'asc' ? 'asc' : 'desc']"
-                ></i>
-              </th>
-              <th @click="handleSort('endDate')">
-                Nächstes Vorkommen
-                <i
-                  v-if="sortBy === 'endDate'"
-                  :class="['sort-icon', sortOrder === 'asc' ? 'asc' : 'desc']"
-                ></i>
-              </th>
-              <th @click="handleSort('lastOccurrence')">
-                Letztes Vorkommen
-                <i
-                  v-if="sortBy === 'lastOccurrence'"
-                  :class="['sort-icon', sortOrder === 'asc' ? 'asc' : 'desc']"
-                ></i>
-              </th>
-              <th>Status</th>
-              <th>Aktionen</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="appointment in filteredAppointments" :key="appointment.id">
-              <td>
-                <div class="appointment-title">
-                  <strong>{{ appointment.base.title }}</strong>
-
-
-                </div>
-              </td>
-              <td>
-                <div class="calendar-info">
-                  <span class="calendar-color" :style="{ backgroundColor: appointment.base.calendar?.color || '#cccccc' }"></span>
-                  {{ appointment.base.calendar?.name || 'Unbekannter Kalender' }}
-                </div>
-              </td>
-              <td>{{ formatDate(appointment.base.startDate) }}</td>
-              <td>{{ appointment.base.repeatUntil ? formatDate(appointment.base.repeatUntil) : 'Kein Enddatum' }}</td>
-              <td>
-                <span :class="['status-badge', getStatusClass(appointment)]">
-                  {{ getStatusText(getAppointmentStatus(appointment)) }}
-                </span>
-              </td>
-              <td class="actions">
-                <button class="btn-icon extend" title="Termin verlängern" @click="extendSeries(appointment)">
-                  <font-awesome-icon icon="calendar-plus" />
-                </button>
-                <button class="btn-icon view" title="Details anzeigen" @click="viewDetails(appointment)">
-                  <font-awesome-icon icon="eye" />
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div v-else class="table-container">
+          <table>
+              <thead>
+                <tr>
+                    <th 
+                    @click="handleSort('title')" 
+                    class="sortable resizable"
+                    :class="{ active: sortBy === 'title' }"
+                    :style="{ width: columnWidths[0] + 'px' }"
+                  >
+                    <div class="header-content">
+                      <span>Titel</span>
+                      <span v-if="sortBy === 'title'" class="sort-indicator">
+                        {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                      </span>
+                    </div>
+                    <div class="resize-handle" @mousedown="startResize($event, 0)"></div>
+                  </th>
+                  <th 
+                    @click="handleSort('calendar')" 
+                    class="sortable resizable"
+                    :class="{ active: sortBy === 'calendar' }"
+                    :style="{ width: columnWidths[1] + 'px' }"
+                  >
+                    <div class="header-content">
+                      <span>Kalender</span>
+                      <span v-if="sortBy === 'calendar'" class="sort-indicator">
+                        {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                      </span>
+                    </div>
+                    <div class="resize-handle" @mousedown="startResize($event, 1)"></div>
+                  </th>
+                  <th 
+                    @click="handleSort('startDate')" 
+                    class="sortable resizable"
+                    :class="{ active: sortBy === 'startDate' }"
+                    :style="{ width: columnWidths[2] + 'px' }"
+                  >
+                    <div class="header-content">
+                      <span>Nächstes Vorkommen</span>
+                      <span v-if="sortBy === 'startDate'" class="sort-indicator">
+                        {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                      </span>
+                    </div>
+                    <div class="resize-handle" @mousedown="startResize($event, 2)"></div>
+                  </th>
+                  <th 
+                    @click="handleSort('repeatUntil')" 
+                    class="sortable resizable"
+                    :class="{ active: sortBy === 'repeatUntil' }"
+                    :style="{ width: columnWidths[3] + 'px' }"
+                  >
+                    <div class="header-content">
+                      <span>Letztes Vorkommen</span>
+                      <span v-if="sortBy === 'repeatUntil'" class="sort-indicator">
+                        {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                      </span>
+                    </div>
+                    <div class="resize-handle" @mousedown="startResize($event, 3)"></div>
+                  </th>
+                  <th 
+                    @click="handleSort('status')" 
+                    class="sortable resizable"
+                    :class="{ active: sortBy === 'status' }"
+                    :style="{ width: columnWidths[4] + 'px' }"
+                  >
+                    <div class="header-content">
+                      <span>Status</span>
+                      <span v-if="sortBy === 'status'" class="sort-indicator">
+                        {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                      </span>
+                    </div>
+                    <div class="resize-handle" @mousedown="startResize($event, 4)"></div>
+                  </th>
+                  <th class="actions-header" :style="{ width: columnWidths[5] + 'px' }">
+                    <div class="header-content">
+                      <span>Aktionen</span>
+                    </div>
+                    <div class="resize-handle" @mousedown="startResize($event, 5)"></div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="appointment in filteredAppointments" :key="appointment.id" class="appointment-row">
+                  <td class="appointment-title" :style="{ width: columnWidths[0] + 'px' }">
+                    <strong>{{ truncateText(appointment.base.title, 40) }}</strong>
+                  </td>
+                  <td class="calendar-cell" :style="{ width: columnWidths[1] + 'px' }">
+                    <div 
+                      class="calendar-info"
+                      :style="{
+                        borderLeft: `3px solid ${appointment.base.calendar?.color || '#cccccc'}`,
+                        paddingLeft: '8px'
+                      }"
+                    >
+                      <span class="calendar-name">
+                        {{ appointment.base.calendar?.name || 'Unbekannter Kalender' }}
+                      </span>
+                    </div>
+                  </td>
+                  <td class="date-cell" :style="{ width: columnWidths[2] + 'px' }">
+                    {{ formatDate(appointment.base.startDate) }}
+                  </td>
+                  <td class="date-cell" :style="{ width: columnWidths[3] + 'px' }">
+                    {{ appointment.base.repeatUntil ? formatDate(appointment.base.repeatUntil) : 'Kein Enddatum' }}
+                  </td>
+                  <td class="status-cell" :style="{ width: columnWidths[4] + 'px' }">
+                    <span :class="['status-badge', getStatusClass(appointment)]">
+                      {{ getStatusText(getAppointmentStatus(appointment)) }}
+                    </span>
+                  </td>
+                  <td class="actions">
+                    <button 
+                      class="btn-icon extend" 
+                      title="Termin verlängern" 
+                      @click="extendSeries(appointment)"
+                    >
+                      <font-awesome-icon icon="calendar-plus" />
+                    </button>
+                    <button 
+                      class="btn-icon view" 
+                      title="Details anzeigen" 
+                      @click="viewDetails(appointment)"
+                    >
+                      <font-awesome-icon icon="eye" />
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -194,10 +277,52 @@ interface CalendarMapEntry {
 // State
 const isLoading = ref(true);
 const error = ref<string | null>(null);
-const searchQuery = ref('');
 const selectedStatus = ref<string>('all');
 const selectedCalendar = ref<string>('all');
 const sortBy = ref('endDate');
+
+// Column resizing
+const columnWidths = ref<number[]>([200, 180, 160, 160, 120, 100]);
+const isResizing = ref(false);
+const resizingColumn = ref(-1);
+const startX = ref(0);
+const startWidth = ref(0);
+
+const startResize = (event: MouseEvent, columnIndex: number) => {
+  event.preventDefault();
+  event.stopPropagation();
+  
+  isResizing.value = true;
+  resizingColumn.value = columnIndex;
+  startX.value = event.clientX;
+  startWidth.value = columnWidths.value[columnIndex];
+  
+  document.addEventListener('mousemove', handleResize);
+  document.addEventListener('mouseup', stopResize);
+  document.body.style.cursor = 'col-resize';
+  document.body.style.userSelect = 'none';
+};
+
+const handleResize = (event: MouseEvent) => {
+  if (!isResizing.value || resizingColumn.value === -1) return;
+  
+  const deltaX = event.clientX - startX.value;
+  const newWidth = Math.max(80, startWidth.value + deltaX); // Minimum width of 80px
+  
+  const newWidths = [...columnWidths.value];
+  newWidths[resizingColumn.value] = newWidth;
+  columnWidths.value = newWidths;
+};
+
+const stopResize = () => {
+  isResizing.value = false;
+  resizingColumn.value = -1;
+  
+  document.removeEventListener('mousemove', handleResize);
+  document.removeEventListener('mouseup', stopResize);
+  document.body.style.cursor = '';
+  document.body.style.userSelect = '';
+};
 const sortOrder = ref('asc');
 const daysInAdvance = ref(60);
 
@@ -207,57 +332,57 @@ const calendarMap = ref<Map<number, {name: string, isGroup: boolean}>>(new Map()
 
 // Computed properties
 const filteredAppointments = computed(() => {
-  return appointments.value.filter(appointment => {
-    // Filter by status
-    if (selectedStatus.value !== 'all') {
-      const status = getAppointmentStatus(appointment);
-      if (status !== selectedStatus.value) {
-        return false;
-      }
-    }
-    
-    // Filter by calendar type
-    if (selectedCalendar.value !== 'all') {
-      const calendar = calendarMap.value.get(appointment.calendar.id);
-      if (!calendar) return false;
+  let result = [...appointments.value];
+  
+  // Apply status filter
+  if (selectedStatus.value !== 'all') {
+    result = result.filter(appointment => 
+      getAppointmentStatus(appointment) === selectedStatus.value
+    );
+  }
+  
+  // Apply calendar filter
+  if (selectedCalendar.value !== 'all') {
+    result = result.filter(appointment => 
+      appointment.base.calendar?.id?.toString() === selectedCalendar.value
+    );
+  }
+  
+  // Apply sorting
+  if (sortBy.value) {
+    result.sort((a, b) => {
+      let valueA, valueB;
       
-      if (selectedCalendar.value === 'church' && calendar.isGroup) {
-        return false;
+      if (sortBy.value === 'calendar') {
+        valueA = a.base.calendar?.name?.toLowerCase() || '';
+        valueB = b.base.calendar?.name?.toLowerCase() || '';
+      } else if (sortBy.value === 'title') {
+        valueA = a.base.title.toLowerCase();
+        valueB = b.base.title.toLowerCase();
+      } else if (sortBy.value === 'startDate') {
+        valueA = new Date(a.base.startDate).getTime();
+        valueB = new Date(b.base.startDate).getTime();
+      } else if (sortBy.value === 'repeatUntil') {
+        valueA = a.base.repeatUntil ? new Date(a.base.repeatUntil).getTime() : 0;
+        valueB = b.base.repeatUntil ? new Date(b.base.repeatUntil).getTime() : 0;
+      } else if (sortBy.value === 'status') {
+        valueA = getAppointmentStatus(a);
+        valueB = getAppointmentStatus(b);
       }
-      if (selectedCalendar.value === 'groups' && !calendar.isGroup) {
-        return false;
+      
+      if (typeof valueA === 'string' && typeof valueB === 'string') {
+        return sortOrder.value === 'asc' 
+          ? valueA.localeCompare(valueB)
+          : valueB.localeCompare(valueA);
       }
-    }
-    
-    // Filter by search query
-    if (searchQuery.value && 
-        !appointment.title.toLowerCase().includes(searchQuery.value.toLowerCase())) {
-      return false;
-    }
-    
-    return true;
-  }).sort((a, b) => {
-    let comparison = 0;
-    
-    switch (sortBy.value) {
-      case 'title':
-        comparison = a.title.localeCompare(b.title);
-        break;
-      case 'calendar':
-        comparison = a.calendar.name.localeCompare(b.calendar.name);
-        break;
-      case 'lastOccurrence':
-        comparison = new Date(a.series?.repeatUntil || a.endDate).getTime() - 
-                     new Date(b.series?.repeatUntil || b.endDate).getTime();
-        break;
-      case 'endDate':
-      default:
-        comparison = new Date(a.endDate).getTime() - new Date(b.endDate).getTime();
-        break;
-    }
-    
-    return sortOrder.value === 'asc' ? comparison : -comparison;
-  });
+      
+      return sortOrder.value === 'asc' 
+        ? (valueA < valueB ? -1 : valueA > valueB ? 1 : 0)
+        : (valueA > valueB ? -1 : valueA < valueB ? 1 : 0);
+    });
+  }
+  
+  return result;
 });
 
 // Available filters
@@ -442,279 +567,321 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* Table resizing */
+.resize-handle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 5px;
+  height: 100%;
+  background: transparent;
+  cursor: col-resize;
+  z-index: 1;
+}
+
+.resize-handle:hover,
+.resize-handle:active {
+  background-color: var(--ct-primary, #3498db);
+  opacity: 0.5;
+}
+
+th {
+  position: relative;
+  user-select: none;
+}
+
+th.sortable {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+th.sortable:hover {
+  background-color: var(--ct-bg-tertiary, #f1f3f5);
+}
+
+th.active {
+  color: var(--ct-primary, #3498db);
+  font-weight: 600;
+}
+
+/* Table layout */
+table {
+  table-layout: fixed;
+  min-width: 100%;
+}
+
+th, td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+/* Calendar info cell */
+.calendar-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.calendar-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Status badges */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
 /* Action buttons */
 .actions {
   display: flex;
-  gap: 8px;
+  gap: 0.5rem;
   justify-content: flex-end;
-  padding: 8px;
-  visibility: visible;
-  opacity: 1;
+  padding: 0.5rem;
 }
 
-.btn-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  border: none;
-  transition: all 0.2s ease;
-  color: white;
-  font-size: 16px;
+/* Empty state */
+.empty-state {
+  padding: 2rem;
+  text-align: center;
+  color: var(--ct-text-secondary, #6c757d);
 }
 
-.btn-icon.view {
-  background-color: #4caf50; /* Green */
+/* Responsive table */
+@media (max-width: 1200px) {
+  .table-container {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    display: block;
+    padding: 0 1rem;
+    margin: 0 -1rem;
+  }
+  
+  table {
+    width: 100%;
+  }
 }
 
-.btn-icon.extend {
-  background-color: #f44336; /* Red */
-}
-
-.btn-icon:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-.btn-icon:active {
-  transform: translateY(0);
-  box-shadow: none;
-}
-
-/* Ensure icons are visible */
-.btn-icon i {
-  color: white;
-  font-size: 16px;
-}
-
-/* Tooltip */
-.btn-icon[title]:hover::after {
-  content: attr(title);
-  position: absolute;
-  background: #333;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  white-space: nowrap;
-  z-index: 1000;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%) translateY(-8px);
-  pointer-events: none;
-}
-
-/* Base styles */
-.expiring-appointments-admin {
-  padding: 1.5rem;
-  background-color: var(--ct-bg-primary, #ffffff);
-  color: var(--ct-text-primary, #2c3e50);
-  min-height: 100%;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-/* Header styles */
-.header {
-  margin-bottom: 2rem;
-  padding: 1.5rem;
-  background: var(--ct-bg-secondary, #f8f9fa);
+/* ===== Reusable Table Styles ===== */
+/* Table container */
+.table-container {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  background: var(--ct-bg-primary, #ffffff);
+  margin-bottom: 0;
+  -webkit-overflow-scrolling: touch;
+  display: block;
+  flex: 1;
+  min-height: 400px;
+}
+
+.table-card {
+  background: var(--ct-bg-primary, #ffffff);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  margin: 2rem 0;
+  width: 100%;
+  max-width: 100%;
+  min-height: 500px;
+  overflow: auto;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.table-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.ct-card-header {
+padding: 1.25rem 1.5rem;
+border-bottom: 1px solid var(--ct-border-color, #e0e0e0);
+background: var(--ct-bg-secondary, #f8f9fa);
+  background: var(--ct-bg-secondary, #f8f9fa);
+}
+
+.ct-card-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--ct-text-primary, #2c3e50);
+}
+
+.ct-card-body {
+  padding: 2rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+table {
+  width: 100%;
+  min-width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin: 0;
+  padding: 0;
+}
+
+table th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ct-text-secondary, #6c757d);
+  background-color: var(--ct-bg-secondary, #f8f9fa);
+  white-space: nowrap;
+  position: relative;
+  letter-spacing: 0.02em;
+  overflow: visible;
+  box-sizing: border-box;
+}
+
+th.sortable {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+}
+
+th.sortable:hover {
+  background-color: var(--ct-bg-tertiary, #e9ecef);
 }
 
 .header-content {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1rem;
+  width: 100%;
 }
 
-h1 {
-  margin: 0;
-  font-size: 1.75rem;
-  color: var(--ct-primary, #3498db);
-}
-
-.subtitle {
-  margin: 0.5rem 0 1.5rem;
-  color: var(--ct-text-secondary, #7f8c8d);
-}
-
-/* Stats summary */
-.stats-summary {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
-}
-
-.stat-card {
-  flex: 1;
-  min-width: 150px;
-  padding: 1.5rem;
-  background: var(--ct-bg-secondary, #f8f9fa);
-  border-radius: 8px;
-  text-align: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.stat-value {
-  font-size: 2rem;
+.sort-indicator {
+  margin-left: 0.5rem;
   font-weight: bold;
+  display: inline-block;
   color: var(--ct-primary, #3498db);
-  margin-bottom: 0.5rem;
 }
 
-.stat-label {
-  color: var(--ct-text-secondary, #7f8c8d);
-  font-size: 0.9rem;
-}
-
-/* Filters */
-.filters {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-  align-items: center;
-  padding: 1rem;
-  background: var(--ct-bg-secondary, #f8f9fa);
-  border-radius: 8px;
-}
-
-.search-box {
-  position: relative;
-  flex: 1;
-  min-width: 200px;
-}
-
-.search-box input {
-  width: 100%;
-  padding: 0.5rem 1rem 0.5rem 2.5rem;
-  border: 1px solid var(--ct-border-color, #e0e0e0);
-  border-radius: 4px;
-  font-size: 0.9rem;
-  background-color: var(--ct-bg-primary, #ffffff);
-  color: var(--ct-text-primary, #2c3e50);
-}
-
-.search-icon {
+.resize-handle {
   position: absolute;
-  left: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--ct-text-secondary, #7f8c8d);
+  top: 0;
+  right: 0;
+  width: 4px;
+  height: 100%;
+  background: transparent;
+  cursor: col-resize;
+  z-index: 10;
 }
 
-.filter-group {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+.resize-handle:hover {
+  background: var(--ct-primary, #3498db);
+  opacity: 0.5;
 }
 
-.filter-group label {
-  font-size: 0.9rem;
-  color: var(--ct-text-secondary, #7f8c8d);
+.resize-handle:active {
+  background: var(--ct-primary, #3498db);
+  opacity: 0.8;
 }
 
-.filter-group select,
-.filter-group input[type="number"] {
-  padding: 0.5rem;
-  border: 1px solid var(--ct-border-color, #e0e0e0);
-  border-radius: 4px;
-  background-color: var(--ct-bg-primary, #ffffff);
-  color: var(--ct-text-primary, #2c3e50);
+/* Make sure the header content doesn't overlap with the resize handle */
+.header-content {
+  padding-right: 8px;
+  position: relative;
+  z-index: 1;
 }
 
-/* Table styles */
-.appointments-table {
-  background: var(--ct-bg-primary, #ffffff);
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-top: 1.5rem;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-th, td {
-  padding: 1rem;
-  text-align: left;
+tr:not(:last-child) {
   border-bottom: 1px solid var(--ct-border-color, #e0e0e0);
 }
 
-th {
-  background-color: var(--ct-bg-secondary, #f8f9fa);
-  font-weight: 600;
-  color: var(--ct-text-primary, #2c3e50);
-  cursor: pointer;
-  user-select: none;
-}
-
-th:hover {
-  background-color: var(--ct-bg-hover, #f0f0f0);
-}
-
-th .sort-icon {
-  margin-left: 0.5rem;
-  color: var(--ct-primary, #3498db);
-}
-
-th .sort-icon.asc::after {
-  content: '↑';
-}
-
-th .sort-icon.desc::after {
-  content: '↓';
-}
-
 tr:hover {
-  background-color: var(--ct-bg-hover, #f8f9fa);
+  background-color: var(--ct-bg-secondary, #f8f9fa);
 }
 
-/* Status badges */
+/* Status Badges */
 .status-badge {
   display: inline-block;
   padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.8rem;
-  font-weight: 500;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
 }
 
-.status-expiring {
-  background-color: #fff3cd;
-  color: #856404;
+.status-active {
+  background-color: rgba(40, 167, 69, 0.1);
+  color: #28a745;
 }
 
 .status-expired {
-  background-color: #f8d7da;
-  color: #721c24;
+  background-color: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
 }
 
-.status-ok {
-  background-color: #d4edda;
-  color: #155724;
+.status-upcoming {
+  background-color: rgba(23, 162, 184, 0.1);
+  color: #17a2b8;
 }
 
-/* Calendar color indicator */
+/* Action Buttons */
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+  color: white;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.btn-icon:hover {
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+.btn-icon:active {
+  transform: translateY(0);
+}
+
+.btn-icon.view {
+  background-color: var(--ct-success, #28a745);
+}
+
+.btn-icon.extend {
+  background-color: var(--ct-danger, #dc3545);
+}
+
+/* Calendar Color Dot */
 .calendar-info {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-}
-
-.calendar-color {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  display: inline-block;
+  height: 100%;
 }
 
 /* Buttons */
@@ -828,12 +995,22 @@ error {
   }
 }
 .expiring-appointments-admin {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 1.5rem;
-  color: var(--text-primary);
+  padding: 0;
+  max-width: 100%;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  color: var(--ct-text-primary, #2c3e50);
+  line-height: 1.5;
 }
 
+.content-container {
+  padding: 1.5rem;
+  max-width: 1600px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Old header styles - can be removed if not needed */
 .header {
   margin-bottom: 2.5rem;
   background: var(--card-bg);
@@ -1023,8 +1200,11 @@ error {
 
 table {
   width: 100%;
+  min-width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
+  margin: 0;
+  padding: 0;
 }
 
 th,
@@ -1043,7 +1223,6 @@ th {
   user-select: none;
   position: relative;
   font-size: 0.85rem;
-  text-transform: uppercase;
   letter-spacing: 0.5px;
   white-space: nowrap;
 }
