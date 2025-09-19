@@ -1,254 +1,909 @@
 <template>
   <div class="expiring-appointments-admin">
-    <div class="admin-header">
-      <h1>{{ module.title }}</h1>
-      <p class="module-description">Verwalten Sie hier die ablaufenden Serientermine.</p>
+    <div class="header">
+      <div class="header-content">
+        <h1>{{ $t('expiringAppointments') }}</h1>
+        <button @click="refreshData" class="btn btn-icon" :title="$t('refresh')">
+          <i class="fas fa-sync-alt" :class="{ 'fa-spin': isLoading }"></i>
+        </button>
+      </div>
+      <p class="subtitle">
+        {{ $t('manageExpiringAppointments') }}
+      </p>
+      
+      <div class="days-in-advance">
+        <label>{{ $t('showAppointmentsEndingIn') }}:</label>
+        <input 
+          type="number" 
+          v-model.number="daysInAdvance" 
+          min="1" 
+          max="365"
+          @change="refreshData"
+        />
+        <span>{{ $t('days') }}</span>
+      </div>
     </div>
 
-    <div class="admin-content">
-      <div class="filters">
-        <div class="filter-group">
-          <label for="timeframe">Zeitraum:</label>
-          <select id="timeframe" v-model="timeframe" class="ct-select">
-            <option value="7">Nächste 7 Tage</option>
-            <option value="30">Nächste 30 Tage</option>
-            <option value="90">Nächste 90 Tage</option>
-            <option value="all">Alle anzeigen</option>
-          </select>
+    <!-- Loading state -->
+    <div v-if="isLoading && appointments.length === 0" class="loading">
+      <div class="spinner"></div>
+      <p>{{ $t('loadingAppointments') }}</p>
+    </div>
+
+    <!-- Error state -->
+    <div v-else-if="error" class="error">
+      <p>{{ error }}</p>
+      <button @click="fetchData" class="btn btn-primary">
+        {{ $t('retry') }}
+      </button>
+    </div>
+
+    <!-- Content -->
+    <div v-else class="content">
+      <!-- Stats Summary -->
+      <div class="stats-summary">
+        <div class="stat-card">
+          <div class="stat-value">{{ filteredAppointments.length }}</div>
+          <div class="stat-label">{{ $t('totalAppointments') }}</div>
         </div>
-        
-        <div class="filter-group">
-          <label for="search">Suchen:</label>
-          <input 
-            id="search" 
-            type="text" 
-            v-model="searchQuery" 
-            placeholder="Nach Titel suchen..."
-            class="ct-input"
-          >
+        <div class="stat-card">
+          <div class="stat-value">{{ getCountByStatus('expiring') }}</div>
+          <div class="stat-label">{{ $t('expiringSoon') }}</div>
         </div>
-        
-        <button 
-          @click="refreshData" 
-          class="ct-btn ct-btn-primary"
-          :disabled="loading"
-        >
-          <span v-if="!loading">Aktualisieren</span>
-          <span v-else class="loading-spinner"></span>
-        </button>
+        <div class="stat-card">
+          <div class="stat-value">{{ getCountByStatus('expired') }}</div>
+          <div class="stat-label">{{ $t('expired') }}</div>
+        </div>
       </div>
 
-      <div v-if="loading" class="loading-container">
-        <div class="loading-spinner"></div>
-        <p>Lade Termine...</p>
-      </div>
-      
-      <div v-else-if="error" class="error-container">
-        <div class="error-message">
-          <span>❌</span>
-          <div>
-            <p>Fehler beim Laden der Daten</p>
-            <p class="error-detail">{{ error }}</p>
-          </div>
+      <!-- Filters -->
+      <div class="filters">
+        <div class="search-box">
+          <input
+            v-model="searchQuery"
+            type="text"
+            :placeholder="$t('searchAppointments')"
+          />
+          <span class="search-icon">
+            <i class="fas fa-search"></i>
+          </span>
         </div>
-        <button @click="loadData" class="ct-btn ct-btn-outline">
-          Erneut versuchen
-        </button>
+
+        <div class="filter-group">
+          <label>{{ $t('status') }}:</label>
+          <select v-model="selectedStatus">
+            <option
+              v-for="option in statusOptions"
+              :key="option.value"
+              :value="option.value"
+            >
+              {{ option.label }}
+            </option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>{{ $t('calendar') }}:</label>
+          <select v-model="selectedCalendar">
+            <option
+              v-for="option in calendarOptions"
+              :key="option.value"
+              :value="option.value"
+            >
+              {{ option.label }}
+            </option>
+          </select>
+        </div>
       </div>
-      
-      <div v-else class="appointments-container">
+
+      <!-- Appointments Table -->
+      <div class="appointments-table">
         <div v-if="filteredAppointments.length === 0" class="no-results">
-          <p>Keine ablaufenden Serientermine gefunden.</p>
+          {{ $t('noAppointmentsFound') }}
         </div>
         
-        <div v-else class="appointments-list">
-          <div v-for="appointment in filteredAppointments" :key="appointment.id" class="appointment-card">
-            <div class="appointment-header">
-              <h3>{{ appointment.title }}</h3>
-              <span class="days-left" :class="getDaysLeftClass(appointment.daysLeft)">
-                {{ formatDaysLeft(appointment.daysLeft) }}
-              </span>
-            </div>
-            
-            <div class="appointment-details">
-              <div class="detail-row">
-                <span class="detail-label">Endet am:</span>
-                <span class="detail-value">{{ formatDate(appointment.endDate) }}</span>
-              </div>
-              
-              <div class="detail-row">
-                <span class="detail-label">Kategorie:</span>
-                <span class="detail-value">{{ appointment.category }}</span>
-              </div>
-              
-              <div class="detail-row">
-                <span class="detail-label">Verantwortlich:</span>
-                <span class="detail-value">{{ appointment.responsiblePerson }}</span>
-              </div>
-            </div>
-            
-            <div class="appointment-actions">
-              <button 
-                @click="extendSeries(appointment)" 
-                class="ct-btn ct-btn-sm ct-btn-primary"
-              >
-                Serie verlängern
-              </button>
-              <button 
-                @click="viewDetails(appointment)" 
-                class="ct-btn ct-btn-sm ct-btn-outline"
-              >
-                Details
-              </button>
-            </div>
-          </div>
-        </div>
+        <table v-else>
+          <thead>
+            <tr>
+              <th @click="handleSort('title')">
+                {{ $t('title') }}
+                <i
+                  v-if="sortBy === 'title'"
+                  :class="['sort-icon', sortOrder === 'asc' ? 'asc' : 'desc']"
+                ></i>
+              </th>
+              <th @click="handleSort('calendar')">
+                {{ $t('calendar') }}
+                <i
+                  v-if="sortBy === 'calendar'"
+                  :class="['sort-icon', sortOrder === 'asc' ? 'asc' : 'desc']"
+                ></i>
+              </th>
+              <th @click="handleSort('endDate')">
+                {{ $t('nextOccurrence') }}
+                <i
+                  v-if="sortBy === 'endDate'"
+                  :class="['sort-icon', sortOrder === 'asc' ? 'asc' : 'desc']"
+                ></i>
+              </th>
+              <th @click="handleSort('lastOccurrence')">
+                {{ $t('lastOccurrence') }}
+                <i
+                  v-if="sortBy === 'lastOccurrence'"
+                  :class="['sort-icon', sortOrder === 'asc' ? 'asc' : 'desc']"
+                ></i>
+              </th>
+              <th>{{ $t('status') }}</th>
+              <th>{{ $t('actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="appointment in filteredAppointments" :key="appointment.id">
+              <td>
+                <div class="appointment-title">
+                  <strong>{{ appointment.title }}</strong>
+                  <div class="appointment-time">
+                    {{ formatTime(appointment.startDate) }} - {{ formatTime(appointment.endDate) }}
+                  </div>
+                  <div v-if="appointment.note" class="appointment-note" :title="appointment.note">
+                    <i class="fas fa-info-circle"></i> {{ truncateText(appointment.note, 40) }}
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div class="calendar-info">
+                  <span class="calendar-color" :style="{ backgroundColor: appointment.calendar.color }"></span>
+                  {{ appointment.calendar.name }}
+                </div>
+              </td>
+              <td>{{ formatDate(appointment.startDate) }}</td>
+              <td>{{ appointment.series?.repeatUntil ? formatDate(appointment.series.repeatUntil) : $t('noEndDate') }}</td>
+              <td>
+                <span :class="['status-badge', getStatusClass(appointment)]">
+                  {{ getStatusText(getAppointmentStatus(appointment)) }}
+                </span>
+              </td>
+              <td class="actions">
+                <button class="btn-icon" :title="$t('extend')" @click="extendSeries(appointment)">
+                  <i class="fas fa-calendar-plus"></i>
+                </button>
+                <button class="btn-icon" :title="$t('viewDetails')" @click="viewDetails(appointment)">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import type { DashboardModule } from '../types/modules';
+import { ref, onMounted, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { findExpiringSeries, identifyCalendars, type Appointment } from '@/services/churchtools';
 
-defineProps<{
-  module: DashboardModule;
-}>();
+const { t } = useI18n();
 
-interface Appointment {
-  id: number;
-  title: string;
-  endDate: string;
-  daysLeft: number;
-  category: string;
-  responsiblePerson: string;
-  location?: string;
-  notes?: string;
-}
-
-const loading = ref(true);
+// State
+const isLoading = ref(true);
 const error = ref<string | null>(null);
 const searchQuery = ref('');
-const timeframe = ref('30');
-const appointments = ref<Appointment[]>([]);
+const selectedStatus = ref<string>('all');
+const selectedCalendar = ref<string>('all');
+const sortBy = ref('endDate');
+const sortOrder = ref('asc');
+const daysInAdvance = ref(60);
 
+// Data
+const appointments = ref<Appointment[]>([]);
+const calendarMap = ref<Map<number, {name: string, isGroup: boolean}>>(new Map());
+
+// Computed properties
 const filteredAppointments = computed(() => {
-  let result = [...appointments.value];
-  
-  // Filter by search query
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase();
-    result = result.filter(appt => 
-      appt.title.toLowerCase().includes(query) ||
-      appt.category.toLowerCase().includes(query) ||
-      appt.responsiblePerson.toLowerCase().includes(query)
-    );
-  }
-  
-  // Filter by timeframe
-  if (timeframe.value !== 'all') {
-    const days = parseInt(timeframe.value);
-    result = result.filter(appt => appt.daysLeft <= days);
-  }
-  
-  // Sort by days left (ascending)
-  return result.sort((a, b) => a.daysLeft - b.daysLeft);
+  return appointments.value.filter(appointment => {
+    // Filter by status
+    if (selectedStatus.value !== 'all') {
+      const status = getAppointmentStatus(appointment);
+      if (status !== selectedStatus.value) {
+        return false;
+      }
+    }
+    
+    // Filter by calendar type
+    if (selectedCalendar.value !== 'all') {
+      const calendar = calendarMap.value.get(appointment.calendar.id);
+      if (!calendar) return false;
+      
+      if (selectedCalendar.value === 'church' && calendar.isGroup) {
+        return false;
+      }
+      if (selectedCalendar.value === 'groups' && !calendar.isGroup) {
+        return false;
+      }
+    }
+    
+    // Filter by search query
+    if (searchQuery.value && 
+        !appointment.title.toLowerCase().includes(searchQuery.value.toLowerCase())) {
+      return false;
+    }
+    
+    return true;
+  }).sort((a, b) => {
+    let comparison = 0;
+    
+    switch (sortBy.value) {
+      case 'title':
+        comparison = a.title.localeCompare(b.title);
+        break;
+      case 'calendar':
+        comparison = a.calendar.name.localeCompare(b.calendar.name);
+        break;
+      case 'lastOccurrence':
+        comparison = new Date(a.series?.repeatUntil || a.endDate).getTime() - 
+                     new Date(b.series?.repeatUntil || b.endDate).getTime();
+        break;
+      case 'endDate':
+      default:
+        comparison = new Date(a.endDate).getTime() - new Date(b.endDate).getTime();
+        break;
+    }
+    
+    return sortOrder.value === 'asc' ? comparison : -comparison;
+  });
 });
 
-const formatDate = (dateString: string): string => {
-  return new Date(dateString).toLocaleDateString('de-DE', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  });
-};
+// Available filters
+const statusOptions = [
+  { value: 'all', label: t('allStatuses') },
+  { value: 'active', label: t('active') },
+  { value: 'expiring', label: t('expiring') },
+  { value: 'expired', label: t('expired') },
+];
 
-const formatDaysLeft = (days: number): string => {
-  if (days === 0) return 'Heute';
-  if (days === 1) return 'Morgen';
-  if (days < 0) return `Vor ${Math.abs(days)} Tagen abgelaufen`;
-  return `Noch ${days} ${days === 1 ? 'Tag' : 'Tage'}`;
-};
+const calendarOptions = [
+  { value: 'all', label: t('allCalendars') },
+  { value: 'church', label: t('churchCalendar') },
+  { value: 'groups', label: t('groupCalendars') },
+];
 
-const getDaysLeftClass = (days: number): string => {
-  if (days <= 0) return 'expired';
-  if (days <= 7) return 'warning';
-  if (days <= 30) return 'notice';
-  return '';
-};
-
-const loadData = async () => {
+// Fetch data from ChurchTools API
+const fetchData = async () => {
+  isLoading.value = true;
+  error.value = null;
+  
   try {
-    loading.value = true;
-    error.value = null;
+    // First, identify all calendars
+    const { churchCalendars, groupCalendars } = await identifyCalendars();
     
-    // In a real implementation, you would fetch this from the API
-    // const response = await churchtoolsClient.get('/appointments/expiring-series');
-    // appointments.value = response.data;
-    
-    // Mock data for demonstration
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const today = new Date();
-    const mockCategories = [
-      'Gottesdienst', 'Jugend', 'Gebet', 'Bibelkreis', 'Chor', 
-      'Hauskreis', 'Senioren', 'Kinder', 'Taufe', 'Trauung'
-    ];
-    
-    const mockNames = [
-      'Max Mustermann', 'Erika Musterfrau', 'Hans Schmidt', 'Maria Weber',
-      'Thomas Müller', 'Sabine Schulz', 'Peter Meyer', 'Anna Wagner'
-    ];
-    
-    appointments.value = Array.from({ length: 12 }, (_, i) => {
-      const daysInFuture = Math.floor(Math.random() * 90);
-      const endDate = new Date(today);
-      endDate.setDate(today.getDate() + daysInFuture);
-      
-      return {
-        id: i + 1,
-        title: `Serientermin ${i + 1}`,
-        endDate: endDate.toISOString().split('T')[0],
-        daysLeft: daysInFuture,
-        category: mockCategories[Math.floor(Math.random() * mockCategories.length)],
-        responsiblePerson: mockNames[Math.floor(Math.random() * mockNames.length)],
-        location: 'Gemeindezentrum',
-        notes: 'Wöchentlicher Termin'
-      };
+    // Create calendar map for quick lookups
+    churchCalendars.forEach(cal => {
+      calendarMap.value.set(cal.id, { name: cal.name, isGroup: false });
+    });
+    groupCalendars.forEach(cal => {
+      calendarMap.value.set(cal.id, { name: cal.name, isGroup: true });
     });
     
+    // Fetch expiring series
+    const expiringSeries = await findExpiringSeries(daysInAdvance.value);
+    appointments.value = expiringSeries;
+    
   } catch (err) {
-    console.error('Fehler beim Laden der Termine:', err);
-    error.value = 'Die Termine konnten nicht geladen werden. Bitte versuchen Sie es später erneut.';
+    console.error('Error fetching appointments:', err);
+    error.value = t('errorLoadingAppointments');
   } finally {
-    loading.value = false;
+    isLoading.value = false;
   }
 };
 
+// Get status of an appointment
+const getAppointmentStatus = (appointment: Appointment): string => {
+  if (!appointment.series?.repeatUntil) return 'active';
+  
+  const endDate = new Date(appointment.series.repeatUntil);
+  const today = new Date();
+  const daysUntilEnd = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  
+  if (endDate < today) return 'expired';
+  if (daysUntilEnd <= 30) return 'expiring';
+  return 'active';
+};
+
+// Get status display text
+const getStatusText = (status: string): string => {
+  switch (status) {
+    case 'active':
+      return t('active');
+    case 'expiring':
+      return t('expiring');
+    case 'expired':
+      return t('expired');
+    default:
+      return status;
+  }
+};
+
+// Format date for display
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString();
+};
+
+// Format time for display
+const formatTime = (dateString: string) => {
+  return new Date(dateString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
+
+// Get status class
+const getStatusClass = (appointment: Appointment) => {
+  const status = getAppointmentStatus(appointment);
+  return `status-${status}`;
+};
+
+// Handle sort
+const handleSort = (column: string) => {
+  if (sortBy.value === column) {
+    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortBy.value = column;
+    sortOrder.value = 'asc';
+  }
+};
+
+// Refresh data
 const refreshData = () => {
-  searchQuery.value = '';
-  loadData();
+  fetchData();
 };
 
-const extendSeries = (appointment: Appointment) => {
-  console.log('Extend series:', appointment);
-  // In a real implementation, this would open a modal or navigate to a form
-  alert(`Serie "${appointment.title}" verlängern`);
-};
-
-const viewDetails = (appointment: Appointment) => {
-  console.log('View details:', appointment);
-  // In a real implementation, this would navigate to a detail view
-  alert(`Details für "${appointment.title}" anzeigen`);
-};
-
+// Initialize component
 onMounted(() => {
-  loadData();
+  fetchData();
 });
 </script>
 
 <style scoped>
+.expiring-appointments-admin {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  color: var(--text-primary);
+}
+
+.header {
+  margin-bottom: 2.5rem;
+  background: var(--card-bg);
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.header h1 {
+  margin: 0;
+  color: var(--primary-color);
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
+.subtitle {
+  margin: 0.5rem 0 1.5rem;
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+.days-in-advance {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--bg-secondary);
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin-top: 1.25rem;
+  max-width: fit-content;
+}
+
+.days-in-advance label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.days-in-advance input {
+  width: 80px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--bg-color);
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.days-in-advance input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.1);
+}
+
+/* Stats Summary */
+.stats-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: var(--card-bg);
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.stat-value {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  line-height: 1.2;
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* Filters */
+.filters {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  background: var(--card-bg);
+  padding: 1.25rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.search-box {
+  position: relative;
+  flex: 1;
+  min-width: 280px;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 0.65rem 1rem 0.65rem 2.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background: var(--bg-color);
+  color: var(--text-primary);
+  transition: all 0.2s;
+}
+
+.search-box input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.1);
+}
+
+.search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-tertiary);
+  pointer-events: none;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+}
+
+.filter-group label {
+  font-size: 0.85rem;
+  margin-bottom: 0.4rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.filter-group select {
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background: var(--bg-color);
+  color: var(--text-primary);
+  cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236B7280%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem top 50%;
+  background-size: 0.65rem auto;
+}
+
+.filter-group select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.1);
+}
+
+/* Appointments Table */
+.appointments-table {
+  background: var(--card-bg);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  margin-bottom: 2rem;
+  border: 1px solid var(--border-color);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+th,
+td {
+  padding: 1.25rem 1.5rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+}
+
+th {
+  background-color: var(--bg-secondary);
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+th:last-child {
+  text-align: right;
+  cursor: default;
+}
+
+th:hover {
+  background-color: var(--bg-hover);
+}
+
+th .sort-icon {
+  margin-left: 0.5rem;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+th:hover .sort-icon {
+  opacity: 1;
+}
+
+.sort-icon.asc::before {
+  content: '↑';
+}
+
+.sort-icon.desc::before {
+  content: '↓';
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+tbody tr:hover {
+  background-color: var(--bg-hover);
+}
+
+/* Appointment row styles */
+.appointment-title {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.appointment-title strong {
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+.appointment-time {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.appointment-note {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  line-height: 1.4;
+}
+
+.appointment-note i {
+  color: var(--primary-color);
+  margin-top: 0.2rem;
+  flex-shrink: 0;
+}
+
+/* Calendar info */
+.calendar-info {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.calendar-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* Status badges */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 0.9rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  text-transform: capitalize;
+}
+
+.status-active {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.status-expiring {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+
+.status-expired {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+/* Actions */
+.actions {
+  display: flex;
+  gap: 0.4rem;
+  justify-content: flex-end;
+  padding-right: 0.5rem;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  font-size: 1rem;
+}
+
+.btn-icon:hover {
+  background-color: var(--bg-hover);
+  color: var(--primary-color);
+  transform: translateY(-1px);
+}
+
+.btn-icon:active {
+  transform: translateY(0);
+}
+
+/* No results */
+.no-results {
+  padding: 3rem 2rem;
+  text-align: center;
+  color: var(--text-tertiary);
+  font-style: italic;
+  background: var(--bg-secondary);
+  border-radius: 0 0 8px 8px;
+}
+
+/* Loading and Error States */
+.loading,
+.error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  background: var(--card-bg);
+  border-radius: 10px;
+  min-height: 300px;
+  margin: 1rem 0;
+}
+
+.spinner {
+  width: 3.5rem;
+  height: 3.5rem;
+  border: 0.35rem solid rgba(var(--primary-rgb), 0.1);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1.5rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.error .btn {
+  margin-top: 1.5rem;
+  padding: 0.6rem 1.5rem;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.error .btn:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .expiring-appointments-admin {
+    padding: 1.25rem;
+  }
+  
+  .stats-summary {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+  
+  th, td {
+    padding: 1rem 1.25rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .filters {
+    gap: 0.75rem;
+  }
+  
+  .filter-group {
+    min-width: 160px;
+  }
+  
+  .search-box {
+    min-width: 240px;
+  }
+  
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  th, td {
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: 1.25rem;
+  }
+  
+  .header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .stats-summary {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  
+  .filter-group, 
+  .search-box {
+    width: 100%;
+    min-width: 100%;
+  }
+  
+  .days-in-advance {
+    max-width: 100%;
+  }
+  
+  th, td {
+    padding: 0.9rem 1rem;
+    font-size: 0.9rem;
+  }
+  
+  .status-badge {
+    padding: 0.3rem 0.7rem;
+    font-size: 0.75rem;
+  }
+  
+  .btn-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .appointments-table {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  }
+  
+  .stat-card {
+    background: var(--bg-secondary);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  .filters {
+    background: var(--bg-secondary);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  .search-box input,
+  .filter-group select {
+    background: var(--bg-color);
+    border-color: var(--border-dark);
+    color: var(--text-primary);
+  }
+  
+  .search-icon {
+    color: var(--text-tertiary);
+  }
+}
+
 .expiring-appointments-admin {
   max-width: 1200px;
   margin: 0 auto;
