@@ -113,6 +113,5 @@ export async function findExpiringSeries(daysInAdvance: number = 60): Promise<Ap
       return [base.id, item]; // Using base.id as the unique identifier
     })
   ).values());
-debugger;
   return uniqueSeries;
 }

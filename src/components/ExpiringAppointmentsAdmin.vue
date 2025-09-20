@@ -7,17 +7,27 @@
       </div>
       <div class="ct-card-body">
         <p class="description">Überwachung und Verwaltung aller auslaufenden Terminserien</p>
-        <div class="days-in-advance">
-          <label>Zeige Serientermine, die in den nächsten:</label>
-          <input 
-            type="number" 
-            v-model.number="daysInAdvance" 
-            min="1" 
-            max="365"
-            @change="refreshData"
-            class="ct-input"
-          />
-          <span>Tagen enden</span>
+        <div class="filter-controls">
+          <div class="days-in-advance">
+            <label>Zeige Serientermine, die in den nächsten:</label>
+            <select 
+              v-model="daysInAdvance" 
+              @change="refreshData"
+              class="ct-select"
+            >
+              <option value="alle">alle</option>
+              <option value="1">1</option>
+              <option value="7">7</option>
+              <option value="14">14</option>
+              <option value="30">30</option>
+              <option value="60">60</option>
+              <option value="90">90</option>
+              <option value="180">180</option>
+              <option value="365">365</option>
+            </select>
+            <span v-if="daysInAdvance !== 'alle'">Tagen enden</span>
+            <span v-else>Termine anzeigen</span>
+          </div>
         </div>
       </div>
     </div>
@@ -262,7 +272,7 @@ const stopResize = () => {
   document.body.style.userSelect = '';
 };
 
-const daysInAdvance = ref(60);
+const daysInAdvance = ref('alle'); // Default to "alle"
 
 // Data
 const appointments = ref<Appointment[]>([]);
@@ -271,6 +281,41 @@ const calendarMap = ref<Map<number, {name: string, isGroup: boolean}>>(new Map()
 // Computed properties
 const filteredAppointments = computed(() => {
   let filtered = appointments.value;
+  console.log('Filtering appointments, total:', filtered.length, 'daysInAdvance:', daysInAdvance.value);
+
+  // Filter by expiration date
+  const now = new Date();
+  
+  if (daysInAdvance.value === 'alle') {
+    // For "alle": show all appointments from findExpiringSeries (already filtered)
+    // No additional filtering needed since findExpiringSeries already returns only expiring series
+    console.log('After date filtering (alle):', filtered.length);
+  } else {
+    // For specific days: show appointments expiring within the selected timeframe
+    const days = parseInt(daysInAdvance.value);
+    const maxDate = new Date(now.getTime() + (days * 24 * 60 * 60 * 1000));
+    
+    filtered = filtered.filter(appointment => {
+      // Check if appointment has base property
+      if (!appointment.base) {
+        return false;
+      }
+      
+      // Only show appointments with valid end dates
+      if (!appointment.base.repeatUntil || appointment.base.repeatUntil === null || appointment.base.repeatUntil === '') {
+        return false;
+      }
+      
+      const endDate = new Date(appointment.base.repeatUntil);
+      // Check if date is valid
+      if (isNaN(endDate.getTime())) {
+        return false;
+      }
+      
+      return endDate >= now && endDate <= maxDate;
+    });
+    console.log('After date filtering (specific days):', filtered.length);
+  }
 
   // Filter by search term
   if (searchTerm.value) {
@@ -294,6 +339,7 @@ const filteredAppointments = computed(() => {
     return sortDirection.value === 'asc' ? comparison : -comparison;
   });
 
+  console.log('Final filtered appointments:', filtered.length);
   return filtered;
 });
 
@@ -311,7 +357,7 @@ const refreshData = async () => {
   error.value = null;
 
   try {
-    console.log('Fetching expiring appointments from ChurchTools API...');
+    console.log('Fetching appointments from ChurchTools API...');
     
     // First, identify all calendars
     const { publicCalendars } = await identifyCalendars();
@@ -322,11 +368,19 @@ const refreshData = async () => {
       calendarMap.value.set(cal.id, { name: cal.name, isGroup });
     });
     
-    // Fetch expiring series
-    const expiringSeries = await findExpiringSeries(daysInAdvance.value);
+    let allAppointments: Appointment[];
+    
+    if (daysInAdvance.value === 'alle') {
+      // For "alle", use findExpiringSeries with a very large timeframe (10 years)
+      allAppointments = await findExpiringSeries(3650); // 10 years
+    } else {
+      // For specific days, use the existing function
+      const days = parseInt(daysInAdvance.value);
+      allAppointments = await findExpiringSeries(days);
+    }
     
     // Clean up the data to ensure all required fields are present
-    appointments.value = expiringSeries.map(appointment => {
+    appointments.value = allAppointments.map(appointment => {
       if (!appointment.base) {
         appointment.base = {
           ...appointment,
@@ -337,11 +391,26 @@ const refreshData = async () => {
       return appointment;
     });
     
-    console.log('Expiring appointments found:', appointments.value.length);
-  } catch (err: any) {
-    console.error('Fehler beim Laden der auslaufenden Termine:', err);
+    console.log('Appointments found:', appointments.value.length);
+    console.log('Sample appointments:', appointments.value.slice(0, 5).map(a => ({
+      id: a.id,
+      hasBase: !!a.base,
+      repeatUntil: a.base?.repeatUntil,
+      directRepeatUntil: a.repeatUntil, // Check if repeatUntil is directly on the object
+      title: a.base?.title || a.title,
+      structure: Object.keys(a),
+      fullObject: a
+    })));
     
-    let errorMessage = 'Fehler beim Laden der auslaufenden Termine.';
+    // Check different ways repeatUntil might exist
+    const withBaseRepeatUntil = appointments.value.filter(a => a.base?.repeatUntil).length;
+    const withDirectRepeatUntil = appointments.value.filter(a => a.repeatUntil).length;
+    const withoutBase = appointments.value.filter(a => !a.base).length;
+    console.log('With base.repeatUntil:', withBaseRepeatUntil, 'With direct repeatUntil:', withDirectRepeatUntil, 'Without base:', withoutBase);
+  } catch (err: any) {
+    console.error('Fehler beim Laden der Termine:', err);
+    
+    let errorMessage = 'Fehler beim Laden der Termine.';
     
     if (err.response) {
       errorMessage += ` HTTP ${err.response.status}: ${err.response.statusText}`;
@@ -364,7 +433,6 @@ const getAppointmentUrl = (appointment: Appointment) => {
   // Construct URL to ChurchTools instance appointment page
   //https://bgkorntal.church.tools/?q=churchcal&startdate=2025-09-17#CalView/
   const churchtoolsBaseUrl = import.meta.env.VITE_BASE_URL || window.location.origin;
-  debugger;
   return `${churchtoolsBaseUrl}?q=churchcal&startdate=${appointment.base.startDate}#CalView/`;
 };
 
@@ -506,6 +574,10 @@ onMounted(() => {
   font-size: 0.95rem;
 }
 
+.filter-controls {
+  margin-top: 1rem;
+}
+
 .days-in-advance {
   display: flex;
   align-items: center;
@@ -513,7 +585,6 @@ onMounted(() => {
   background: var(--ct-bg-secondary, #f8f9fa);
   padding: 0.75rem 1rem;
   border-radius: 6px;
-  margin-top: 1rem;
   max-width: fit-content;
 }
 
@@ -523,6 +594,7 @@ onMounted(() => {
   margin: 0;
 }
 
+.days-in-advance select,
 .days-in-advance input {
   width: 80px;
   padding: 0.5rem 0.75rem;
@@ -533,6 +605,7 @@ onMounted(() => {
   text-align: center;
 }
 
+.days-in-advance select:focus,
 .days-in-advance input:focus {
   outline: none;
   border-color: var(--ct-primary, #3498db);
