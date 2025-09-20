@@ -97,8 +97,6 @@ const formattedLastUpdate = computed(() => {
   });
 });
 
-
-
 // Get status of an appointment
 const getAppointmentStatus = (appointment: Appointment): string => {
   if (!appointment.base?.repeatUntil) return 'active';
@@ -111,8 +109,6 @@ const getAppointmentStatus = (appointment: Appointment): string => {
   if (daysUntilEnd <= DAYS_TO_SHOW) return 'expiring';
   return 'active';
 };
-
-
 
 // Fetch data from ChurchTools API
 const fetchData = async () => {
@@ -148,5 +144,3 @@ onMounted(() => {
   fetchData();
 });
 </script>
-
-
