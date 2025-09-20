@@ -11,7 +11,8 @@ und dieses Projekt folgt [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 #### ✨ Neue Features
 
-**📅 Auslaufende Termine**
+**📅 auslaufende Terminserien**
+
 - Zentrale Übersicht aller auslaufenden Terminserien
 - Detailliertes Admin-Panel mit erweiterten Filtermöglichkeiten
 - Multi-Filter-System (Suche, Kalender, Status, Zeitraum)
@@ -20,12 +21,14 @@ und dieses Projekt folgt [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Unterstützung für manuelle Wiederholungen (additionals)
 
 **⚙️ Automatische Gruppen**
+
 - Status-Übersicht aller automatischen Gruppen
 - Monitoring von Ausführungsstatus (Erfolg, Fehler, Ausstehend)
 - Anzeige der letzten Aktualisierungszeiten
 - Statistiken über Gruppenverwaltung
 
 **🎯 BaseCard-Architektur**
+
 - Einheitliche Karten-Komponente für konsistentes Design
 - Wiederverwendbare UI-Patterns
 - Unterstützung für Props und Slots
@@ -34,18 +37,21 @@ und dieses Projekt folgt [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 #### 🔧 Technische Verbesserungen
 
 **Frontend-Architektur**
+
 - Vue 3 + TypeScript für moderne Entwicklung
 - Vite als Build-Tool für schnelle Entwicklung
 - ChurchTools Client Integration
 - Responsive Design für Desktop und Mobile
 
 **Filter & Sortierung**
+
 - Echtzeit-Filterung ohne Server-Roundtrips
 - Kombinierbare Filter für präzise Suchen
 - Sortierung aller Tabellenspalten
 - Intelligente Datentyp-Erkennung für Sortierung
 
 **Performance**
+
 - Client-seitige Datenverarbeitung
 - Optimierte Bundle-Größe
 - Lazy Loading für große Datensätze
@@ -54,12 +60,14 @@ und dieses Projekt folgt [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 #### 🎨 Design System
 
 **UI/UX**
+
 - ChurchTools-konformes Design
 - Konsistente Farbpalette und Typografie
 - Intuitive Benutzerführung
 - Accessibility-Features
 
 **Responsive Layout**
+
 - Mobile-first Ansatz
 - Flexible Grid-Layouts
 - Touch-optimierte Bedienelemente
@@ -68,12 +76,14 @@ und dieses Projekt folgt [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 #### 📊 Datenmanagement
 
 **API-Integration**
+
 - Vollständige ChurchTools API-Anbindung
 - Automatische Authentifizierung
 - Error-Handling und Retry-Logik
 - Typisierte API-Responses
 
 **Datenverarbeitung**
+
 - Intelligente Kalender-Erkennung
 - Automatische Status-Bestimmung
 - Effektive Enddatum-Berechnung
@@ -82,18 +92,21 @@ und dieses Projekt folgt [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 ### 🔧 Entwickler-Features
 
 #### Architektur
+
 - Modulare Komponenten-Struktur
 - TypeScript für Type-Safety
 - Comprehensive Error Handling
 - Extensive Documentation
 
 #### Build & Deployment
+
 - Automatisches Packaging für ChurchTools
 - Versionierte Releases
 - Development und Production Builds
 - ZIP-basierte Distribution
 
 #### Testing & Quality
+
 - ESLint für Code-Qualität
 - TypeScript Strict Mode
 - Comprehensive Error Boundaries
@@ -102,17 +115,20 @@ und dieses Projekt folgt [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 ### 📚 Dokumentation
 
 #### Benutzer-Dokumentation
+
 - Vollständige README mit Setup-Anleitung
 - Feature-Übersicht und Screenshots
 - Deployment-Anleitung für ChurchTools
 
 #### Entwickler-Dokumentation
+
 - API-Dokumentation mit TypeScript-Interfaces
 - Komponenten-Architektur-Guide
 - Entwicklungsrichtlinien
 - Deployment-Prozess
 
 #### Beispiele
+
 - BaseCard-Implementierungsbeispiele
 - Filter-System-Patterns
 - API-Integration-Beispiele
@@ -120,11 +136,13 @@ und dieses Projekt folgt [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 ### 🚀 Deployment
 
 #### ChurchTools-Integration
+
 - Plugin-Kürzel: `ctdashboard`
 - Base URL: `/ccm/ctdashboard/`
 - Automatische Session-Authentifizierung
 
 #### Build-Optimierung
+
 - Minimierte Bundle-Größe
 - Tree-Shaking für ungenutzten Code
 - Optimierte Asset-Komprimierung
@@ -135,18 +153,21 @@ und dieses Projekt folgt [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 ## Geplante Features (Roadmap)
 
 ### 🔮 Version 1.1.0
+
 - **Export-Funktionen**: CSV/Excel-Export für Tabellendaten
 - **Erweiterte Filter**: Datum-Range-Picker, Multi-Select-Filter
 - **Benachrichtigungen**: E-Mail-Alerts für kritische Termine
 - **Dashboard-Widgets**: Konfigurierbare Übersichts-Widgets
 
 ### 🔮 Version 1.2.0
+
 - **Benutzer-Management**: User-spezifische Dashboards
 - **Reporting**: Automatische Reports und Statistiken
 - **API-Erweiterungen**: Zusätzliche ChurchTools-Endpunkte
 - **Performance**: Virtual Scrolling für große Datensätze
 
 ### 🔮 Version 2.0.0
+
 - **Real-time Updates**: WebSocket-basierte Live-Updates
 - **Mobile App**: Progressive Web App (PWA)
 - **Erweiterte Analytics**: Detaillierte Nutzungsstatistiken

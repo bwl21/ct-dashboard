@@ -20,40 +20,40 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import BaseCard from './BaseCard.vue';
+import { ref, computed, onMounted } from 'vue'
+import BaseCard from './BaseCard.vue'
 
 // Props
 defineProps<{
   module: {
-    id: string;
-    title: string;
-    icon: string;
-    description: string;
-  };
-}>();
+    id: string
+    title: string
+    icon: string
+    description: string
+  }
+}>()
 
 defineEmits<{
-  navigate: [];
-}>();
+  navigate: []
+}>()
 
 // State
-const isLoading = ref(false);
-const error = ref<string | null>(null);
+const isLoading = ref(false)
+const error = ref<string | null>(null)
 const data = ref({
   total: 0,
   active: 0,
   pending: 0,
   completed: 0,
-  errors: 0
-});
-const lastUpdate = ref<string | null>(null);
+  errors: 0,
+})
+const lastUpdate = ref<string | null>(null)
 
 // Computed properties
 const mainStat = computed(() => ({
   value: data.value.total,
-  label: 'Beispiel Einträge'
-}));
+  label: 'Beispiel Einträge',
+}))
 
 const statusStats = computed(() => [
   {
@@ -61,100 +61,100 @@ const statusStats = computed(() => [
     value: data.value.active,
     label: 'Aktiv',
     icon: '🟢',
-    type: 'success' as const
+    type: 'success' as const,
   },
   {
     key: 'pending',
     value: data.value.pending,
     label: 'Wartend',
     icon: '🟡',
-    type: 'warning' as const
+    type: 'warning' as const,
   },
   {
     key: 'completed',
     value: data.value.completed,
     label: 'Erledigt',
     icon: '✅',
-    type: 'info' as const
+    type: 'info' as const,
   },
   {
     key: 'errors',
     value: data.value.errors,
     label: 'Fehler',
     icon: '🔴',
-    type: 'error' as const
-  }
-]);
+    type: 'error' as const,
+  },
+])
 
 const formattedLastUpdate = computed(() => {
-  if (!lastUpdate.value) return '';
+  if (!lastUpdate.value) return ''
   return new Date(lastUpdate.value).toLocaleString('de-DE', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
-  });
-});
+    minute: '2-digit',
+  })
+})
 
 // Simulate API call
 const fetchData = async () => {
-  isLoading.value = true;
-  error.value = null;
-  
+  isLoading.value = true
+  error.value = null
+
   try {
     // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+
     // Simulate random data
-    const total = Math.floor(Math.random() * 100) + 50;
-    const active = Math.floor(total * 0.6);
-    const pending = Math.floor(total * 0.2);
-    const completed = Math.floor(total * 0.15);
-    const errors = total - active - pending - completed;
-    
+    const total = Math.floor(Math.random() * 100) + 50
+    const active = Math.floor(total * 0.6)
+    const pending = Math.floor(total * 0.2)
+    const completed = Math.floor(total * 0.15)
+    const errors = total - active - pending - completed
+
     data.value = {
       total,
       active,
       pending,
       completed,
-      errors
-    };
-    
-    lastUpdate.value = new Date().toISOString();
-    
-    console.log('Beispieldaten geladen:', data.value);
+      errors,
+    }
+
+    lastUpdate.value = new Date().toISOString()
+
+    console.log('Beispieldaten geladen:', data.value)
   } catch (err) {
-    console.error('Fehler beim Laden der Beispieldaten:', err);
-    error.value = 'Fehler beim Laden der Beispieldaten';
+    console.error('Fehler beim Laden der Beispieldaten:', err)
+    error.value = 'Fehler beim Laden der Beispieldaten'
   } finally {
-    isLoading.value = false;
+    isLoading.value = false
   }
-};
+}
 
 const loadMockData = () => {
-  console.log('Lade Mock-Daten für Beispiel...');
+  console.log('Lade Mock-Daten für Beispiel...')
   data.value = {
     total: 75,
     active: 45,
     pending: 15,
     completed: 12,
-    errors: 3
-  };
-  lastUpdate.value = new Date().toISOString();
-  error.value = null;
-};
+    errors: 3,
+  }
+  lastUpdate.value = new Date().toISOString()
+  error.value = null
+}
 
 const refreshData = () => {
-  fetchData();
-};
+  fetchData()
+}
 
 // Initialize component
 onMounted(() => {
   // Start with mock data, then load real data
-  loadMockData();
+  loadMockData()
   setTimeout(() => {
-    fetchData();
-  }, 500);
-});
+    fetchData()
+  }, 500)
+})
 </script>

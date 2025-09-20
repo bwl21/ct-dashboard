@@ -20,11 +20,11 @@
 </template>
 
 <script setup lang="ts">
-import type { DashboardModule } from '../types/modules';
+import type { DashboardModule } from '../types/modules'
 
 defineProps<{
-  module: DashboardModule;
-}>();
+  module: DashboardModule
+}>()
 </script>
 
 <style scoped>
@@ -76,7 +76,7 @@ defineProps<{
   .stat-value {
     font-size: 1.5rem;
   }
-  
+
   .stat-label {
     font-size: 0.75rem;
   }

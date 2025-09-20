@@ -17,22 +17,25 @@ Implementierung einer neuen Spalte "Gruppentyp" in der automatischen Gruppen Adm
 ## Technische Umsetzung
 
 ### 1. Interface-Erweiterung
+
 ```typescript
 interface AutomaticGroup {
-  id: number;
-  name: string;
-  groupType: string;  // Neu hinzugefügt
-  dynamicGroupStatus: DynamicGroupStatus;
+  id: number
+  name: string
+  groupType: string // Neu hinzugefügt
+  dynamicGroupStatus: DynamicGroupStatus
   // ... weitere Properties
 }
 ```
 
 ### 2. Tabellen-Header Anpassung
+
 - Neue Spalte "Gruppentyp" als zweite Spalte (nach ID)
 - Sortierung nach `groupTypeId` implementiert
 - Resize-Handles für alle Spalten angepasst
 
 ### 3. API-Integration
+
 ```typescript
 // API-Aufruf erweitert um information-Daten
 const response = await churchtoolsClient.get(`/groups?include=settings,information&limit=${limit}&page=${page}`);
@@ -48,6 +51,7 @@ const response = await churchtoolsClient.get(`/groups?include=settings,informati
 ```
 
 ### 4. UI-Anpassungen
+
 ```vue
 <!-- Neue Spalte im Header -->
 <th @click="sortBy('groupTypeId')" class="sortable resizable">
@@ -64,28 +68,33 @@ const response = await churchtoolsClient.get(`/groups?include=settings,informati
 ```
 
 ### 5. Spaltenbreiten-Anpassung
+
 ```typescript
 // Erweitert von 6 auf 7 Spalten
-const columnWidths = ref([100, 150, 250, 150, 180, 120, 100]);
+const columnWidths = ref([100, 150, 250, 150, 180, 120, 100])
 ```
 
 ## Debugging-Prozess
 
 ### Problem 1: "Unbekannt" wird angezeigt
+
 **Ursache:** Mock-Daten wurden nicht geladen, echte API-Daten haben keine `information` Property  
 **Lösung:** API-Aufruf um `include=information` erweitert
 
 ### Problem 2: Immer noch "N/A" angezeigt
+
 **Ursache:** API-Daten enthalten nur begrenzte Felder für automatische Gruppen  
 **Lösung:** Daten-Mapping erweitert um `groupTypeId` aus `group.information?.groupTypeId`
 
 ### Problem 3: Sortierung funktioniert nicht
+
 **Ursache:** Sortierfeld-Name `groupType` stimmte nicht mit Property-Name `groupTypeId` überein  
 **Lösung:** Sortierung auf `groupTypeId` geändert
 
 ## Verfügbare API-Daten
 
 Automatische Gruppen enthalten folgende Felder:
+
 - `id, name, dynamicGroupStatus, lastExecution, executionStatus`
 - `dynamicGroupUpdateStarted, dynamicGroupUpdateFinished`
 - `information.groupTypeId` (nach API-Erweiterung)
@@ -105,6 +114,7 @@ Automatische Gruppen enthalten folgende Felder:
 ## Ergebnis
 
 ✅ **Erfolgreich implementiert:**
+
 - Gruppentyp-Spalte als zweite Spalte positioniert
 - Zeigt `groupTypeId` aus ChurchTools API-Daten an
 - Sortierung nach Gruppentyp funktioniert

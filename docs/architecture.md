@@ -1,17 +1,20 @@
 # ChurchTools Dashboard - Architektur-Dokumentation
 
 ## Überblick
+
 Das ChurchTools Dashboard ist eine moderne, modulare Webanwendung, die mit Vue 3 und TypeScript entwickelt wurde. Es bietet eine Benutzeroberfläche zur Überwachung und Verwaltung verschiedener Aspekte einer ChurchTools-Instanz.
 
 ## Technologie-Stack
 
 ### Kern-Technologien
+
 - **Vue 3** - Progressives JavaScript-Framework
 - **TypeScript** - Typisiertes JavaScript-Superset
 - **Vite** - Schnelles Build-Tool und Entwicklungsserver
 - **ChurchTools Client** - Offizielle Client-Bibliothek für die ChurchTools-API
 
 ### Entwicklungswerkzeuge
+
 - **Node.js** - JavaScript-Laufzeitumgebung
 - **npm** - Paketmanager
 - **ESLint** - Code-Linting
@@ -24,8 +27,8 @@ src/
 ├── components/                      # Wiederverwendbare UI-Komponenten
 │   ├── AutomaticGroupsAdmin.vue     # Admin-Oberfläche für automatische Gruppen
 │   ├── AutomaticGroupsCard.vue      # Karte für die Übersicht der automatischen Gruppen
-│   ├── ExpiringAppointmentsAdmin.vue # Admin-Oberfläche für auslaufende Serientermine
-│   ├── ExpiringAppointmentsCard.vue  # Karte für die Übersicht der auslaufenden Serientermine
+│   ├── ExpiringAppointmentsAdmin.vue # Admin-Oberfläche für auslaufende Terminserien
+│   ├── ExpiringAppointmentsCard.vue  # Karte für die Übersicht der auslaufenden Terminserien
 │   ├── UserStatisticsAdmin.vue      # Admin-Oberfläche für Benutzerstatistiken
 │   ├── UserStatisticsCard.vue       # Karte für Benutzerstatistiken
 │   └── Start.vue                   # Haupt-Dashboard-Ansicht
@@ -39,24 +42,28 @@ src/
 ## Wichtige Komponenten
 
 ### 1. Hauptanwendung (App.vue)
+
 - Verwaltet Routing und Layout
 - Verwaltet den Anwendungszustand
 - Rendert die Hauptnavigation und den Inhaltsbereich
 
 ### 2. Start-Komponente (Start.vue)
+
 - Hauptansicht des Dashboards
 - Zeigt Feature-Karten in einem responsiven Grid an
 - Verarbeitet die Navigation zu Admin-Ansichten
 - Verwaltet das Layout und die Anpassungsfähigkeit der Karten
 
 ### 3. Dashboard-Karten
+
 - **AutomaticGroupsCard**: Zeigt Statistiken und Aktualisierungsstatus der automatischen Gruppen an
-- **ExpiringAppointmentsCard**: Zeigt anstehende auslaufende Serientermine an
+- **ExpiringAppointmentsCard**: Zeigt anstehende auslaufende Terminserien an
 - **UserStatisticsCard**: Zeigt wichtige Benutzerkennzahlen und Statistiken an
 
 ### 4. Admin-Komponenten
+
 - **AutomaticGroupsAdmin**: Detaillierte Verwaltungsoberfläche für automatische Gruppen
-- **ExpiringAppointmentsAdmin**: Verwaltungsoberfläche für auslaufende Serientermine
+- **ExpiringAppointmentsAdmin**: Verwaltungsoberfläche für auslaufende Terminserien
 - **UserStatisticsAdmin**: Detaillierte Benutzerstatistiken und -analysen
 
 ## Datenfluss
@@ -92,6 +99,7 @@ src/
 ## Entwicklungsworkflow
 
 1. **Einrichtung**
+
    ```bash
    npm install
    cp .env-example .env
@@ -99,6 +107,7 @@ src/
    ```
 
 2. **Entwicklungsserver**
+
    ```bash
    npm run dev
    ```
@@ -111,6 +120,7 @@ src/
 ## Umgebungsvariablen
 
 Erforderliche Umgebungsvariablen (in `.env` gespeichert):
+
 - `VITE_BASE_URL` - Basis-URL der ChurchTools-Instanz
 - `VITE_USERNAME` - Benutzername für die automatische Anmeldung im Entwicklungsmodus
 - `VITE_PASSWORD` - Passwort für die automatische Anmeldung im Entwicklungsmodus
@@ -160,12 +170,14 @@ Erforderliche Umgebungsvariablen (in `.env` gespeichert):
 ## Abhängigkeiten
 
 ### Kern-Abhängigkeiten
+
 - `@churchtools/churchtools-client` - Offizieller ChurchTools-API-Client
 - `vue` - Kernframework (v3.x)
 - `vite` - Build-Tool und Entwicklungsserver
 - `typescript` - Typenprüfung und bessere Entwicklererfahrung
 
 ### Entwicklungsabhängigkeiten
+
 - `@vitejs/plugin-vue` - Vue 3-Unterstützung für Vite
 - `@vue/compiler-sfc` - Single-File-Component-Compiler
 - `eslint` - Code-Linting

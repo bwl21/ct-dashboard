@@ -10,7 +10,8 @@ Das **ChurchTools Dashboard** ist eine Vue 3 + TypeScript basierte Erweiterung f
 
 ## ✨ Hauptfeatures
 
-### 📅 Auslaufende Termine
+### 📅 auslaufende Terminserien
+
 - **Übersicht:** Zentrale Anzeige aller auslaufenden Terminserien
 - **Admin-Panel:** Detaillierte Verwaltung mit erweiterten Filtermöglichkeiten
 - **Multi-Filter:** Suche nach ID, Titel, Kalender + Status- und Kalender-Filter
@@ -18,11 +19,13 @@ Das **ChurchTools Dashboard** ist eine Vue 3 + TypeScript basierte Erweiterung f
 - **Export:** Direkte Links zu ChurchTools-Kalenderansicht
 
 ### ⚙️ Automatische Gruppen
+
 - **Status-Übersicht:** Anzeige aller automatischen Gruppen mit Ausführungsstatus
 - **Statistiken:** Erfolgreiche, fehlerhafte und ausstehende Gruppenaktualisierungen
 - **Monitoring:** Letzte Aktualisierungszeiten und Ausführungsstatus
 
 ### 🎯 BaseCard-Architektur
+
 - **Konsistentes Design:** Einheitliche Karten-Layouts für alle Module
 - **Wiederverwendbar:** Standardisierte Komponenten für schnelle Entwicklung
 - **Flexibel:** Unterstützung für Props und Slots für maximale Anpassbarkeit
@@ -32,6 +35,7 @@ Das **ChurchTools Dashboard** ist eine Vue 3 + TypeScript basierte Erweiterung f
 Die Extension nutzt das ChurchTools Design System mit folgenden CSS-Klassen:
 
 ### Farben
+
 - **Primary:** `#007bff` (ChurchTools Blau)
 - **Secondary:** `#2c3e50` (Dunkelgrau)
 - **Success:** `#28a745` (Grün)
@@ -39,6 +43,7 @@ Die Extension nutzt das ChurchTools Design System mit folgenden CSS-Klassen:
 - **Danger:** `#dc3545` (Rot)
 
 ### CSS-Klassen
+
 - `.cts` - Haupt-Container-Klasse
 - `.ct-main` - Hauptinhalt-Container
 - `.ct-card` - Karten-Layout
@@ -49,11 +54,13 @@ Die Extension nutzt das ChurchTools Design System mit folgenden CSS-Klassen:
 ## 🚀 Entwicklung
 
 ### Voraussetzungen
+
 - Node.js (Version 18 oder höher)
 - npm oder yarn
 - Git
 
 ### Installation
+
 ```bash
 # Repository klonen
 git clone <repository-url>
@@ -68,12 +75,15 @@ cp .env-example .env
 ```
 
 ### Entwicklungsserver starten
+
 ```bash
 npm run dev
 ```
+
 Der Development Server läuft auf `http://localhost:5173`
 
 ### Production Build erstellen
+
 ```bash
 npm run build
 ```
@@ -99,11 +109,13 @@ npm run deploy
 ### Manuelle Schritte
 
 1. **Build erstellen:**
+
    ```bash
    npm run build
    ```
 
 2. **Package erstellen:**
+
    ```bash
    npm run deploy
    ```
@@ -115,6 +127,7 @@ npm run deploy
    - Installation bestätigen
 
 ### ZIP-Datei Format
+
 - **Namenskonvention:** `{projektname}-v{version}-{git-hash}.zip`
 - **Inhalt:** Nur `dist/` Verzeichnis (ohne Source Maps)
 - **Speicherort:** `releases/` Verzeichnis (automatisch erstellt)
@@ -122,11 +135,13 @@ npm run deploy
 ## 🔧 ChurchTools Integration
 
 ### Konfiguration
+
 - **Plugin-Kürzel:** `ctdashboard`
 - **Base URL:** `/ccm/ctdashboard/`
 - **API-Client:** `@churchtools/churchtools-client`
 
 ### Umgebungsvariablen (.env)
+
 ```env
 # Plugin-Kürzel für ChurchTools
 VITE_KEY=ctdashboard
@@ -140,12 +155,14 @@ VITE_PASSWORD=ihr-passwort
 ## 🛠️ Technische Details
 
 ### Tech Stack
+
 - **Frontend:** Vue 3 + TypeScript
 - **Build Tool:** Vite
 - **Styling:** CSS3 + ChurchTools Design System
 - **API Client:** ChurchTools Client Library
 
 ### Projektstruktur
+
 ```
 ct-dashboard/
 ├── src/
@@ -153,8 +170,8 @@ ct-dashboard/
 │   │   ├── Start.vue                      # Haupt-Dashboard
 │   │   ├── BaseCard.vue                   # Basis-Karten-Komponente
 │   │   ├── BeispielCard.vue               # Beispiel-Implementierung
-│   │   ├── ExpiringAppointmentsCard.vue   # Auslaufende Termine (Übersicht)
-│   │   ├── ExpiringAppointmentsAdmin.vue  # Auslaufende Termine (Admin)
+│   │   ├── ExpiringAppointmentsCard.vue   # auslaufende Terminserien (Übersicht)
+│   │   ├── ExpiringAppointmentsAdmin.vue  # auslaufende Terminserien (Admin)
 │   │   ├── AutomaticGroupsCard.vue        # Automatische Gruppen (Übersicht)
 │   │   └── AutomaticGroupsAdmin.vue       # Automatische Gruppen (Admin)
 │   ├── services/
@@ -175,6 +192,7 @@ ct-dashboard/
 ```
 
 ### Responsive Design
+
 - **Mobile:** 1-spaltige Grid-Ansicht
 - **Desktop:** 2x2 Grid-Layout für Features
 - **Breakpoint:** 768px
@@ -182,6 +200,7 @@ ct-dashboard/
 ## 🔄 GitHub Setup
 
 ### Repository initialisieren
+
 ```bash
 # Git Repository initialisieren (falls noch nicht vorhanden)
 git init
@@ -196,6 +215,7 @@ git push -u origin main
 ```
 
 ### Branching-Strategie
+
 - **main** - Produktionsreifer Code
 - **develop** - Entwicklungsbranch
 - **feature/** - Feature-Branches
@@ -203,6 +223,7 @@ git push -u origin main
 ## 🧩 Komponenten-Architektur
 
 ### BaseCard-System
+
 Die BaseCard-Architektur bietet eine einheitliche Basis für alle Dashboard-Karten:
 
 ```vue
@@ -220,6 +241,7 @@ Die BaseCard-Architektur bietet eine einheitliche Basis für alle Dashboard-Kart
 ```
 
 **Props:**
+
 - `title` - Titel der Karte
 - `icon` - Emoji-Icon für die Karte
 - `is-loading` - Loading-Status
@@ -229,6 +251,7 @@ Die BaseCard-Architektur bietet eine einheitliche Basis für alle Dashboard-Kart
 - `last-update` - Zeitstempel der letzten Aktualisierung
 
 **Events:**
+
 - `@refresh` - Daten neu laden
 - `@navigate` - Navigation zur Detail-Ansicht
 - `@retry` - Erneuter Versuch bei Fehlern
@@ -236,25 +259,31 @@ Die BaseCard-Architektur bietet eine einheitliche Basis für alle Dashboard-Kart
 ### Admin-Panels
 
 #### ExpiringAppointmentsAdmin
+
 **Features:**
+
 - **Multi-Filter-System:** Suche, Kalender-Filter, Status-Filter, Tage-Filter
 - **Sortierbare Tabelle:** Alle Spalten (ID, Titel, Kalender, Datum) sortierbar
 - **Responsive Design:** Spaltenbreiten per Drag&Drop anpassbar
 - **Export-Funktionen:** Direkte Links zu ChurchTools-Kalender
 
 **Filter-Optionen:**
+
 - **Suchfeld:** ID, Titel, Kalender-Name
 - **Kalender-Dropdown:** Automatisch aus Daten generiert
 - **Status-Filter:** Aktiv, Läuft ab, Abgelaufen
 - **Tage-Filter:** 1, 7, 14, 30, 60, 90, 180, 365 Tage oder "alle"
 
 #### AutomaticGroupsAdmin
+
 **Features:**
+
 - **Gruppen-Übersicht:** Alle automatischen Gruppen mit Status
 - **Ausführungs-Monitoring:** Erfolg, Fehler, Ausstehend
 - **Zeitstempel-Tracking:** Letzte Ausführungszeiten
 
 ### Dashboard-Layout
+
 - **Header Card:** Projekt-Titel mit Versionsnummer
 - **Module Grid:** Responsive 2x2 Grid für Desktop, 1-spaltig für Mobile
 - **Navigation:** Klickbare Karten führen zu Detail-Ansichten
@@ -262,6 +291,7 @@ Die BaseCard-Architektur bietet eine einheitliche Basis für alle Dashboard-Kart
 ## 📚 Dokumentation
 
 ### Vollständige Dokumentation
+
 - **[📋 Dokumentations-Übersicht](./docs/README.md)** - Alle Dokumentationen im Überblick
 - **[👨‍💻 Entwickler-Handbuch](./docs/DEVELOPMENT.md)** - Architektur und Entwicklung
 - **[🔌 API-Dokumentation](./docs/API.md)** - Interfaces und Datenstrukturen
@@ -269,6 +299,7 @@ Die BaseCard-Architektur bietet eine einheitliche Basis für alle Dashboard-Kart
 - **[📝 Changelog](./CHANGELOG.md)** - Versionshistorie
 
 ### Quick Links
+
 - **BaseCard-Architektur**: [DEVELOPMENT.md#basecard-architektur](./docs/DEVELOPMENT.md#basecard-architektur)
 - **Filter-System**: [API.md#filter--sortierung-api](./docs/API.md#filter--sortierung-api)
 - **ChurchTools-Integration**: [DEPLOYMENT.md#churchtools-installation](./docs/DEPLOYMENT.md#churchtools-installation)
@@ -276,11 +307,13 @@ Die BaseCard-Architektur bietet eine einheitliche Basis für alle Dashboard-Kart
 ## 📞 Support
 
 ### Dokumentation & Hilfe
+
 - **[📚 Vollständige Dokumentation](./docs/)** - Umfassende Anleitungen
 - **[ChurchTools Forum](https://forum.church.tools)** - Community-Support
 - **[GitHub Issues](https://github.com/ihr-username/ct-dashboard/issues)** - Bug-Reports
 
 ### Entwickler-Support
+
 - **[API-Referenz](./docs/API.md)** - Technische Details
 - **[Entwickler-Guide](./docs/DEVELOPMENT.md)** - Architektur-Dokumentation
 - **[Deployment-Anleitung](./docs/DEPLOYMENT.md)** - Installation und Updates

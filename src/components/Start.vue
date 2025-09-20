@@ -13,13 +13,9 @@
 
     <!-- Modules Grid -->
     <div class="features-grid">
-      <div 
-        v-for="module in modules" 
-        :key="module.id"
-        class="module-wrapper"
-      >
-        <component 
-          :is="module.cardComponent" 
+      <div v-for="module in modules" :key="module.id" class="module-wrapper">
+        <component
+          :is="module.cardComponent"
           :module="module"
           class="feature-card"
           @navigate="$emit('navigate', module.id)"
@@ -30,22 +26,22 @@
 </template>
 
 <script setup lang="ts">
-import type { PropType } from 'vue';
-import type { DashboardModule } from '../types/modules';
-import packageJson from '../../package.json';
+import type { PropType } from 'vue'
+import type { DashboardModule } from '../types/modules'
+import packageJson from '../../package.json'
 
-const version = packageJson.version;
+const version = packageJson.version
 
 defineProps({
   modules: {
     type: Array as PropType<DashboardModule[]>,
-    required: true
-  }
-});
+    required: true,
+  },
+})
 
 defineEmits<{
   (e: 'navigate', moduleId: string): void
-}>();
+}>()
 </script>
 
 <style scoped>
@@ -85,8 +81,6 @@ defineEmits<{
   transition: transform 0.2s;
 }
 
-
-
 .feature-card {
   height: 100%;
   display: flex;
@@ -110,11 +104,11 @@ defineEmits<{
   .features-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .header-card .ct-card-title {
     font-size: 2rem;
   }
-  
+
   .description {
     font-size: 1rem;
   }
@@ -154,12 +148,14 @@ defineEmits<{
 }
 
 .feature-card {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .feature-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
 .feature-icon {
@@ -196,7 +192,7 @@ defineEmits<{
 
 .test-button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
 }
 
 .test-result {
@@ -213,7 +209,7 @@ defineEmits<{
 .ct-card {
   background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
@@ -287,7 +283,7 @@ defineEmits<{
     grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
   }
-  
+
   .ct-main {
     padding: 1.5rem;
   }
@@ -298,23 +294,23 @@ defineEmits<{
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
+
   .header-card .ct-card-title {
     font-size: 2rem;
   }
-  
+
   .description {
     font-size: 1rem;
   }
-  
+
   .feature-icon {
     font-size: 2.5rem;
   }
-  
+
   .feature-value {
     font-size: 1.2rem;
   }
-  
+
   .dashboard-container {
     gap: 1.5rem;
   }

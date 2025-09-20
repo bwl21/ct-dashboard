@@ -5,7 +5,8 @@
 ### Aufgabe: Erstelle eine ChurchTools Erweiterung
 
 **Anforderungen:**
-- **Titel:** Churchtools Dashboard 
+
+- **Titel:** Churchtools Dashboard
 - **Kürzel:** ctdashboard
 - **Zweck:** Dieses Modul hilft, das ChurchTools System zu überwachen
 - **Features:** Anzahl User, Hauptaktiviäten, Fehler, System Status
@@ -17,19 +18,23 @@
 ## Entwicklungsprozess
 
 ### 1. Projekt Setup (Root-Level)
+
 ✅ **Abgeschlossen**
+
 - Template-Dateien aus GitHub Repository heruntergeladen
 - Metadaten aktualisiert:
   - `package.json`: name auf "churchtools-dashboard"
-  - `.env`: VITE_KEY auf "ctdashboard" 
+  - `.env`: VITE_KEY auf "ctdashboard"
   - `index.html`: title auf "Churchtools Dashboard"
 - Temporäre Dateien bereinigt
 
 ### 2. Vue-Komponenten Entwicklung
+
 ✅ **Abgeschlossen**
+
 - **Vue 3 + TypeScript** Setup implementiert
 - **src/App.vue:** Development-Navbar mit ChurchTools-Styling, `ct-main` Container
-- **src/components/Start.vue:** 
+- **src/components/Start.vue:**
   - Card-basiertes Layout mit Header
   - Feature-Grid mit 4 definierten Features:
     - 👥 Anzahl User - "1,234 Benutzer"
@@ -40,16 +45,21 @@
   - Responsive Grid (mobile: 1 Spalte, desktop: 2x2)
 
 ### 3. Vite-Konfiguration
+
 ✅ **Abgeschlossen**
+
 - Vue Plugin integriert
 - Server-Konfiguration: `host: '0.0.0.0', port: 5173, allowedHosts: true`
 - Korrekte base-URL mit VITE_KEY
 
 ### 4. Git Repository Setup
+
 ✅ **Abgeschlossen**
+
 - .gitignore erweitert für Node.js/Vue (inkl. `releases/` Ordner)
 - Git-Konfiguration gesetzt
 - Initial Commit erstellt:
+
 ```
 Initial commit: ChurchTools Extension 'Churchtools Dashboard'
 
@@ -65,14 +75,18 @@ Co-authored-by: Ona <no-reply@ona.com>
 ```
 
 ### 5. Deployment-System
+
 ✅ **Abgeschlossen**
+
 - **scripts/package.js** erstellt für automatisches ZIP-Packaging
 - **npm run deploy** Kommando hinzugefügt
 - ZIP-Archive werden in `releases/` mit Namenskonvention erstellt:
   `{projektname}-v{version}-{git-hash}.zip`
 
 ### 6. Deutsche Dokumentation
+
 ✅ **Abgeschlossen**
+
 - **README.md** vollständig auf Deutsch erstellt
 - Projektbeschreibung und Zweck dokumentiert
 - Hauptfeatures des Moduls aufgelistet
@@ -84,7 +98,9 @@ Co-authored-by: Ona <no-reply@ona.com>
 - UI-Komponenten Übersicht
 
 ### 7. Development Server Test
+
 ✅ **Abgeschlossen**
+
 - Development Server erfolgreich gestartet
 - **Preview URL:** https://5173--01991558-1392-7da0-a00a-3e90c3cc85b3.eu-central-1-01.gitpod.dev
 
@@ -93,9 +109,11 @@ Co-authored-by: Ona <no-reply@ona.com>
 ## Problem: Layout zu schmal
 
 ### Benutzer-Feedback
+
 > "im Browser ist das zu schmal"
 
 ### Lösung: Layout-Optimierung
+
 ✅ **Abgeschlossen**
 
 #### Durchgeführte Änderungen:
@@ -124,6 +142,7 @@ Co-authored-by: Ona <no-reply@ona.com>
    - Box-sizing: border-box für alle Elemente
 
 #### Commit für Layout-Fix:
+
 ```
 fix: improve layout width and responsive design
 
@@ -144,6 +163,7 @@ Co-authored-by: Ona <no-reply@ona.com>
 **Origin:** `https://github.com/bwl21/ct-extension-with-ona.git`
 
 **Commits:**
+
 1. `c543156` - Initial commit: ChurchTools Extension 'Churchtools Dashboard'
 2. `9d04561` - fix: improve layout width and responsive design
 
@@ -154,6 +174,7 @@ Co-authored-by: Ona <no-reply@ona.com>
 ## Endergebnis
 
 ### ✅ Erfolgreich implementiert:
+
 - **Vue 3 + TypeScript** ChurchTools Extension
 - **4 Dashboard-Features:** Anzahl User, Hauptaktivitäten, Fehler, System Status
 - **Responsive Design** für alle Bildschirmgrößen
@@ -163,13 +184,15 @@ Co-authored-by: Ona <no-reply@ona.com>
 - **Optimierte Layout-Breite** für bessere Nutzung des Bildschirmplatzes
 
 ### 🚀 Verfügbare Kommandos:
+
 ```bash
 npm run dev      # Development Server starten
-npm run build    # Production Build erstellen  
+npm run build    # Production Build erstellen
 npm run deploy   # Build + ZIP-Package für ChurchTools
 ```
 
 ### 🌐 Live Preview:
+
 **URL:** https://5173--01991558-1392-7da0-a00a-3e90c3cc85b3.eu-central-1-01.gitpod.dev
 
 Die Extension ist vollständig funktionsfähig und bereit für die Verwendung in ChurchTools!
@@ -179,12 +202,14 @@ Die Extension ist vollständig funktionsfähig und bereit für die Verwendung in
 ## Technische Details
 
 ### Tech Stack:
+
 - **Frontend:** Vue 3 + TypeScript
 - **Build Tool:** Vite
 - **Styling:** CSS3 + ChurchTools Design System
 - **API Client:** ChurchTools Client Library
 
 ### Projektstruktur:
+
 ```
 churchtools-dashboard/
 ├── src/
@@ -206,6 +231,7 @@ churchtools-dashboard/
 ```
 
 ### ChurchTools Integration:
+
 - **Plugin-Kürzel:** `ctdashboard`
 - **Base URL:** `/ccm/ctdashboard/`
 - **Design System:** Vollständig integriert mit `.cts`, `.ct-main`, `.ct-card` etc.
