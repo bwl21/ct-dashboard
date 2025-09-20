@@ -170,7 +170,7 @@
                 </td>
                 <td class="actions" :style="{ width: columnWidths[5] + 'px' }">
                   <a
-                    :href="getAppointmentUrl(appointment.id)"
+                    :href="getAppointmentUrl(appointment)"
                     target="_blank"
                     rel="noopener noreferrer"
                     class="ct-btn ct-btn-sm ct-btn-outline"
@@ -360,10 +360,12 @@ const refreshData = async () => {
   }
 };
 
-const getAppointmentUrl = (appointmentId: number) => {
+const getAppointmentUrl = (appointment: Appointment) => {
   // Construct URL to ChurchTools instance appointment page
+  //https://bgkorntal.church.tools/?q=churchcal&startdate=2025-09-17#CalView/
   const churchtoolsBaseUrl = import.meta.env.VITE_BASE_URL || window.location.origin;
-  return `${churchtoolsBaseUrl}/calendar/appointments/${appointmentId}`;
+  debugger;
+  return `${churchtoolsBaseUrl}?q=churchcal&startdate=${appointment.base.startDate}#CalView/`;
 };
 
 const loadMockData = () => {
