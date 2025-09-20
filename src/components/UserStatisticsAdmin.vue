@@ -27,7 +27,7 @@
           </div>
         </div>
       </div>
-      
+
       <div class="ct-card chart-container">
         <div class="ct-card-header">
           <h3 class="ct-card-title">Aktivität der letzten 30 Tage</h3>
@@ -43,11 +43,11 @@
 </template>
 
 <script setup lang="ts">
-import type { DashboardModule } from '../types/modules';
+import type { DashboardModule } from '../types/modules'
 
 defineProps<{
-  module?: DashboardModule;
-}>();
+  module?: DashboardModule
+}>()
 </script>
 
 <style scoped>
@@ -81,7 +81,9 @@ h2 {
   border-radius: 8px;
   padding: 1.5rem;
   text-align: center;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
 }
 
 .stat-card:hover {
@@ -122,7 +124,7 @@ h2 {
   .stats-grid {
     grid-template-columns: 1fr 1fr;
   }
-  
+
   .stat-number {
     font-size: 1.75rem;
   }
@@ -132,11 +134,11 @@ h2 {
   .stats-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .stat-number {
     font-size: 1.5rem;
   }
-  
+
   .chart-placeholder {
     height: 200px;
   }

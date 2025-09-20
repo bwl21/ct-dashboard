@@ -7,7 +7,17 @@
       </h3>
       <div class="ct-card-actions">
         <button class="ct-btn-icon" @click.stop="$emit('navigate')">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
             <circle cx="12" cy="12" r="10"></circle>
             <polyline points="12 16 16 12 12 8"></polyline>
             <line x1="8" y1="12" x2="16" y2="12"></line>
@@ -16,12 +26,11 @@
       </div>
     </div>
     <div class="ct-card-body">
-      
       <div v-if="isLoading" class="loading-content">
         <div class="loading-spinner"></div>
         <p>{{ loadingText }}</p>
       </div>
-      
+
       <div v-else-if="error" class="error-content">
         <p class="error-message">❌ {{ error }}</p>
         <slot name="error-actions">
@@ -30,20 +39,15 @@
           </button>
         </slot>
       </div>
-      
+
       <div v-else class="card-stats">
         <div class="main-stat">
           <div class="stat-number">{{ mainStat.value }}</div>
           <div class="stat-label">{{ mainStat.label }}</div>
         </div>
-        
+
         <div class="status-breakdown">
-          <div 
-            v-for="stat in statusStats" 
-            :key="stat.key"
-            class="status-item"
-            :class="stat.type"
-          >
+          <div v-for="stat in statusStats" :key="stat.key" class="status-item" :class="stat.type">
             <div class="status-icon">{{ stat.icon }}</div>
             <div class="status-info">
               <div class="status-number">{{ stat.value }}</div>
@@ -51,25 +55,20 @@
             </div>
           </div>
         </div>
-        
-        <div class="last-update" v-if="lastUpdate">
-          {{ lastUpdateText }}: {{ lastUpdate }}
-        </div>
+
+        <div class="last-update" v-if="lastUpdate">{{ lastUpdateText }}: {{ lastUpdate }}</div>
       </div>
-      
+
       <div class="ct-card-footer">
-        <button 
-          @click="$emit('refresh')" 
+        <button
+          @click="$emit('refresh')"
           class="ct-btn ct-btn-primary ct-btn-sm"
           :disabled="isLoading"
         >
           {{ isLoading ? refreshingText : refreshText }}
         </button>
         <slot name="actions">
-          <button 
-            @click="$emit('navigate')" 
-            class="ct-btn ct-btn-sm ct-btn-outline"
-          >
+          <button @click="$emit('navigate')" class="ct-btn ct-btn-sm ct-btn-outline">
             {{ detailsText }}
           </button>
         </slot>
@@ -80,39 +79,39 @@
 
 <script setup lang="ts">
 interface StatItem {
-  key: string;
-  value: number | string;
-  label: string;
-  icon: string;
-  type?: 'success' | 'error' | 'warning' | 'info';
+  key: string
+  value: number | string
+  label: string
+  icon: string
+  type?: 'success' | 'error' | 'warning' | 'info'
 }
 
 interface MainStat {
-  value: number | string;
-  label: string;
+  value: number | string
+  label: string
 }
 
 defineProps<{
-  title: string;
-  icon: string;
-  isLoading?: boolean;
-  error?: string | null;
-  mainStat: MainStat;
-  statusStats: StatItem[];
-  lastUpdate?: string;
-  loadingText?: string;
-  retryText?: string;
-  refreshText?: string;
-  refreshingText?: string;
-  detailsText?: string;
-  lastUpdateText?: string;
-}>();
+  title: string
+  icon: string
+  isLoading?: boolean
+  error?: string | null
+  mainStat: MainStat
+  statusStats: StatItem[]
+  lastUpdate?: string
+  loadingText?: string
+  retryText?: string
+  refreshText?: string
+  refreshingText?: string
+  detailsText?: string
+  lastUpdateText?: string
+}>()
 
 defineEmits<{
-  navigate: [];
-  refresh: [];
-  retry: [];
-}>();
+  navigate: []
+  refresh: []
+  retry: []
+}>()
 </script>
 
 <style scoped>
@@ -123,7 +122,9 @@ defineEmits<{
   background: white;
   border-radius: 10px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
   overflow: hidden;
 }
 
@@ -192,8 +193,12 @@ defineEmits<{
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .error-content {
@@ -375,20 +380,20 @@ defineEmits<{
   .base-card .ct-card-body {
     padding: 1rem 1.5rem 1.5rem 1.5rem;
   }
-  
+
   .status-breakdown {
     flex-direction: column;
     gap: 0.75rem;
   }
-  
+
   .status-item {
     justify-content: center;
   }
-  
+
   .ct-card-footer {
     flex-direction: column;
   }
-  
+
   .ct-btn {
     width: 100%;
   }
@@ -398,7 +403,7 @@ defineEmits<{
   .stat-number {
     font-size: 2rem;
   }
-  
+
   .status-number {
     font-size: 1rem;
   }

@@ -46,25 +46,19 @@
     <!-- Groups Table Card -->
     <div class="ct-card table-card">
       <div class="ct-card-header">
-        <h3 class="ct-card-title">
-          Automatische Gruppen ({{ filteredGroups.length }})
-        </h3>
+        <h3 class="ct-card-title">Automatische Gruppen ({{ filteredGroups.length }})</h3>
       </div>
       <div class="ct-card-body">
         <div v-if="loading" class="loading-state">
           <div class="loading-spinner"></div>
           <p>Lade automatische Gruppen...</p>
         </div>
-        
+
         <div v-else-if="error" class="error-state">
           <p class="error-message">❌ {{ error }}</p>
           <div class="error-actions">
-            <button @click="refreshGroups" class="ct-btn ct-btn-secondary">
-              Erneut versuchen
-            </button>
-            <button @click="loadMockData" class="ct-btn ct-btn-outline">
-              Mock-Daten laden
-            </button>
+            <button @click="refreshGroups" class="ct-btn ct-btn-secondary">Erneut versuchen</button>
+            <button @click="loadMockData" class="ct-btn ct-btn-outline">Mock-Daten laden</button>
           </div>
           <div v-if="isDevelopment" class="dev-info">
             <p><strong>Entwicklungsmodus:</strong></p>
@@ -76,9 +70,7 @@
         <div v-else-if="filteredGroups.length === 0" class="empty-state">
           <p>Keine automatischen Gruppen gefunden.</p>
           <div class="empty-actions">
-            <button @click="refreshGroups" class="ct-btn ct-btn-primary">
-              Erneut laden
-            </button>
+            <button @click="refreshGroups" class="ct-btn ct-btn-primary">Erneut laden</button>
             <button @click="loadMockData" class="ct-btn ct-btn-secondary">
               Mock-Daten laden (für Demo)
             </button>
@@ -89,42 +81,66 @@
           <table class="groups-table" ref="tableRef">
             <thead>
               <tr>
-                <th @click="sortBy('id')" class="sortable resizable" :style="{ width: columnWidths[0] + 'px' }">
+                <th
+                  @click="sortBy('id')"
+                  class="sortable resizable"
+                  :style="{ width: columnWidths[0] + 'px' }"
+                >
                   Gruppen-ID
                   <span class="sort-indicator" v-if="sortField === 'id'">
                     {{ sortDirection === 'asc' ? '↑' : '↓' }}
                   </span>
                   <div class="resize-handle" @mousedown="startResize($event, 0)"></div>
                 </th>
-                <th @click="sortBy('groupTypeId')" class="sortable resizable" :style="{ width: columnWidths[1] + 'px' }">
+                <th
+                  @click="sortBy('groupTypeId')"
+                  class="sortable resizable"
+                  :style="{ width: columnWidths[1] + 'px' }"
+                >
                   Gruppentyp
                   <span class="sort-indicator" v-if="sortField === 'groupTypeId'">
                     {{ sortDirection === 'asc' ? '↑' : '↓' }}
                   </span>
                   <div class="resize-handle" @mousedown="startResize($event, 1)"></div>
                 </th>
-                <th @click="sortBy('name')" class="sortable resizable" :style="{ width: columnWidths[2] + 'px' }">
+                <th
+                  @click="sortBy('name')"
+                  class="sortable resizable"
+                  :style="{ width: columnWidths[2] + 'px' }"
+                >
                   Name
                   <span class="sort-indicator" v-if="sortField === 'name'">
                     {{ sortDirection === 'asc' ? '↑' : '↓' }}
                   </span>
                   <div class="resize-handle" @mousedown="startResize($event, 2)"></div>
                 </th>
-                <th @click="sortBy('dynamicGroupStatus')" class="sortable resizable" :style="{ width: columnWidths[3] + 'px' }">
+                <th
+                  @click="sortBy('dynamicGroupStatus')"
+                  class="sortable resizable"
+                  :style="{ width: columnWidths[3] + 'px' }"
+                >
                   Konfiguration
                   <span class="sort-indicator" v-if="sortField === 'dynamicGroupStatus'">
                     {{ sortDirection === 'asc' ? '↑' : '↓' }}
                   </span>
                   <div class="resize-handle" @mousedown="startResize($event, 3)"></div>
                 </th>
-                <th @click="sortBy('lastExecution')" class="sortable resizable" :style="{ width: columnWidths[4] + 'px' }">
+                <th
+                  @click="sortBy('lastExecution')"
+                  class="sortable resizable"
+                  :style="{ width: columnWidths[4] + 'px' }"
+                >
                   Letzte Ausführung
                   <span class="sort-indicator" v-if="sortField === 'lastExecution'">
                     {{ sortDirection === 'asc' ? '↑' : '↓' }}
                   </span>
                   <div class="resize-handle" @mousedown="startResize($event, 4)"></div>
                 </th>
-                <th @click="sortBy('executionStatus')" class="sortable resizable" :style="{ width: columnWidths[5] + 'px' }">
+                <th
+                  @click="sortBy('executionStatus')"
+                  class="sortable resizable"
+                  :style="{ width: columnWidths[5] + 'px' }"
+                >
                   Status
                   <span class="sort-indicator" v-if="sortField === 'executionStatus'">
                     {{ sortDirection === 'asc' ? '↑' : '↓' }}
@@ -144,7 +160,10 @@
                   <strong>{{ group.name }}</strong>
                 </td>
                 <td class="group-config" :style="{ width: columnWidths[3] + 'px' }">
-                  <span class="status-badge" :class="getConfigStatusClass(group.dynamicGroupStatus)">
+                  <span
+                    class="status-badge"
+                    :class="getConfigStatusClass(group.dynamicGroupStatus)"
+                  >
                     {{ getConfigStatusText(group.dynamicGroupStatus) }}
                   </span>
                 </td>
@@ -152,7 +171,10 @@
                   {{ formatDate(group.lastExecution) }}
                 </td>
                 <td class="execution-status" :style="{ width: columnWidths[5] + 'px' }">
-                  <span class="status-badge" :class="getExecutionStatusClass(group.executionStatus)">
+                  <span
+                    class="status-badge"
+                    :class="getExecutionStatusClass(group.executionStatus)"
+                  >
                     {{ getExecutionStatusText(group.executionStatus) }}
                   </span>
                 </td>
@@ -177,158 +199,164 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { churchtoolsClient } from '@churchtools/churchtools-client';
-import type { Group, DynamicGroupStatus } from '../ct-types';
-import type { DashboardModule } from '../types/modules';
+import { ref, computed, onMounted } from 'vue'
+import { churchtoolsClient } from '@churchtools/churchtools-client'
+import type { Group, DynamicGroupStatus } from '../ct-types'
+import type { DashboardModule } from '../types/modules'
 
 defineProps<{
-  module: DashboardModule;
-}>();
+  module: DashboardModule
+}>()
 
 interface AutomaticGroup {
-  id: number;
-  name: string;
-  groupType: string;
-  dynamicGroupStatus: DynamicGroupStatus;
-  lastExecution: string | null;
-  executionStatus: 'success' | 'error' | 'running' | 'pending' | 'unknown';
-  dynamicGroupUpdateStarted: string | null;
-  dynamicGroupUpdateFinished: string | null;
+  id: number
+  name: string
+  groupType: string
+  dynamicGroupStatus: DynamicGroupStatus
+  lastExecution: string | null
+  executionStatus: 'success' | 'error' | 'running' | 'pending' | 'unknown'
+  dynamicGroupUpdateStarted: string | null
+  dynamicGroupUpdateFinished: string | null
 }
 
-const groups = ref<AutomaticGroup[]>([]);
-const loading = ref(false);
-const error = ref<string | null>(null);
-const searchTerm = ref('');
-const sortField = ref<keyof AutomaticGroup>('id');
-const sortDirection = ref<'asc' | 'desc'>('asc');
-const isDevelopment = ref(import.meta.env.MODE === 'development');
+const groups = ref<AutomaticGroup[]>([])
+const loading = ref(false)
+const error = ref<string | null>(null)
+const searchTerm = ref('')
+const sortField = ref<keyof AutomaticGroup>('id')
+const sortDirection = ref<'asc' | 'desc'>('asc')
+const isDevelopment = ref(import.meta.env.MODE === 'development')
 
 // Column resizing
-const tableRef = ref<HTMLTableElement>();
-const columnWidths = ref([100, 150, 250, 150, 180, 120, 100]); // Default widths
-const isResizing = ref(false);
-const resizingColumn = ref(-1);
-const startX = ref(0);
-const startWidth = ref(0);
+const tableRef = ref<HTMLTableElement>()
+const columnWidths = ref([100, 150, 250, 150, 180, 120, 100]) // Default widths
+const isResizing = ref(false)
+const resizingColumn = ref(-1)
+const startX = ref(0)
+const startWidth = ref(0)
 
 const filteredGroups = computed(() => {
-  let filtered = groups.value;
+  let filtered = groups.value
 
   // Filter by search term
   if (searchTerm.value) {
-    const term = searchTerm.value.toLowerCase();
-    filtered = filtered.filter(group =>
-      group.name.toLowerCase().includes(term) ||
-      group.id.toString().includes(term)
-    );
+    const term = searchTerm.value.toLowerCase()
+    filtered = filtered.filter(
+      (group) => group.name.toLowerCase().includes(term) || group.id.toString().includes(term)
+    )
   }
 
   // Sort
   filtered.sort((a, b) => {
-    const aVal = a[sortField.value];
-    const bVal = b[sortField.value];
-    
-    let comparison = 0;
-    if (aVal < bVal) comparison = -1;
-    if (aVal > bVal) comparison = 1;
-    
-    return sortDirection.value === 'asc' ? comparison : -comparison;
-  });
+    const aVal = a[sortField.value]
+    const bVal = b[sortField.value]
 
-  return filtered;
-});
+    let comparison = 0
+    if (aVal < bVal) comparison = -1
+    if (aVal > bVal) comparison = 1
+
+    return sortDirection.value === 'asc' ? comparison : -comparison
+  })
+
+  return filtered
+})
 
 const sortBy = (field: keyof AutomaticGroup) => {
   if (sortField.value === field) {
-    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
+    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
   } else {
-    sortField.value = field;
-    sortDirection.value = 'asc';
+    sortField.value = field
+    sortDirection.value = 'asc'
   }
-};
+}
 
 const refreshGroups = async () => {
-  loading.value = true;
-  error.value = null;
+  loading.value = true
+  error.value = null
 
   try {
-    console.log('Fetching groups from ChurchTools API...');
-    
-    let allGroups: Group[] = [];
-    let page = 1;
-    const limit = 100; // ChurchTools API Standard
-    let hasMore = true;
+    console.log('Fetching groups from ChurchTools API...')
+
+    let allGroups: Group[] = []
+    let page = 1
+    const limit = 100 // ChurchTools API Standard
+    let hasMore = true
 
     // Fetch all groups with proper pagination
     while (hasMore) {
-      console.log(`Fetching page ${page} with limit ${limit}...`);
-      
-      const response = await churchtoolsClient.get(`/groups?include=settings,information&limit=${limit}&page=${page}`);
+      console.log(`Fetching page ${page} with limit ${limit}...`)
 
-      console.log(`API Response for page ${page}:`, response);
-      console.log('Response type:', typeof response);
-      console.log('Response keys:', Object.keys(response || {}));
+      const response = await churchtoolsClient.get(
+        `/groups?include=settings,information&limit=${limit}&page=${page}`
+      )
+
+      console.log(`API Response for page ${page}:`, response)
+      console.log('Response type:', typeof response)
+      console.log('Response keys:', Object.keys(response || {}))
 
       // Handle different possible response formats
-      let pageGroups: Group[] = [];
-      
+      let pageGroups: Group[] = []
+
       if (Array.isArray(response)) {
         // Direct array response
-        pageGroups = response;
+        pageGroups = response
       } else if (response && response.data && Array.isArray(response.data)) {
         // Wrapped in data property
-        pageGroups = response.data;
+        pageGroups = response.data
       } else if (response && Array.isArray(response.groups)) {
         // Wrapped in groups property
-        pageGroups = response.groups;
+        pageGroups = response.groups
       } else {
-        console.error('Unexpected API response format:', response);
-        throw new Error(`Invalid API response format. Expected array or object with data/groups property, got: ${typeof response}`);
+        console.error('Unexpected API response format:', response)
+        throw new Error(
+          `Invalid API response format. Expected array or object with data/groups property, got: ${typeof response}`
+        )
       }
 
-      console.log(`Groups found on page ${page}:`, pageGroups.length);
-      
+      console.log(`Groups found on page ${page}:`, pageGroups.length)
+
       if (pageGroups.length === 0) {
         // No more groups
-        hasMore = false;
+        hasMore = false
       } else {
         // Add groups to total collection
-        allGroups = allGroups.concat(pageGroups);
-        
+        allGroups = allGroups.concat(pageGroups)
+
         // Check if we got fewer results than the limit (indicates last page)
         if (pageGroups.length < limit) {
-          hasMore = false;
+          hasMore = false
         } else {
-          page++;
-          
+          page++
+
           // Safety limit to prevent infinite loops
           if (page > 100) {
-            console.warn('Reached safety limit of 100 pages');
-            hasMore = false;
+            console.warn('Reached safety limit of 100 pages')
+            hasMore = false
           }
         }
       }
     }
 
-    console.log('Total groups found across all pages:', allGroups.length);
+    console.log('Total groups found across all pages:', allGroups.length)
 
     // Filter for automatic groups (those with dynamic group rules)
     const automaticGroups = allGroups
-      .filter(group => {
-        const hasSettings = group.settings?.dynamicGroupStatus;
-        const isAutomatic = hasSettings && 
+      .filter((group) => {
+        const hasSettings = group.settings?.dynamicGroupStatus
+        const isAutomatic =
+          hasSettings &&
           group.settings.dynamicGroupStatus !== 'none' &&
-          group.settings.dynamicGroupStatus !== null;
-        
+          group.settings.dynamicGroupStatus !== null
+
         if (hasSettings) {
-          console.log(`Group ${group.id}: ${group.information?.name}, status: ${group.settings.dynamicGroupStatus}, isAutomatic: ${isAutomatic}`);
+          console.log(
+            `Group ${group.id}: ${group.information?.name}, status: ${group.settings.dynamicGroupStatus}, isAutomatic: ${isAutomatic}`
+          )
         }
-        
-        return isAutomatic;
+
+        return isAutomatic
       })
-      .map(group => ({
+      .map((group) => ({
         id: group.id,
         name: group.name || `Gruppe ${group.id}`,
         groupTypeId: group.information?.groupTypeId || null,
@@ -336,114 +364,132 @@ const refreshGroups = async () => {
         lastExecution: group.settings?.dynamicGroupUpdateFinished || null,
         executionStatus: determineExecutionStatus(group),
         dynamicGroupUpdateStarted: group.settings?.dynamicGroupUpdateStarted || null,
-        dynamicGroupUpdateFinished: group.settings?.dynamicGroupUpdateFinished || null
-      }));
+        dynamicGroupUpdateFinished: group.settings?.dynamicGroupUpdateFinished || null,
+      }))
 
-    console.log('Automatic groups found:', automaticGroups.length);
-    groups.value = automaticGroups;
+    console.log('Automatic groups found:', automaticGroups.length)
+    groups.value = automaticGroups
   } catch (err: any) {
-    console.error('Fehler beim Laden der automatischen Gruppen:', err);
-    
-    let errorMessage = 'Fehler beim Laden der automatischen Gruppen.';
-    
+    console.error('Fehler beim Laden der automatischen Gruppen:', err)
+
+    let errorMessage = 'Fehler beim Laden der automatischen Gruppen.'
+
     if (err.response) {
-      errorMessage += ` HTTP ${err.response.status}: ${err.response.statusText}`;
+      errorMessage += ` HTTP ${err.response.status}: ${err.response.statusText}`
       if (err.response.status === 401) {
-        errorMessage += ' (Nicht authentifiziert)';
+        errorMessage += ' (Nicht authentifiziert)'
       } else if (err.response.status === 403) {
-        errorMessage += ' (Keine Berechtigung)';
+        errorMessage += ' (Keine Berechtigung)'
       }
     } else if (err.message) {
-      errorMessage += ` ${err.message}`;
+      errorMessage += ` ${err.message}`
     }
-    
-    error.value = errorMessage;
+
+    error.value = errorMessage
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 const determineExecutionStatus = (group: Group): AutomaticGroup['executionStatus'] => {
-  const started = group.settings?.dynamicGroupUpdateStarted;
-  const finished = group.settings?.dynamicGroupUpdateFinished;
-  
-  if (!started && !finished) return 'pending';
-  if (started && !finished) return 'running';
+  const started = group.settings?.dynamicGroupUpdateStarted
+  const finished = group.settings?.dynamicGroupUpdateFinished
+
+  if (!started && !finished) return 'pending'
+  if (started && !finished) return 'running'
   if (started && finished) {
     // Check if started is more recent than finished (indicating a running process)
-    const startedDate = new Date(started);
-    const finishedDate = new Date(finished);
-    if (startedDate > finishedDate) return 'running';
-    return 'success';
+    const startedDate = new Date(started)
+    const finishedDate = new Date(finished)
+    if (startedDate > finishedDate) return 'running'
+    return 'success'
   }
-  
-  return 'unknown';
-};
+
+  return 'unknown'
+}
 
 const getConfigStatusClass = (status: DynamicGroupStatus) => {
   switch (status) {
-    case 'active': return 'status-active';
-    case 'inactive': return 'status-inactive';
-    case 'manual': return 'status-manual';
-    default: return 'status-unknown';
+    case 'active':
+      return 'status-active'
+    case 'inactive':
+      return 'status-inactive'
+    case 'manual':
+      return 'status-manual'
+    default:
+      return 'status-unknown'
   }
-};
+}
 
 const getConfigStatusText = (status: DynamicGroupStatus) => {
   switch (status) {
-    case 'active': return 'Aktiv';
-    case 'inactive': return 'Inaktiv';
-    case 'manual': return 'Manuell';
-    default: return 'Unbekannt';
+    case 'active':
+      return 'Aktiv'
+    case 'inactive':
+      return 'Inaktiv'
+    case 'manual':
+      return 'Manuell'
+    default:
+      return 'Unbekannt'
   }
-};
+}
 
 const getExecutionStatusClass = (status: AutomaticGroup['executionStatus']) => {
   switch (status) {
-    case 'success': return 'status-success';
-    case 'error': return 'status-error';
-    case 'running': return 'status-running';
-    case 'pending': return 'status-pending';
-    default: return 'status-unknown';
+    case 'success':
+      return 'status-success'
+    case 'error':
+      return 'status-error'
+    case 'running':
+      return 'status-running'
+    case 'pending':
+      return 'status-pending'
+    default:
+      return 'status-unknown'
   }
-};
+}
 
 const getExecutionStatusText = (status: AutomaticGroup['executionStatus']) => {
   switch (status) {
-    case 'success': return 'Erfolgreich';
-    case 'error': return 'Fehler';
-    case 'running': return 'Läuft';
-    case 'pending': return 'Ausstehend';
-    default: return 'Unbekannt';
+    case 'success':
+      return 'Erfolgreich'
+    case 'error':
+      return 'Fehler'
+    case 'running':
+      return 'Läuft'
+    case 'pending':
+      return 'Ausstehend'
+    default:
+      return 'Unbekannt'
   }
-};
+}
 
 const formatDate = (dateString: string | null) => {
-  if (!dateString) return 'Nie';
-  
+  if (!dateString) return 'Nie'
+
   try {
-    const date = new Date(dateString);
+    const date = new Date(dateString)
     return date.toLocaleString('de-DE', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
-      minute: '2-digit'
-    });
+      minute: '2-digit',
+    })
   } catch {
-    return 'Ungültiges Datum';
+    return 'Ungültiges Datum'
   }
-};
+}
 
 const getGroupUrl = (groupId: number) => {
   // Construct URL to ChurchTools instance group dynamic settings page
   // Use the ChurchTools base URL from the client configuration
-  const churchtoolsBaseUrl = import.meta.env.VITE_BASE_URL || window.location.origin;
-  return `${churchtoolsBaseUrl}/groups/${groupId}/settings/dynamic-group`;
-};
+  const churchtoolsBaseUrl = import.meta.env.VITE_BASE_URL || window.location.origin
+  return `${churchtoolsBaseUrl}/groups/${groupId}/settings/dynamic-group`
+}
 
 const loadMockData = () => {
-  console.log('Loading mock data...');
+  console.log('Loading mock data...')
   groups.value = [
     {
       id: 1,
@@ -453,7 +499,7 @@ const loadMockData = () => {
       lastExecution: '2025-09-07T10:30:00Z',
       executionStatus: 'success',
       dynamicGroupUpdateStarted: '2025-09-07T10:25:00Z',
-      dynamicGroupUpdateFinished: '2025-09-07T10:30:00Z'
+      dynamicGroupUpdateFinished: '2025-09-07T10:30:00Z',
     },
     {
       id: 2,
@@ -463,7 +509,7 @@ const loadMockData = () => {
       lastExecution: '2025-09-07T08:15:00Z',
       executionStatus: 'success',
       dynamicGroupUpdateStarted: '2025-09-07T08:10:00Z',
-      dynamicGroupUpdateFinished: '2025-09-07T08:15:00Z'
+      dynamicGroupUpdateFinished: '2025-09-07T08:15:00Z',
     },
     {
       id: 3,
@@ -473,7 +519,7 @@ const loadMockData = () => {
       lastExecution: '2025-09-06T22:00:00Z',
       executionStatus: 'error',
       dynamicGroupUpdateStarted: '2025-09-06T21:55:00Z',
-      dynamicGroupUpdateFinished: '2025-09-06T22:00:00Z'
+      dynamicGroupUpdateFinished: '2025-09-06T22:00:00Z',
     },
     {
       id: 4,
@@ -483,7 +529,7 @@ const loadMockData = () => {
       lastExecution: null,
       executionStatus: 'pending',
       dynamicGroupUpdateStarted: null,
-      dynamicGroupUpdateFinished: null
+      dynamicGroupUpdateFinished: null,
     },
     {
       id: 5,
@@ -493,49 +539,49 @@ const loadMockData = () => {
       lastExecution: '2025-09-07T11:45:00Z',
       executionStatus: 'running',
       dynamicGroupUpdateStarted: '2025-09-07T11:45:00Z',
-      dynamicGroupUpdateFinished: null
-    }
-  ];
-  error.value = null;
-};
+      dynamicGroupUpdateFinished: null,
+    },
+  ]
+  error.value = null
+}
 
 const startResize = (event: MouseEvent, columnIndex: number) => {
-  event.preventDefault();
-  event.stopPropagation();
-  
-  isResizing.value = true;
-  resizingColumn.value = columnIndex;
-  startX.value = event.clientX;
-  startWidth.value = columnWidths.value[columnIndex];
-  
-  document.addEventListener('mousemove', handleResize);
-  document.addEventListener('mouseup', stopResize);
-  document.body.style.cursor = 'col-resize';
-  document.body.style.userSelect = 'none';
-};
+  event.preventDefault()
+  event.stopPropagation()
+
+  isResizing.value = true
+  resizingColumn.value = columnIndex
+  startX.value = event.clientX
+  startWidth.value = columnWidths.value[columnIndex]
+
+  document.addEventListener('mousemove', handleResize)
+  document.addEventListener('mouseup', stopResize)
+  document.body.style.cursor = 'col-resize'
+  document.body.style.userSelect = 'none'
+}
 
 const handleResize = (event: MouseEvent) => {
-  if (!isResizing.value || resizingColumn.value === -1) return;
-  
-  const deltaX = event.clientX - startX.value;
-  const newWidth = Math.max(50, startWidth.value + deltaX); // Minimum width of 50px
-  
-  columnWidths.value[resizingColumn.value] = newWidth;
-};
+  if (!isResizing.value || resizingColumn.value === -1) return
+
+  const deltaX = event.clientX - startX.value
+  const newWidth = Math.max(50, startWidth.value + deltaX) // Minimum width of 50px
+
+  columnWidths.value[resizingColumn.value] = newWidth
+}
 
 const stopResize = () => {
-  isResizing.value = false;
-  resizingColumn.value = -1;
-  
-  document.removeEventListener('mousemove', handleResize);
-  document.removeEventListener('mouseup', stopResize);
-  document.body.style.cursor = '';
-  document.body.style.userSelect = '';
-};
+  isResizing.value = false
+  resizingColumn.value = -1
+
+  document.removeEventListener('mousemove', handleResize)
+  document.removeEventListener('mouseup', stopResize)
+  document.body.style.cursor = ''
+  document.body.style.userSelect = ''
+}
 
 onMounted(() => {
-  refreshGroups();
-});
+  refreshGroups()
+})
 </script>
 
 <style scoped>
@@ -766,8 +812,12 @@ onMounted(() => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .error-message {
@@ -800,7 +850,7 @@ onMounted(() => {
 .ct-card {
   background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
@@ -830,7 +880,9 @@ onMounted(() => {
   background-color: #fff;
   border: 1px solid #ced4da;
   border-radius: 0.25rem;
-  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  transition:
+    border-color 0.15s ease-in-out,
+    box-shadow 0.15s ease-in-out;
 }
 
 .ct-input:focus {
@@ -898,34 +950,34 @@ onMounted(() => {
   .header-card .ct-card-title {
     font-size: 2rem;
   }
-  
+
   .description {
     font-size: 1rem;
   }
-  
+
   .controls-row {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .search-container {
     min-width: auto;
   }
-  
+
   .button-group {
     flex-direction: column;
     width: 100%;
   }
-  
+
   .empty-actions {
     flex-direction: column;
     align-items: center;
   }
-  
+
   .groups-table {
     font-size: 0.875rem;
   }
-  
+
   .groups-table th,
   .groups-table td {
     padding: 0.5rem;
@@ -936,7 +988,7 @@ onMounted(() => {
   .automatic-groups-admin {
     gap: 1rem;
   }
-  
+
   .ct-card-header,
   .ct-card-body {
     padding: 1rem;

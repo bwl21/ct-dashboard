@@ -11,12 +11,9 @@
 
     <div class="ct-main">
       <div v-if="currentView === 'dashboard'">
-        <Start 
-          :modules="modules" 
-          @navigate="navigateToModule" 
-        />
+        <Start :modules="modules" @navigate="navigateToModule" />
       </div>
-      
+
       <div v-else>
         <div class="admin-header">
           <button @click="currentView = 'dashboard'" class="ct-btn ct-btn-outline back-btn">
@@ -24,23 +21,27 @@
           </button>
           <h2>{{ currentModule?.title || 'Admin' }}</h2>
         </div>
-        <component :is="currentModule?.adminComponent" v-if="currentModule" :module="currentModule" />
+        <component
+          :is="currentModule?.adminComponent"
+          v-if="currentModule"
+          :module="currentModule"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { churchtoolsClient } from '@churchtools/churchtools-client';
-import type { Person } from './ct-types';
-import type { DashboardModule } from './types/modules';
-import Start from './components/Start.vue';
-import AutomaticGroupsCard from './components/AutomaticGroupsCard.vue';
-import AutomaticGroupsAdmin from './components/AutomaticGroupsAdmin.vue';
-import ExpiringAppointmentsCard from './components/ExpiringAppointmentsCard.vue';
-import ExpiringAppointmentsAdmin from './components/ExpiringAppointmentsAdmin.vue';
-import BeispielCard from './components/BeispielCard.vue';
+import { ref, computed, onMounted } from 'vue'
+import { churchtoolsClient } from '@churchtools/churchtools-client'
+import type { Person } from './ct-types'
+import type { DashboardModule } from './types/modules'
+import Start from './components/Start.vue'
+import AutomaticGroupsCard from './components/AutomaticGroupsCard.vue'
+import AutomaticGroupsAdmin from './components/AutomaticGroupsAdmin.vue'
+import ExpiringAppointmentsCard from './components/ExpiringAppointmentsCard.vue'
+import ExpiringAppointmentsAdmin from './components/ExpiringAppointmentsAdmin.vue'
+import BeispielCard from './components/BeispielCard.vue'
 
 const modules: DashboardModule[] = [
   {
@@ -49,43 +50,41 @@ const modules: DashboardModule[] = [
     icon: '⚙️',
     description: 'Verwaltung automatischer Gruppen',
     cardComponent: AutomaticGroupsCard,
-    adminComponent: AutomaticGroupsAdmin
+    adminComponent: AutomaticGroupsAdmin,
   },
   {
     id: 'expiring-appointments',
-    title: 'Ablaufende Serientermine',
+    title: 'auslaufende Terminserien',
     icon: '📅',
-    description: 'Verwaltung von ablaufenden Serienterminen',
+    description: 'Verwaltung von ablaufenden Terminserienn',
     cardComponent: ExpiringAppointmentsCard,
-    adminComponent: ExpiringAppointmentsAdmin
-  }
-];
+    adminComponent: ExpiringAppointmentsAdmin,
+  },
+]
 
-const userDisplayName = ref<string>('');
-const isDevelopment = ref<boolean>(false);
-const currentView = ref<'dashboard' | string>('dashboard');
-const currentModuleId = ref<string>('');
+const userDisplayName = ref<string>('')
+const isDevelopment = ref<boolean>(false)
+const currentView = ref<'dashboard' | string>('dashboard')
+const currentModuleId = ref<string>('')
 
-const currentModule = computed(() => 
-  modules.find(m => m.id === currentModuleId.value)
-);
+const currentModule = computed(() => modules.find((m) => m.id === currentModuleId.value))
 
 const navigateToModule = (moduleId: string) => {
-  currentModuleId.value = moduleId;
-  currentView.value = moduleId;
-};
+  currentModuleId.value = moduleId
+  currentView.value = moduleId
+}
 
 onMounted(async () => {
-  isDevelopment.value = import.meta.env.MODE === 'development';
-  
+  isDevelopment.value = import.meta.env.MODE === 'development'
+
   try {
-    const user = await churchtoolsClient.get<Person>('/whoami');
-    userDisplayName.value = [user.firstName, user.lastName].filter(Boolean).join(' ') || 'Benutzer';
+    const user = await churchtoolsClient.get<Person>('/whoami')
+    userDisplayName.value = [user.firstName, user.lastName].filter(Boolean).join(' ') || 'Benutzer'
   } catch (error) {
-    console.error('Fehler beim Laden der Benutzerdaten:', error);
-    userDisplayName.value = 'Benutzer';
+    console.error('Fehler beim Laden der Benutzerdaten:', error)
+    userDisplayName.value = 'Benutzer'
   }
-});
+})
 </script>
 
 <style scoped>
@@ -96,7 +95,7 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .ct-navbar-brand {
@@ -161,13 +160,13 @@ onMounted(async () => {
   .ct-main {
     padding: 1rem;
   }
-  
+
   .ct-navbar {
     padding: 1rem;
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   .back-btn {
     width: 100%;
     justify-content: center;

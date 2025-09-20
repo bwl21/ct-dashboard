@@ -1,0 +1,33 @@
+{
+  "semi": false,
+  "singleQuote": true,
+  "printWidth": 100,
+  "trailingComma": "es5",
+  "tabWidth": 2,
+  "useTabs": false,
+  "bracketSpacing": true,
+  "arrowParens": "always",
+  "endOfLine": "auto",
+  "htmlWhitespaceSensitivity": "ignore",
+  "overrides": [
+    {
+      "files": "*.vue",
+      "options": {
+        "parser": "vue"
+      }
+    },
+    {
+      "files": "*.{js,jsx,ts,tsx}",
+      "options": {
+        "semi": false,
+        "singleQuote": true
+      }
+    },
+    {
+      "files": "*.{json,md}",
+      "options": {
+        "singleQuote": false
+      }
+    }
+  ]
+}
