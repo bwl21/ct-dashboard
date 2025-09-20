@@ -40,11 +40,35 @@
             <input
               v-model="searchTerm"
               type="text"
-              placeholder="Termine durchsuchen..."
+              placeholder="Suche nach ID, Titel oder Kalender..."
               class="ct-input search-input"
             />
           </div>
+          <div class="filter-container">
+            <select v-model="calendarFilter" class="ct-select filter-select">
+              <option value="">Alle Kalender</option>
+              <option v-for="calendar in availableCalendars" :key="calendar.id" :value="calendar.id">
+                {{ calendar.name }}
+              </option>
+            </select>
+          </div>
+          <div class="filter-container">
+            <select v-model="statusFilter" class="ct-select filter-select">
+              <option value="">Alle Status</option>
+              <option value="expiring">Läuft bald ab</option>
+              <option value="expired">Abgelaufen</option>
+              <option value="active">Aktiv</option>
+            </select>
+          </div>
           <div class="button-group">
+            <button
+              @click="clearFilters"
+              class="ct-btn ct-btn-secondary clear-btn"
+              :disabled="!hasActiveFilters"
+              title="Alle Filter zurücksetzen"
+            >
+              Filter löschen
+            </button>
             <button
               @click="refreshData"
               class="ct-btn ct-btn-primary refresh-btn"
@@ -52,14 +76,7 @@
             >
               {{ isLoading ? 'Lädt...' : 'Aktualisieren' }}
             </button>
-            <button
-              @click="loadMockData"
-              class="ct-btn ct-btn-outline mock-btn"
-              :disabled="isLoading"
-              title="Lädt Beispieldaten zum Testen der Oberfläche"
-            >
-              Mock-Daten
-            </button>
+
           </div>
         </div>
       </div>
@@ -84,9 +101,6 @@
             <button @click="refreshData" class="ct-btn ct-btn-secondary">
               Erneut versuchen
             </button>
-            <button @click="loadMockData" class="ct-btn ct-btn-outline">
-              Mock-Daten laden
-            </button>
           </div>
           <div v-if="isDevelopment" class="dev-info">
             <p><strong>Entwicklungsmodus:</strong></p>
@@ -101,22 +115,26 @@
             <button @click="refreshData" class="ct-btn ct-btn-primary">
               Erneut laden
             </button>
-            <button @click="loadMockData" class="ct-btn ct-btn-secondary">
-              Mock-Daten laden (für Demo)
-            </button>
           </div>
         </div>
 
         <div v-else class="table-container">
+          <div v-if="hasActiveFilters" class="active-filters" style="margin-bottom: 1rem; padding: 0.5rem; background: #e3f2fd; border-radius: 4px; font-size: 0.85rem;">
+            <strong>Aktive Filter:</strong>
+            <span v-if="searchTerm"> Suche: "{{ searchTerm }}"</span>
+            <span v-if="calendarFilter"> | Kalender: {{ availableCalendars.find(c => c.id == calendarFilter)?.name }}</span>
+            <span v-if="statusFilter"> | Status: {{ statusFilter }}</span>
+            <span v-if="daysInAdvance !== 'alle'"> | Tage: {{ daysInAdvance }}</span>
+            | Ergebnisse: {{ filteredAppointments.length }}
+          </div>
           <table class="appointments-table" ref="tableRef">
             <thead>
               <tr>
-                <th @click="sortBy('id')" class="sortable resizable" :style="{ width: columnWidths[0] + 'px' }">
+                <th @click="sortBy('id')" class="sortable id-header" :style="{ width: columnWidths[0] + 'px' }">
                   ID
                   <span class="sort-indicator" v-if="sortField === 'id'">
                     {{ sortDirection === 'asc' ? '↑' : '↓' }}
                   </span>
-                  <div class="resize-handle" @mousedown="startResize($event, 0)"></div>
                 </th>
                 <th @click="sortBy('title')" class="sortable resizable" :style="{ width: columnWidths[1] + 'px' }">
                   Titel
@@ -222,13 +240,15 @@ interface CalendarMapEntry {
 const isLoading = ref(true);
 const error = ref<string | null>(null);
 const searchTerm = ref('');
+const calendarFilter = ref('');
+const statusFilter = ref('');
 const sortField = ref<'id' | 'title' | 'calendar' | 'startDate' | 'repeatUntil'>('id');
 const sortDirection = ref<'asc' | 'desc'>('asc');
 const isDevelopment = ref(import.meta.env.MODE === 'development');
 
 // Column resizing
 const tableRef = ref<HTMLTableElement>();
-const columnWidths = ref([80, 200, 200, 180, 180, 120]); // Pixel-Breiten für Drag&Drop
+const columnWidths = ref([55, 225, 200, 180, 180, 120]); // Pixel-Breiten für Drag&Drop
 const isResizing = ref(false);
 const resizingColumn = ref(-1);
 const startX = ref(0);
@@ -272,33 +292,78 @@ const stopResize = () => {
 
 const daysInAdvance = ref('alle'); // Default to "alle"
 
+// Helper function to get appointment status
+const getAppointmentStatus = (appointment: Appointment): 'active' | 'expiring' | 'expired' => {
+  const now = new Date();
+  let effectiveEndDate = null;
+  
+  if (appointment.base.repeatUntil) {
+    effectiveEndDate = new Date(appointment.base.repeatUntil);
+  } else if (appointment.base.additionals && Array.isArray(appointment.base.additionals) && appointment.base.additionals.length > 0) {
+    const latestAdditional = appointment.base.additionals
+      .map(additional => new Date(additional.startDate || additional.date))
+      .filter(date => !isNaN(date.getTime()))
+      .sort((a, b) => b.getTime() - a.getTime())[0];
+    
+    if (latestAdditional) {
+      effectiveEndDate = latestAdditional;
+    }
+  }
+  
+  if (!effectiveEndDate) return 'active';
+  
+  const daysUntilEnd = Math.ceil((effectiveEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  
+  if (effectiveEndDate < now) return 'expired';
+  if (daysUntilEnd <= 30) return 'expiring'; // 30 days threshold
+  return 'active';
+};
+
 // Data
 const appointments = ref<Appointment[]>([]);
 const calendarMap = ref<Map<number, {name: string, isGroup: boolean}>>(new Map());
 
+// Computed properties for filters
+const availableCalendars = computed(() => {
+  const calendars = new Map();
+  appointments.value.forEach(appointment => {
+    const calendar = appointment.base.calendar;
+    if (calendar && !calendars.has(calendar.id)) {
+      calendars.set(calendar.id, {
+        id: calendar.id,
+        name: calendar.name
+      });
+    }
+  });
+  return Array.from(calendars.values()).sort((a, b) => a.name.localeCompare(b.name));
+});
+
+const hasActiveFilters = computed(() => {
+  return searchTerm.value !== '' || 
+         calendarFilter.value !== '' || 
+         statusFilter.value !== '' ||
+         daysInAdvance.value !== 'alle';
+});
+
 // Computed properties
 const filteredAppointments = computed(() => {
   let filtered = appointments.value;
-  console.log('Filtering appointments, total:', filtered.length, 'daysInAdvance:', daysInAdvance.value);
+  console.log('Filtering appointments, total:', filtered.length);
 
-  // Filter by expiration date
+  // 1. Filter by days in advance (existing logic)
   const now = new Date();
   
   if (daysInAdvance.value === 'alle') {
-    // For "alle": show all recurring appointments (already filtered by findExpiringSeries)
-    // Additional filter to ensure we only show recurring appointments
+    // Show all recurring appointments
     filtered = filtered.filter(appointment => {
       if (!appointment.base || !appointment.base.repeatId) {
         return false;
       }
       
-      // Determine the effective end date
       let effectiveEndDate = null;
-      
       if (appointment.base.repeatUntil) {
         effectiveEndDate = new Date(appointment.base.repeatUntil);
       } else if (appointment.base.additionals && Array.isArray(appointment.base.additionals) && appointment.base.additionals.length > 0) {
-        // Find the latest date in additionals
         const latestAdditional = appointment.base.additionals
           .map(additional => new Date(additional.startDate || additional.date))
           .filter(date => !isNaN(date.getTime()))
@@ -309,33 +374,26 @@ const filteredAppointments = computed(() => {
         }
       }
       
-      // If we have an effective end date, check if it's not expired
       if (effectiveEndDate && !isNaN(effectiveEndDate.getTime())) {
         return effectiveEndDate >= now;
       }
       
-      // If no end date can be determined, include it (ongoing series)
       return true;
     });
-    console.log('After date filtering (alle):', filtered.length);
   } else {
-    // For specific days: show appointments expiring within the selected timeframe
+    // Filter by specific days
     const days = parseInt(daysInAdvance.value);
     const maxDate = new Date(now.getTime() + (days * 24 * 60 * 60 * 1000));
     
     filtered = filtered.filter(appointment => {
-      // Check if appointment has base property and is recurring
       if (!appointment.base || !appointment.base.repeatId) {
         return false;
       }
       
-      // Determine the effective end date
       let effectiveEndDate = null;
-      
       if (appointment.base.repeatUntil) {
         effectiveEndDate = new Date(appointment.base.repeatUntil);
       } else if (appointment.base.additionals && Array.isArray(appointment.base.additionals) && appointment.base.additionals.length > 0) {
-        // Find the latest date in additionals
         const latestAdditional = appointment.base.additionals
           .map(additional => new Date(additional.startDate || additional.date))
           .filter(date => !isNaN(date.getTime()))
@@ -346,24 +404,49 @@ const filteredAppointments = computed(() => {
         }
       }
       
-      // For specific days, we need an end date to check
       if (!effectiveEndDate || isNaN(effectiveEndDate.getTime())) {
         return false;
       }
       
       return effectiveEndDate >= now && effectiveEndDate <= maxDate;
     });
-    console.log('After date filtering (specific days):', filtered.length);
   }
 
-  // Filter by search term
-  if (searchTerm.value) {
-    const term = searchTerm.value.toLowerCase();
-    filtered = filtered.filter(appointment =>
-      appointment.base.title.toLowerCase().includes(term) ||
-      appointment.base.calendar?.name?.toLowerCase().includes(term) ||
-      appointment.id.toString().includes(term)
+  // 2. Filter by calendar
+  if (calendarFilter.value) {
+    const calendarId = parseInt(calendarFilter.value);
+    const beforeCount = filtered.length;
+    filtered = filtered.filter(appointment => 
+      appointment.base.calendar?.id === calendarId
     );
+    console.log(`Calendar filter applied: ${calendarId} -> ${beforeCount} to ${filtered.length} results`);
+  }
+
+  // 3. Filter by status
+  if (statusFilter.value) {
+    const beforeCount = filtered.length;
+    filtered = filtered.filter(appointment => 
+      getAppointmentStatus(appointment) === statusFilter.value
+    );
+    console.log(`Status filter applied: ${statusFilter.value} -> ${beforeCount} to ${filtered.length} results`);
+  }
+
+  // 4. Filter by search term (ID, title, calendar)
+  if (searchTerm.value) {
+    const term = searchTerm.value.toLowerCase().trim();
+    filtered = filtered.filter(appointment => {
+      // Search in ID (convert to string safely)
+      const idMatch = (appointment.id?.toString() || '').includes(term);
+      
+      // Search in title
+      const titleMatch = (appointment.base?.title || '').toLowerCase().includes(term);
+      
+      // Search in calendar name
+      const calendarMatch = (appointment.base?.calendar?.name || '').toLowerCase().includes(term);
+      
+      return idMatch || titleMatch || calendarMatch;
+    });
+    console.log(`Search filter applied: "${term}" -> ${filtered.length} results`);
   }
 
   // Sort
@@ -415,6 +498,13 @@ const sortBy = (field: 'id' | 'title' | 'calendar' | 'startDate' | 'repeatUntil'
     sortField.value = field;
     sortDirection.value = 'asc';
   }
+};
+
+const clearFilters = () => {
+  searchTerm.value = '';
+  calendarFilter.value = '';
+  statusFilter.value = '';
+  daysInAdvance.value = 'alle';
 };
 
 const refreshData = async () => {
@@ -521,38 +611,7 @@ const getAppointmentUrl = (appointment: Appointment) => {
   return `${churchtoolsBaseUrl}?q=churchcal&startdate=${appointment.base.startDate}#CalView/`;
 };
 
-const loadMockData = () => {
-  console.log('Loading mock data...');
-  appointments.value = [
-    {
-      id: 1,
-      base: {
-        title: 'Jugendgottesdienst Serie',
-        startDate: '2025-09-20T10:00:00Z',
-        repeatUntil: '2025-09-25T10:00:00Z',
-        calendar: { id: 1, name: 'Hauptkalender', color: '#007bff' }
-      }
-    },
-    {
-      id: 2,
-      base: {
-        title: 'Bibelstunde Wöchentlich',
-        startDate: '2025-09-22T19:00:00Z',
-        repeatUntil: '2025-09-28T19:00:00Z',
-        calendar: { id: 2, name: 'Gruppenkalender', color: '#28a745' }
-      }
-    },
-    {
-      id: 3,
-      base: {
-        title: 'Gebetskreis',
-        startDate: '2025-09-18T18:30:00Z',
-        repeatUntil: '2025-09-15T18:30:00Z',
-        calendar: { id: 3, name: 'Gemeindekalender', color: '#dc3545' }
-      }
-    }
-  ] as Appointment[];
-};
+
 
 const formatDate = (dateString: string | null) => {
   if (!dateString) return 'Nie';
@@ -706,8 +765,29 @@ onMounted(() => {
 }
 
 .search-container {
-  flex: 1;
+  flex: 2;
   min-width: 280px;
+}
+
+.filter-container {
+  min-width: 180px;
+}
+
+.filter-select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--ct-border-color, #e0e0e0);
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background: var(--ct-bg-primary, #ffffff);
+  color: var(--ct-text-primary, #2c3e50);
+  transition: all 0.2s;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: var(--ct-primary, #3498db);
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
 }
 
 .search-input {
@@ -891,7 +971,7 @@ onMounted(() => {
 
 .appointments-table th {
   text-align: left;
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 0.75rem;
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--ct-text-secondary, #6c757d);
@@ -901,6 +981,11 @@ onMounted(() => {
   letter-spacing: 0.02em;
   overflow: visible;
   box-sizing: border-box;
+}
+
+.appointments-table td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--ct-border-color, #f0f2f5);
 }
 
 .appointments-table th.sortable {
@@ -955,8 +1040,12 @@ th.sortable:hover {
   font-family: 'Courier New', monospace;
   font-size: 0.85rem;
   color: #000000 !important;
-  text-align: center;
+  text-align: right;
   font-weight: bold;
+}
+
+.appointments-table .id-header {
+  text-align: right;
 }
 
 th.active {
@@ -1010,7 +1099,7 @@ th, td {
   display: flex !important;
   gap: 0.5rem;
   justify-content: flex-end !important;
-  padding: 0.5rem;
+  padding: 0.5rem 0.75rem;
   min-width: 100px !important;
   white-space: nowrap;
 }
