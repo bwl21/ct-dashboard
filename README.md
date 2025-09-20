@@ -1,19 +1,31 @@
-# Churchtools Dashboard
+# ChurchTools Dashboard
 
-Eine moderne ChurchTools-Erweiterung zur Systemüberwachung und -verwaltung.
+Eine moderne ChurchTools-Erweiterung für Terminverwaltung und Systemüberwachung.
 
 ## 📋 Projektbeschreibung
 
-Das **Churchtools Dashboard** ist eine Vue 3 + TypeScript basierte Erweiterung für ChurchTools, die dabei hilft, das ChurchTools System zu überwachen. Die Extension bietet eine benutzerfreundliche Oberfläche zur Anzeige wichtiger Systemmetriken und -aktivitäten.
+Das **ChurchTools Dashboard** ist eine Vue 3 + TypeScript basierte Erweiterung für ChurchTools, die eine zentrale Übersicht über wichtige Systemdaten bietet. Die Extension nutzt eine moderne BaseCard-Architektur für konsistente und wiederverwendbare UI-Komponenten.
 
 **Kürzel:** `ctdashboard`
 
 ## ✨ Hauptfeatures
 
-- **👥 Anzahl User** - Überwachung der registrierten Benutzer im System
-- **📊 Hauptaktivitäten** - Monitoring der wichtigsten Systemaktivitäten  
-- **⚠️ Fehler** - Überwachung von Systemfehlern und Problemen
-- **🟢 System Status** - Allgemeiner Gesundheitsstatus des Systems
+### 📅 Auslaufende Termine
+- **Übersicht:** Zentrale Anzeige aller auslaufenden Terminserien
+- **Admin-Panel:** Detaillierte Verwaltung mit erweiterten Filtermöglichkeiten
+- **Multi-Filter:** Suche nach ID, Titel, Kalender + Status- und Kalender-Filter
+- **Sortierung:** Alle Spalten sortierbar (ID, Titel, Kalender, Datum)
+- **Export:** Direkte Links zu ChurchTools-Kalenderansicht
+
+### ⚙️ Automatische Gruppen
+- **Status-Übersicht:** Anzeige aller automatischen Gruppen mit Ausführungsstatus
+- **Statistiken:** Erfolgreiche, fehlerhafte und ausstehende Gruppenaktualisierungen
+- **Monitoring:** Letzte Aktualisierungszeiten und Ausführungsstatus
+
+### 🎯 BaseCard-Architektur
+- **Konsistentes Design:** Einheitliche Karten-Layouts für alle Module
+- **Wiederverwendbar:** Standardisierte Komponenten für schnelle Entwicklung
+- **Flexibel:** Unterstützung für Props und Slots für maximale Anpassbarkeit
 
 ## 🎨 Design System
 
@@ -135,21 +147,31 @@ VITE_PASSWORD=ihr-passwort
 
 ### Projektstruktur
 ```
-churchtools-dashboard/
+ct-dashboard/
 ├── src/
 │   ├── components/
-│   │   └── Start.vue          # Haupt-Dashboard-Komponente
-│   ├── App.vue                # Root-Komponente
-│   ├── main.ts                # Entry Point
-│   ├── style.css              # Globale Styles
-│   └── ct-types.d.ts          # TypeScript-Definitionen
+│   │   ├── Start.vue                      # Haupt-Dashboard
+│   │   ├── BaseCard.vue                   # Basis-Karten-Komponente
+│   │   ├── BeispielCard.vue               # Beispiel-Implementierung
+│   │   ├── ExpiringAppointmentsCard.vue   # Auslaufende Termine (Übersicht)
+│   │   ├── ExpiringAppointmentsAdmin.vue  # Auslaufende Termine (Admin)
+│   │   ├── AutomaticGroupsCard.vue        # Automatische Gruppen (Übersicht)
+│   │   └── AutomaticGroupsAdmin.vue       # Automatische Gruppen (Admin)
+│   ├── services/
+│   │   └── churchtools.ts                 # ChurchTools API Service
+│   ├── types/
+│   │   └── modules.ts                     # Modul-Definitionen
+│   ├── App.vue                            # Root-Komponente
+│   ├── main.ts                            # Entry Point
+│   ├── style.css                          # Globale Styles
+│   └── ct-types.d.ts                      # ChurchTools TypeScript-Definitionen
 ├── scripts/
-│   └── package.js             # Deployment-Script
-├── releases/                  # Generierte ZIP-Pakete
-├── dist/                      # Build-Output
-├── package.json               # Projekt-Konfiguration
-├── vite.config.ts             # Vite-Konfiguration
-└── README.md                  # Diese Dokumentation
+│   └── package.js                         # Deployment-Script
+├── releases/                              # Generierte ZIP-Pakete
+├── dist/                                  # Build-Output
+├── package.json                           # Projekt-Konfiguration
+├── vite.config.ts                         # Vite-Konfiguration
+└── README.md                              # Diese Dokumentation
 ```
 
 ### Responsive Design
@@ -178,30 +200,90 @@ git push -u origin main
 - **develop** - Entwicklungsbranch
 - **feature/** - Feature-Branches
 
-## 🧩 UI-Komponenten Übersicht
+## 🧩 Komponenten-Architektur
 
-### Header Card
-- Gradient-Hintergrund mit Projekt-Titel
-- Zentrale Beschreibung des Moduls
+### BaseCard-System
+Die BaseCard-Architektur bietet eine einheitliche Basis für alle Dashboard-Karten:
 
-### Feature Grid
-- 4 Feature-Karten in responsivem Grid
-- Hover-Effekte mit Animation
-- Icon, Beschreibung und Wert pro Feature
+```vue
+<BaseCard
+  :title="'Mein Modul'"
+  :icon="'🎯'"
+  :is-loading="loading"
+  :error="error"
+  :main-stat="{ value: 42, label: 'Hauptstatistik' }"
+  :status-stats="statusStats"
+  :last-update="lastUpdate"
+  @refresh="refreshData"
+  @navigate="navigateToAdmin"
+/>
+```
 
-### Interactive Test Section
-- Test-Button mit Zähler-Funktionalität
-- Erfolgs-Feedback nach Ausführung
-- Demonstration der Interaktivität
+**Props:**
+- `title` - Titel der Karte
+- `icon` - Emoji-Icon für die Karte
+- `is-loading` - Loading-Status
+- `error` - Fehlermeldung (optional)
+- `main-stat` - Hauptstatistik (Wert + Label)
+- `status-stats` - Array von Status-Statistiken
+- `last-update` - Zeitstempel der letzten Aktualisierung
 
-### Development Navbar
-- Nur im Development-Modus sichtbar
-- Zeigt aktuellen Benutzer an
-- ChurchTools-konformes Styling
+**Events:**
+- `@refresh` - Daten neu laden
+- `@navigate` - Navigation zur Detail-Ansicht
+- `@retry` - Erneuter Versuch bei Fehlern
+
+### Admin-Panels
+
+#### ExpiringAppointmentsAdmin
+**Features:**
+- **Multi-Filter-System:** Suche, Kalender-Filter, Status-Filter, Tage-Filter
+- **Sortierbare Tabelle:** Alle Spalten (ID, Titel, Kalender, Datum) sortierbar
+- **Responsive Design:** Spaltenbreiten per Drag&Drop anpassbar
+- **Export-Funktionen:** Direkte Links zu ChurchTools-Kalender
+
+**Filter-Optionen:**
+- **Suchfeld:** ID, Titel, Kalender-Name
+- **Kalender-Dropdown:** Automatisch aus Daten generiert
+- **Status-Filter:** Aktiv, Läuft ab, Abgelaufen
+- **Tage-Filter:** 1, 7, 14, 30, 60, 90, 180, 365 Tage oder "alle"
+
+#### AutomaticGroupsAdmin
+**Features:**
+- **Gruppen-Übersicht:** Alle automatischen Gruppen mit Status
+- **Ausführungs-Monitoring:** Erfolg, Fehler, Ausstehend
+- **Zeitstempel-Tracking:** Letzte Ausführungszeiten
+
+### Dashboard-Layout
+- **Header Card:** Projekt-Titel mit Versionsnummer
+- **Module Grid:** Responsive 2x2 Grid für Desktop, 1-spaltig für Mobile
+- **Navigation:** Klickbare Karten führen zu Detail-Ansichten
+
+## 📚 Dokumentation
+
+### Vollständige Dokumentation
+- **[📋 Dokumentations-Übersicht](./docs/README.md)** - Alle Dokumentationen im Überblick
+- **[👨‍💻 Entwickler-Handbuch](./docs/DEVELOPMENT.md)** - Architektur und Entwicklung
+- **[🔌 API-Dokumentation](./docs/API.md)** - Interfaces und Datenstrukturen
+- **[🚀 Deployment-Guide](./docs/DEPLOYMENT.md)** - Build und Installation
+- **[📝 Changelog](./CHANGELOG.md)** - Versionshistorie
+
+### Quick Links
+- **BaseCard-Architektur**: [DEVELOPMENT.md#basecard-architektur](./docs/DEVELOPMENT.md#basecard-architektur)
+- **Filter-System**: [API.md#filter--sortierung-api](./docs/API.md#filter--sortierung-api)
+- **ChurchTools-Integration**: [DEPLOYMENT.md#churchtools-installation](./docs/DEPLOYMENT.md#churchtools-installation)
 
 ## 📞 Support
 
-Bei Fragen zur ChurchTools-API wenden Sie sich an das [ChurchTools Forum](https://forum.church.tools).
+### Dokumentation & Hilfe
+- **[📚 Vollständige Dokumentation](./docs/)** - Umfassende Anleitungen
+- **[ChurchTools Forum](https://forum.church.tools)** - Community-Support
+- **[GitHub Issues](https://github.com/ihr-username/ct-dashboard/issues)** - Bug-Reports
+
+### Entwickler-Support
+- **[API-Referenz](./docs/API.md)** - Technische Details
+- **[Entwickler-Guide](./docs/DEVELOPMENT.md)** - Architektur-Dokumentation
+- **[Deployment-Anleitung](./docs/DEPLOYMENT.md)** - Installation und Updates
 
 ## 📄 Lizenz
 
@@ -209,4 +291,5 @@ Dieses Projekt steht unter der MIT-Lizenz. Siehe LICENSE-Datei für Details.
 
 ---
 
-**Entwickelt für ChurchTools** - Die moderne Gemeindeverwaltung
+**Entwickelt für ChurchTools** - Die moderne Gemeindeverwaltung  
+**Version:** 1.0.0 | **Dokumentation:** [docs/](./docs/) | **Support:** [GitHub Issues](https://github.com/ihr-username/ct-dashboard/issues)
