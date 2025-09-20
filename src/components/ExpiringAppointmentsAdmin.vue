@@ -111,43 +111,53 @@
           <table class="appointments-table" ref="tableRef">
             <thead>
               <tr>
-                <th @click="sortBy('title')" class="sortable resizable" :style="{ width: columnWidths[0] + 'px' }">
-                  Titel
-                  <span class="sort-indicator" v-if="sortField === 'title'">
+                <th @click="sortBy('id')" class="sortable resizable" :style="{ width: columnWidths[0] + 'px' }">
+                  ID
+                  <span class="sort-indicator" v-if="sortField === 'id'">
                     {{ sortDirection === 'asc' ? '↑' : '↓' }}
                   </span>
                   <div class="resize-handle" @mousedown="startResize($event, 0)"></div>
                 </th>
-                <th @click="sortBy('calendar')" class="sortable resizable" :style="{ width: columnWidths[1] + 'px' }">
-                  Kalender
-                  <span class="sort-indicator" v-if="sortField === 'calendar'">
+                <th @click="sortBy('title')" class="sortable resizable" :style="{ width: columnWidths[1] + 'px' }">
+                  Titel
+                  <span class="sort-indicator" v-if="sortField === 'title'">
                     {{ sortDirection === 'asc' ? '↑' : '↓' }}
                   </span>
                   <div class="resize-handle" @mousedown="startResize($event, 1)"></div>
                 </th>
-                <th @click="sortBy('startDate')" class="sortable resizable" :style="{ width: columnWidths[2] + 'px' }">
-                  Nächstes Vorkommen
-                  <span class="sort-indicator" v-if="sortField === 'startDate'">
+                <th @click="sortBy('calendar')" class="sortable resizable" :style="{ width: columnWidths[2] + 'px' }">
+                  Kalender
+                  <span class="sort-indicator" v-if="sortField === 'calendar'">
                     {{ sortDirection === 'asc' ? '↑' : '↓' }}
                   </span>
                   <div class="resize-handle" @mousedown="startResize($event, 2)"></div>
                 </th>
-                <th @click="sortBy('repeatUntil')" class="sortable resizable" :style="{ width: columnWidths[3] + 'px' }">
-                  Letztes Vorkommen
-                  <span class="sort-indicator" v-if="sortField === 'repeatUntil'">
+                <th @click="sortBy('startDate')" class="sortable resizable" :style="{ width: columnWidths[3] + 'px' }">
+                  Nächstes Vorkommen
+                  <span class="sort-indicator" v-if="sortField === 'startDate'">
                     {{ sortDirection === 'asc' ? '↑' : '↓' }}
                   </span>
                   <div class="resize-handle" @mousedown="startResize($event, 3)"></div>
                 </th>
-                <th :style="{ width: columnWidths[4] + 'px', textAlign: 'right' }">Aktionen</th>
+                <th @click="sortBy('repeatUntil')" class="sortable resizable" :style="{ width: columnWidths[4] + 'px' }">
+                  Letztes Vorkommen
+                  <span class="sort-indicator" v-if="sortField === 'repeatUntil'">
+                    {{ sortDirection === 'asc' ? '↑' : '↓' }}
+                  </span>
+                  <div class="resize-handle" @mousedown="startResize($event, 4)"></div>
+                </th>
+                <th :style="{ width: columnWidths[5] + 'px', textAlign: 'right' }">Aktionen</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="appointment in filteredAppointments" :key="appointment.id" class="appointment-row">
-                <td :style="{ width: columnWidths[0] + 'px' }">
+                <td class="id-cell" :style="{ width: columnWidths[0] + 'px' }">
+                  {{ appointment.id || appointment.base?.id || 'NO_ID' }}
+                </td>
+                <td :style="{ width: columnWidths[1] + 'px' }">
                   {{ appointment.base.title }}
                 </td>
-                <td class="calendar-cell" :style="{ width: columnWidths[1] + 'px' }">
+                <td class="calendar-cell" :style="{ width: columnWidths[2] + 'px' }">
                   <div 
                     class="calendar-info"
                     :style="{
@@ -160,10 +170,10 @@
                     </span>
                   </div>
                 </td>
-                <td class="date-cell" :style="{ width: columnWidths[2] + 'px' }">
+                <td class="date-cell" :style="{ width: columnWidths[3] + 'px' }">
                   {{ formatDate(appointment.base.startDate) }}
                 </td>
-                <td class="date-cell" :style="{ width: columnWidths[3] + 'px' }">
+                <td class="date-cell" :style="{ width: columnWidths[4] + 'px' }">
                   {{ getEffectiveEndDate(appointment) }}
                 </td>
                 <td class="actions" :style="{ width: 'auto' }">
@@ -212,13 +222,13 @@ interface CalendarMapEntry {
 const isLoading = ref(true);
 const error = ref<string | null>(null);
 const searchTerm = ref('');
-const sortField = ref<keyof Appointment>('title');
+const sortField = ref<'id' | 'title' | 'calendar' | 'startDate' | 'repeatUntil'>('id');
 const sortDirection = ref<'asc' | 'desc'>('asc');
 const isDevelopment = ref(import.meta.env.MODE === 'development');
 
 // Column resizing
 const tableRef = ref<HTMLTableElement>();
-const columnWidths = ref([200, 200, 180, 180, 120]); // Pixel-Breiten für Drag&Drop
+const columnWidths = ref([80, 200, 200, 180, 180, 120]); // Pixel-Breiten für Drag&Drop
 const isResizing = ref(false);
 const resizingColumn = ref(-1);
 const startX = ref(0);
@@ -358,8 +368,34 @@ const filteredAppointments = computed(() => {
 
   // Sort
   filtered.sort((a, b) => {
-    const aVal = a[sortField.value];
-    const bVal = b[sortField.value];
+    let aVal: any;
+    let bVal: any;
+    
+    switch (sortField.value) {
+      case 'id':
+        aVal = parseInt(a.id);
+        bVal = parseInt(b.id);
+        break;
+      case 'title':
+        aVal = a.base.title;
+        bVal = b.base.title;
+        break;
+      case 'calendar':
+        aVal = a.base.calendar?.name || '';
+        bVal = b.base.calendar?.name || '';
+        break;
+      case 'startDate':
+        aVal = new Date(a.base.startDate);
+        bVal = new Date(b.base.startDate);
+        break;
+      case 'repeatUntil':
+        aVal = a.base.repeatUntil ? new Date(a.base.repeatUntil) : new Date(0);
+        bVal = b.base.repeatUntil ? new Date(b.base.repeatUntil) : new Date(0);
+        break;
+      default:
+        aVal = a[sortField.value];
+        bVal = b[sortField.value];
+    }
     
     let comparison = 0;
     if (aVal < bVal) comparison = -1;
@@ -372,7 +408,7 @@ const filteredAppointments = computed(() => {
   return filtered;
 });
 
-const sortBy = (field: keyof Appointment) => {
+const sortBy = (field: 'id' | 'title' | 'calendar' | 'startDate' | 'repeatUntil') => {
   if (sortField.value === field) {
     sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
   } else {
@@ -423,7 +459,10 @@ const refreshData = async () => {
     console.log('Appointments found:', appointments.value.length);
     console.log('Sample appointments:', appointments.value.slice(0, 5).map(a => ({
       id: a.id,
+      idType: typeof a.id,
       hasBase: !!a.base,
+      baseId: a.base?.id,
+      baseIdType: typeof a.base?.id,
       repeatId: a.base?.repeatId,
       repeatUntil: a.base?.repeatUntil,
       title: a.base?.title || a.title,
@@ -910,6 +949,14 @@ th.sortable {
 
 th.sortable:hover {
   background-color: var(--ct-bg-tertiary, #f1f3f5);
+}
+
+.appointments-table .id-cell {
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  color: #000000 !important;
+  text-align: center;
+  font-weight: bold;
 }
 
 th.active {
