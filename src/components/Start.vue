@@ -4,6 +4,7 @@
     <div class="ct-card header-card">
       <div class="ct-card-header">
         <h1 class="ct-card-title">ChurchTools Dashboard</h1>
+        <span class="version-badge">v{{ version }}</span>
       </div>
       <div class="ct-card-body">
         <p class="description">Zentrale Übersicht für ChurchTools Module</p>
@@ -31,6 +32,9 @@
 <script setup lang="ts">
 import type { PropType } from 'vue';
 import type { DashboardModule } from '../types/modules';
+import packageJson from '../../package.json';
+
+const version = packageJson.version;
 
 defineProps({
   modules: {
@@ -216,6 +220,9 @@ defineEmits<{
 .ct-card-header {
   padding: 1.5rem;
   border-bottom: 1px solid #e9ecef;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .ct-card-body {
@@ -227,6 +234,16 @@ defineEmits<{
   font-size: 1.5rem;
   font-weight: 600;
   color: #2c3e50;
+}
+
+.version-badge {
+  background: #007bff;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
 }
 
 .ct-btn {
