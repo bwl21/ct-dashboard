@@ -13,8 +13,8 @@
     refreshing-text="Lädt..."
     details-text="Details anzeigen"
     last-update-text="Letzte Aktualisierung"
+    @navigate="$emit('navigate-to-admin')"
     @refresh="refreshData"
-    @navigate="$emit('navigate')"
     @retry="loadMockData"
   />
 </template>
@@ -22,18 +22,34 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { churchtoolsClient } from '@churchtools/churchtools-client';
-import type { Group, DynamicGroupStatus } from '../ct-types';
-import type { DashboardModule } from '../types/modules';
 import BaseCard from './BaseCard.vue';
-import type { MainStat, StatusStat } from './BaseCard.vue';
+
+interface Group {
+  id: number;
+  name: string;
+  settings?: {
+    dynamicGroupStatus?: DynamicGroupStatus;
+    dynamicGroupUpdateStarted?: string;
+    dynamicGroupUpdateFinished?: string;
+  };
+}
+
+interface DynamicGroupStatus {
+  active: boolean;
+  lastExecution: string | null;
+}
 
 defineProps<{
-  module: DashboardModule;
+  module: {
+    id: string;
+    title: string;
+    icon: string;
+    description: string;
+  };
 }>();
 
-// Emit für Navigation
 defineEmits<{
-  navigate: []
+  'navigate-to-admin': [];
 }>();
 
 interface AutomaticGroup {
@@ -69,49 +85,39 @@ const pendingGroups = computed(() =>
   ).length
 );
 
-// BaseCard computed properties
-const mainStat = computed((): MainStat => ({
+const mainStat = computed(() => ({
   value: totalGroups.value,
   label: 'Automatische Gruppen'
 }));
 
-const formattedLastUpdate = computed(() => {
-  if (!lastUpdate.value) return null;
-  
-  try {
-    const date = new Date(lastUpdate.value);
-    return date.toLocaleString('de-DE', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  } catch {
-    return null;
-  }
-});
-
-const statusStats = computed((): StatusStat[] => [
+const statusStats = computed(() => [
   {
-    icon: '✅',
+    key: 'success',
     value: successfulGroups.value,
     label: 'Erfolgreich',
-    type: 'success'
+    icon: '✅',
+    type: 'success' as const
   },
   {
-    icon: '❌',
+    key: 'error',
     value: errorGroups.value,
     label: 'Fehler',
-    type: 'error'
+    icon: '❌',
+    type: 'error' as const
   },
   {
-    icon: '⏳',
+    key: 'pending',
     value: pendingGroups.value,
     label: 'Ausstehend',
-    type: 'warning'
+    icon: '⏳',
+    type: 'warning' as const
   }
 ]);
+
+const formattedLastUpdate = computed(() => {
+  if (!lastUpdate.value) return '';
+  return formatDate(lastUpdate.value);
+});
 
 const determineExecutionStatus = (group: Group): AutomaticGroup['executionStatus'] => {
   const started = group.settings?.dynamicGroupUpdateStarted;
@@ -129,55 +135,40 @@ const determineExecutionStatus = (group: Group): AutomaticGroup['executionStatus
   return 'unknown';
 };
 
-const refreshData = async () => {
+const formatDate = (dateString: string): string => {
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleString('de-DE', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch {
+    return 'Ungültiges Datum';
+  }
+};
+
+const fetchGroups = async () => {
   loading.value = true;
   error.value = null;
-
+  
   try {
     console.log('Fetching automatic groups for card...');
+    const response = await churchtoolsClient.get<Group[]>('/groups');
     
-    let allGroups: Group[] = [];
-    let page = 1;
-    const limit = 100;
-    let hasMore = true;
-
-    while (hasMore) {
-      const response = await churchtoolsClient.get(`/groups?include=settings&limit=${limit}&page=${page}`);
-      
-      let pageGroups: Group[] = [];
-      if (Array.isArray(response)) {
-        pageGroups = response;
-      } else if (response && response.data && Array.isArray(response.data)) {
-        pageGroups = response.data;
-      } else if (response && Array.isArray(response.groups)) {
-        pageGroups = response.groups;
-      }
-      
-      if (pageGroups.length === 0) {
-        hasMore = false;
-      } else {
-        allGroups = allGroups.concat(pageGroups);
-        if (pageGroups.length < limit) {
-          hasMore = false;
-        } else {
-          page++;
-          if (page > 100) break; // Safety limit
-        }
-      }
+    if (!Array.isArray(response)) {
+      throw new Error('Invalid response format');
     }
 
-    // Filter for automatic groups
-    const automaticGroups = allGroups
-      .filter(group => 
-        group.settings?.dynamicGroupStatus && 
-        group.settings.dynamicGroupStatus !== 'none' &&
-        group.settings.dynamicGroupStatus !== null
-      )
+    const automaticGroups = response
+      .filter(group => group.settings?.dynamicGroupStatus?.active)
       .map(group => ({
         id: group.id,
-        name: group.name || `Gruppe ${group.id}`,
-        dynamicGroupStatus: group.settings?.dynamicGroupStatus || 'none',
-        lastExecution: group.settings?.dynamicGroupUpdateFinished || null,
+        name: group.name,
+        dynamicGroupStatus: group.settings!.dynamicGroupStatus!,
+        lastExecution: group.settings!.dynamicGroupStatus!.lastExecution,
         executionStatus: determineExecutionStatus(group),
         dynamicGroupUpdateStarted: group.settings?.dynamicGroupUpdateStarted || null,
         dynamicGroupUpdateFinished: group.settings?.dynamicGroupUpdateFinished || null
@@ -185,60 +176,44 @@ const refreshData = async () => {
 
     groups.value = automaticGroups;
     lastUpdate.value = new Date().toISOString();
+    
     console.log(`Found ${automaticGroups.length} automatic groups`);
-  } catch (err: any) {
-    console.error('Error loading automatic groups:', err);
-    error.value = 'Fehler beim Laden der automatischen Gruppen.';
+  } catch (err) {
+    console.error('Error fetching groups:', err);
+    error.value = 'Fehler beim Laden der Gruppendaten';
   } finally {
     loading.value = false;
   }
 };
 
 const loadMockData = () => {
+  console.log('Loading mock data for automatic groups...');
   groups.value = [
     {
       id: 1,
-      name: 'Jugendgruppe Automatisch',
-      dynamicGroupStatus: 'active',
-      lastExecution: '2025-09-07T10:30:00Z',
+      name: 'Jugendgruppe Auto',
+      dynamicGroupStatus: { active: true, lastExecution: '2024-01-15T10:30:00Z' },
+      lastExecution: '2024-01-15T10:30:00Z',
       executionStatus: 'success',
-      dynamicGroupUpdateStarted: '2025-09-07T10:25:00Z',
-      dynamicGroupUpdateFinished: '2025-09-07T10:30:00Z'
+      dynamicGroupUpdateStarted: '2024-01-15T10:25:00Z',
+      dynamicGroupUpdateFinished: '2024-01-15T10:30:00Z'
     },
     {
       id: 2,
-      name: 'Neue Mitglieder',
-      dynamicGroupStatus: 'active',
-      lastExecution: '2025-09-07T08:15:00Z',
-      executionStatus: 'success',
-      dynamicGroupUpdateStarted: '2025-09-07T08:10:00Z',
-      dynamicGroupUpdateFinished: '2025-09-07T08:15:00Z'
+      name: 'Erwachsene Auto',
+      dynamicGroupStatus: { active: true, lastExecution: '2024-01-14T09:15:00Z' },
+      lastExecution: '2024-01-14T09:15:00Z',
+      executionStatus: 'error',
+      dynamicGroupUpdateStarted: '2024-01-14T09:10:00Z',
+      dynamicGroupUpdateFinished: '2024-01-14T09:15:00Z'
     },
     {
       id: 3,
-      name: 'Inaktive Mitglieder',
-      dynamicGroupStatus: 'inactive',
-      lastExecution: '2025-09-06T22:00:00Z',
-      executionStatus: 'error',
-      dynamicGroupUpdateStarted: '2025-09-06T21:55:00Z',
-      dynamicGroupUpdateFinished: '2025-09-06T22:00:00Z'
-    },
-    {
-      id: 4,
-      name: 'Geburtstage diese Woche',
-      dynamicGroupStatus: 'active',
+      name: 'Mitarbeiter Auto',
+      dynamicGroupStatus: { active: true, lastExecution: null },
       lastExecution: null,
       executionStatus: 'pending',
       dynamicGroupUpdateStarted: null,
-      dynamicGroupUpdateFinished: null
-    },
-    {
-      id: 5,
-      name: 'Mitarbeiter Gottesdienst',
-      dynamicGroupStatus: 'manual',
-      lastExecution: '2025-09-07T11:45:00Z',
-      executionStatus: 'running',
-      dynamicGroupUpdateStarted: '2025-09-07T11:45:00Z',
       dynamicGroupUpdateFinished: null
     }
   ];
@@ -246,10 +221,11 @@ const loadMockData = () => {
   error.value = null;
 };
 
-
+const refreshData = () => {
+  fetchGroups();
+};
 
 onMounted(() => {
   refreshData();
 });
 </script>
-

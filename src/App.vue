@@ -40,12 +40,13 @@ import AutomaticGroupsCard from './components/AutomaticGroupsCard.vue';
 import AutomaticGroupsAdmin from './components/AutomaticGroupsAdmin.vue';
 import ExpiringAppointmentsCard from './components/ExpiringAppointmentsCard.vue';
 import ExpiringAppointmentsAdmin from './components/ExpiringAppointmentsAdmin.vue';
+import BeispielCard from './components/BeispielCard.vue';
 
 const modules: DashboardModule[] = [
   {
     id: 'automatic-groups',
     title: 'Automatische Gruppen',
-    icon: '🔄',
+    icon: '⚙️',
     description: 'Verwaltung automatischer Gruppen',
     cardComponent: AutomaticGroupsCard,
     adminComponent: AutomaticGroupsAdmin
