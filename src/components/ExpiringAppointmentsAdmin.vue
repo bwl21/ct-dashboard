@@ -139,20 +139,13 @@
                   </span>
                   <div class="resize-handle" @mousedown="startResize($event, 3)"></div>
                 </th>
-                <th @click="sortBy('status')" class="sortable resizable" :style="{ width: columnWidths[4] + 'px' }">
-                  Status
-                  <span class="sort-indicator" v-if="sortField === 'status'">
-                    {{ sortDirection === 'asc' ? '↑' : '↓' }}
-                  </span>
-                  <div class="resize-handle" @mousedown="startResize($event, 4)"></div>
-                </th>
-                <th :style="{ width: columnWidths[5] + 'px' }">Aktionen</th>
+                <th :style="{ width: columnWidths[4] + 'px', textAlign: 'right' }">Aktionen</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="appointment in filteredAppointments" :key="appointment.id" class="appointment-row">
-                <td class="appointment-title" :style="{ width: columnWidths[0] + 'px' }">
-                  <strong>{{ truncateText(appointment.base.title, 40) }}</strong>
+                <td :style="{ width: columnWidths[0] + 'px' }">
+                  {{ appointment.base.title }}
                 </td>
                 <td class="calendar-cell" :style="{ width: columnWidths[1] + 'px' }">
                   <div 
@@ -171,14 +164,9 @@
                   {{ formatDate(appointment.base.startDate) }}
                 </td>
                 <td class="date-cell" :style="{ width: columnWidths[3] + 'px' }">
-                  {{ appointment.base.repeatUntil ? formatDate(appointment.base.repeatUntil) : 'Kein Enddatum' }}
+                  {{ getEffectiveEndDate(appointment) }}
                 </td>
-                <td class="status-cell" :style="{ width: columnWidths[4] + 'px' }">
-                  <span :class="['status-badge', getStatusClass(appointment)]">
-                    {{ getStatusText(getAppointmentStatus(appointment)) }}
-                  </span>
-                </td>
-                <td class="actions" :style="{ width: columnWidths[5] + 'px' }">
+                <td class="actions" :style="{ width: 'auto' }">
                   <a
                     :href="getAppointmentUrl(appointment)"
                     target="_blank"
@@ -230,7 +218,7 @@ const isDevelopment = ref(import.meta.env.MODE === 'development');
 
 // Column resizing
 const tableRef = ref<HTMLTableElement>();
-const columnWidths = ref([350, 200, 180, 180, 120, 120]); // Pixel-Breiten für Drag&Drop
+const columnWidths = ref([200, 200, 180, 180, 120]); // Pixel-Breiten für Drag&Drop
 const isResizing = ref(false);
 const resizingColumn = ref(-1);
 const startX = ref(0);
@@ -287,8 +275,38 @@ const filteredAppointments = computed(() => {
   const now = new Date();
   
   if (daysInAdvance.value === 'alle') {
-    // For "alle": show all appointments from findExpiringSeries (already filtered)
-    // No additional filtering needed since findExpiringSeries already returns only expiring series
+    // For "alle": show all recurring appointments (already filtered by findExpiringSeries)
+    // Additional filter to ensure we only show recurring appointments
+    filtered = filtered.filter(appointment => {
+      if (!appointment.base || !appointment.base.repeatId) {
+        return false;
+      }
+      
+      // Determine the effective end date
+      let effectiveEndDate = null;
+      
+      if (appointment.base.repeatUntil) {
+        effectiveEndDate = new Date(appointment.base.repeatUntil);
+      } else if (appointment.base.additionals && Array.isArray(appointment.base.additionals) && appointment.base.additionals.length > 0) {
+        // Find the latest date in additionals
+        const latestAdditional = appointment.base.additionals
+          .map(additional => new Date(additional.startDate || additional.date))
+          .filter(date => !isNaN(date.getTime()))
+          .sort((a, b) => b.getTime() - a.getTime())[0];
+        
+        if (latestAdditional) {
+          effectiveEndDate = latestAdditional;
+        }
+      }
+      
+      // If we have an effective end date, check if it's not expired
+      if (effectiveEndDate && !isNaN(effectiveEndDate.getTime())) {
+        return effectiveEndDate >= now;
+      }
+      
+      // If no end date can be determined, include it (ongoing series)
+      return true;
+    });
     console.log('After date filtering (alle):', filtered.length);
   } else {
     // For specific days: show appointments expiring within the selected timeframe
@@ -296,23 +314,34 @@ const filteredAppointments = computed(() => {
     const maxDate = new Date(now.getTime() + (days * 24 * 60 * 60 * 1000));
     
     filtered = filtered.filter(appointment => {
-      // Check if appointment has base property
-      if (!appointment.base) {
+      // Check if appointment has base property and is recurring
+      if (!appointment.base || !appointment.base.repeatId) {
         return false;
       }
       
-      // Only show appointments with valid end dates
-      if (!appointment.base.repeatUntil || appointment.base.repeatUntil === null || appointment.base.repeatUntil === '') {
+      // Determine the effective end date
+      let effectiveEndDate = null;
+      
+      if (appointment.base.repeatUntil) {
+        effectiveEndDate = new Date(appointment.base.repeatUntil);
+      } else if (appointment.base.additionals && Array.isArray(appointment.base.additionals) && appointment.base.additionals.length > 0) {
+        // Find the latest date in additionals
+        const latestAdditional = appointment.base.additionals
+          .map(additional => new Date(additional.startDate || additional.date))
+          .filter(date => !isNaN(date.getTime()))
+          .sort((a, b) => b.getTime() - a.getTime())[0];
+        
+        if (latestAdditional) {
+          effectiveEndDate = latestAdditional;
+        }
+      }
+      
+      // For specific days, we need an end date to check
+      if (!effectiveEndDate || isNaN(effectiveEndDate.getTime())) {
         return false;
       }
       
-      const endDate = new Date(appointment.base.repeatUntil);
-      // Check if date is valid
-      if (isNaN(endDate.getTime())) {
-        return false;
-      }
-      
-      return endDate >= now && endDate <= maxDate;
+      return effectiveEndDate >= now && effectiveEndDate <= maxDate;
     });
     console.log('After date filtering (specific days):', filtered.length);
   }
@@ -371,8 +400,8 @@ const refreshData = async () => {
     let allAppointments: Appointment[];
     
     if (daysInAdvance.value === 'alle') {
-      // For "alle", use findExpiringSeries with a very large timeframe (10 years)
-      allAppointments = await findExpiringSeries(3650); // 10 years
+      // For "alle", use findExpiringSeries with a very large timeframe
+      allAppointments = await findExpiringSeries(36500); // 100 years
     } else {
       // For specific days, use the existing function
       const days = parseInt(daysInAdvance.value);
@@ -395,18 +424,35 @@ const refreshData = async () => {
     console.log('Sample appointments:', appointments.value.slice(0, 5).map(a => ({
       id: a.id,
       hasBase: !!a.base,
+      repeatId: a.base?.repeatId,
       repeatUntil: a.base?.repeatUntil,
-      directRepeatUntil: a.repeatUntil, // Check if repeatUntil is directly on the object
       title: a.base?.title || a.title,
-      structure: Object.keys(a),
-      fullObject: a
+      titleLength: (a.base?.title || a.title || '').length,
+      fullTitle: a.base?.title || a.title
     })));
     
-    // Check different ways repeatUntil might exist
-    const withBaseRepeatUntil = appointments.value.filter(a => a.base?.repeatUntil).length;
-    const withDirectRepeatUntil = appointments.value.filter(a => a.repeatUntil).length;
-    const withoutBase = appointments.value.filter(a => !a.base).length;
-    console.log('With base.repeatUntil:', withBaseRepeatUntil, 'With direct repeatUntil:', withDirectRepeatUntil, 'Without base:', withoutBase);
+    // Check recurring appointments
+    const withRepeatId = appointments.value.filter(a => a.base?.repeatId).length;
+    const withRepeatUntil = appointments.value.filter(a => a.base?.repeatUntil).length;
+    const withBoth = appointments.value.filter(a => a.base?.repeatId && a.base?.repeatUntil).length;
+    const manualRepeat = appointments.value.filter(a => a.base?.repeatId && !a.base?.repeatUntil).length;
+    console.log('With repeatId:', withRepeatId, 'With repeatUntil:', withRepeatUntil, 'With both:', withBoth, 'Manual repeat (no repeatUntil):', manualRepeat);
+    
+    // Debug: Check for specific appointment ID 39793
+    const appointment39793 = appointments.value.find(a => a.id === 39793 || a.base?.id === 39793);
+    if (appointment39793) {
+      console.log('Found appointment 39793:', {
+        id: appointment39793.id,
+        baseId: appointment39793.base?.id,
+        repeatId: appointment39793.base?.repeatId,
+        repeatUntil: appointment39793.base?.repeatUntil,
+        title: appointment39793.base?.title
+      });
+    } else {
+      console.log('Appointment 39793 NOT found in loaded appointments');
+      // Check if it exists in the raw data before filtering
+      console.log('All appointment IDs:', appointments.value.map(a => a.id).slice(0, 20));
+    }
   } catch (err: any) {
     console.error('Fehler beim Laden der Termine:', err);
     
@@ -486,40 +532,27 @@ const formatDate = (dateString: string | null) => {
   }
 };
 
-const truncateText = (text: string, maxLength: number) => {
-  if (!text) return '';
-  return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
-};
 
-const getAppointmentStatus = (appointment: Appointment) => {
-  if (!appointment.base.repeatUntil) return 'active';
-  
-  const now = new Date();
-  const endDate = new Date(appointment.base.repeatUntil);
-  const daysUntilEnd = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-  
-  if (daysUntilEnd < 0) return 'expired';
-  if (daysUntilEnd <= 7) return 'expiring';
-  return 'active';
-};
 
-const getStatusClass = (appointment: Appointment) => {
-  const status = getAppointmentStatus(appointment);
-  switch (status) {
-    case 'expired': return 'status-error';
-    case 'expiring': return 'status-warning';
-    case 'active': return 'status-success';
-    default: return 'status-unknown';
+
+
+const getEffectiveEndDate = (appointment: Appointment) => {
+  if (appointment.base.repeatUntil) {
+    return formatDate(appointment.base.repeatUntil);
   }
-};
-
-const getStatusText = (status: string) => {
-  switch (status) {
-    case 'expired': return 'Abgelaufen';
-    case 'expiring': return 'Läuft bald ab';
-    case 'active': return 'Aktiv';
-    default: return 'Unbekannt';
+  
+  if (appointment.base.additionals && Array.isArray(appointment.base.additionals) && appointment.base.additionals.length > 0) {
+    const latestAdditional = appointment.base.additionals
+      .map(additional => new Date(additional.startDate || additional.date))
+      .filter(date => !isNaN(date.getTime()))
+      .sort((a, b) => b.getTime() - a.getTime())[0];
+    
+    if (latestAdditional) {
+      return formatDate(latestAdditional.toISOString()) + ' manuell';
+    }
   }
+  
+  return 'Kein Enddatum';
 };
 
 onMounted(() => {
@@ -923,20 +956,19 @@ th, td {
   white-space: nowrap;
 }
 
+
+
 /* Action buttons */
 .actions {
-  display: flex;
+  display: flex !important;
   gap: 0.5rem;
-  justify-content: flex-end;
+  justify-content: flex-end !important;
   padding: 0.5rem;
   min-width: 100px !important;
   white-space: nowrap;
 }
 
-td.actions {
-  min-width: 120px !important;
-  width: 10% !important;
-}
+
 
 /* Empty state */
 .empty-state {
@@ -1490,6 +1522,8 @@ td {
   border-bottom: 1px solid var(--border-color);
   vertical-align: middle;
 }
+
+td.actions {width:auto;}
 
 th {
   background-color: var(--bg-secondary);

@@ -74,7 +74,7 @@ export async function findExpiringSeries(daysInAdvance: number = 60): Promise<Ap
   const now = new Date();
   const endDate = new Date();
   endDate.setDate(now.getDate() + daysInAdvance);
-
+debugger;
   // Get all relevant calendars
   const { publicCalendars } = await identifyCalendars();
 
@@ -98,12 +98,33 @@ export async function findExpiringSeries(daysInAdvance: number = 60): Promise<Ap
     // Handle both AppointmentBase and AppointmentCalculated types
     const base = 'base' in appointment ? appointment.base : appointment;
     
-    // Only consider recurring appointments with a repeatUntil date
-    if (!base.repeatUntil) return false;
-
-    // Check if the series has an end date that's within our time frame
-    const endDateObj = new Date(base.repeatUntil);
-    return endDateObj >= now ;
+    // Only consider recurring appointments (must have repeatId)
+    if (!base.repeatId) return false;
+    
+    // Determine the effective end date
+    let effectiveEndDate = null;
+    
+    if (base.repeatUntil) {
+      effectiveEndDate = new Date(base.repeatUntil);
+    } else if (base.additionals && Array.isArray(base.additionals) && base.additionals.length > 0) {
+      // Find the latest date in additionals
+      const latestAdditional = base.additionals
+        .map(additional => new Date(additional.startDate || additional.date))
+        .filter(date => !isNaN(date.getTime()))
+        .sort((a, b) => b.getTime() - a.getTime())[0];
+      
+      if (latestAdditional) {
+        effectiveEndDate = latestAdditional;
+      }
+    }
+    
+    // If we have an effective end date, check if it's within our time frame
+    if (effectiveEndDate) {
+      return effectiveEndDate >= now;
+    }
+    
+    // If no end date can be determined, include it (ongoing series)
+    return true;
   });
 
   // Remove duplicates (multiple instances of the same series)
