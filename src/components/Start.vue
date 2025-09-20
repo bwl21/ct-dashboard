@@ -16,12 +16,12 @@
         v-for="module in modules" 
         :key="module.id"
         class="module-wrapper"
-        @click="$emit('navigate', module.id)"
       >
         <component 
           :is="module.cardComponent" 
           :module="module"
           class="feature-card"
+          @navigate="$emit('navigate', module.id)"
         />
       </div>
     </div>
@@ -78,13 +78,10 @@ defineEmits<{
 }
 
 .module-wrapper {
-  cursor: pointer;
   transition: transform 0.2s;
 }
 
-.module-wrapper:hover {
-  transform: translateY(-4px);
-}
+
 
 .feature-card {
   height: 100%;

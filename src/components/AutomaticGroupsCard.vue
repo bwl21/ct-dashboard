@@ -337,6 +337,14 @@ onMounted(() => {
   margin-left: 0.5rem;
 }
 
+.automatic-groups-card .ct-card-body {
+  flex: 1;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
 .automatic-groups-card.loading {
   opacity: 0.8;
 }

@@ -43,8 +43,3 @@ h1 {
 * {
     box-sizing: border-box;
 }
-
-.cts {
-    width: 100%;
-    min-height: 100vh;
-}

@@ -74,7 +74,7 @@ export async function findExpiringSeries(daysInAdvance: number = 60): Promise<Ap
   const now = new Date();
   const endDate = new Date();
   endDate.setDate(now.getDate() + daysInAdvance);
-debugger;
+
   // Get all relevant calendars
   const { publicCalendars } = await identifyCalendars();
 
@@ -109,7 +109,7 @@ debugger;
     } else if (base.additionals && Array.isArray(base.additionals) && base.additionals.length > 0) {
       // Find the latest date in additionals
       const latestAdditional = base.additionals
-        .map(additional => new Date(additional.startDate || additional.date))
+        .map(additional => new Date(additional.date || additional.date))
         .filter(date => !isNaN(date.getTime()))
         .sort((a, b) => b.getTime() - a.getTime())[0];
       
