@@ -6,16 +6,7 @@
         <h3>Auslaufende Termine</h3>
       </div>
       <div class="header-actions">
-        <div class="days-in-advance" v-if="appointments.length > 0">
-          <span>Zeige nächste</span>
-          <select v-model="daysInAdvance" @change="fetchData" :disabled="isLoading">
-            <option value="7">7 Tage</option>
-            <option value="14">14 Tage</option>
-            <option value="30" selected>30 Tage</option>
-            <option value="60">60 Tage</option>
-            <option value="90">90 Tage</option>
-          </select>
-        </div>
+
         <button 
           class="refresh-btn" 
           @click="refreshData" 
@@ -70,66 +61,7 @@
               </div>
             </div>
             
-            <div class="appointments">
-              <div 
-                v-for="appointment in visibleAppointments" 
-                :key="appointment.id" 
-                class="appointment-item"
-                :class="getStatusClass(appointment)"
-              >
-                <div class="appointment-header">
-                  <h4 class="appointment-title" :title="appointment.title">
-                    {{ appointment.title }}
-                  </h4>
-                  <span v-if="getCalendarName(appointment)" class="calendar-tag" :style="{ backgroundColor: getCalendarColor(appointment) }">
-                    {{ getCalendarName(appointment) }}
-                  </span>
-                </div>
-                
-                <div class="appointment-details">
-                  <div class="detail-row">
-                    <i class="fas fa-calendar-alt"></i>
-                    <span>{{ formatDate(appointment.base.startDate) }}</span>
-                    {{ appointment.base.title}}
-                    </div>
-                  
-                  <div v-if="appointment.base?.repeatUntil" class="detail-row">
-                    <i class="fas fa-flag-checkered"></i>
-                    <span>Endet am {{ formatDate(appointment.base.repeatUntil) }}</span>
 
-                  </div>
-                  
-                  <div v-if="appointment.base.title" class="appointment-note">
-                    <i class="fas fa-info-circle"></i>
-                    <span>{{ truncateText(appointment.base.title, 60) }}</span>
-                  </div>
-                </div>
-                
-                <div class="appointment-actions">
-                  <button 
-                    class="action-btn extend" 
-                    @click="$emit('extend', appointment)"
-                    title="Reihe verlängern"
-                  >
-                    <i class="fas fa-calendar-plus"></i>
-                  </button>
-                  <button 
-                    class="action-btn view" 
-                    @click="$emit('view', appointment)"
-                    title="Details anzeigen"
-                  >
-                    <i class="fas fa-eye"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
-            
-            <div v-if="hasMore" class="show-more">
-              <button class="show-more-btn" @click="toggleShowAll">
-                {{ showAll ? 'Weniger anzeigen' : 'Mehr anzeigen' }}
-                <i class="fas" :class="{ 'fa-chevron-up': showAll, 'fa-chevron-down': !showAll }"></i>
-              </button>
-            </div>
           </div>
         </div>
         
@@ -147,6 +79,9 @@
 import { ref, onMounted, computed } from 'vue';
 import { findExpiringSeries, type Appointment } from '@/services/churchtools';
 
+// Configuration
+const DAYS_TO_SHOW = 90;
+
 // Props
 defineProps({
   module: {
@@ -159,7 +94,7 @@ defineProps({
 const isLoading = ref(true);
 const error = ref<string | null>(null);
 const showAll = ref(false);
-const daysInAdvance = ref(30);
+
 
 // Data
 const appointments = ref<Appointment[]>([]);
@@ -210,7 +145,7 @@ const getAppointmentStatus = (appointment: Appointment): string => {
   const daysUntilEnd = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   
   if (endDate < today) return 'expired';
-  if (daysUntilEnd <= 30) return 'expiring';
+  if (daysUntilEnd <= DAYS_TO_SHOW) return 'expiring';
   return 'active';
 };
 
@@ -232,7 +167,7 @@ const fetchData = async () => {
   error.value = null;
   
   try {
-    const expiringSeries = await findExpiringSeries(daysInAdvance.value);
+    const expiringSeries = await findExpiringSeries(DAYS_TO_SHOW);
     
     // Log the first few appointments to debug date issues
     console.log('Fetched appointments:', expiringSeries);
@@ -381,33 +316,7 @@ onMounted(() => {
   gap: 0.75rem;
 }
 
-.days-in-advance {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.85rem;
-  color: var(--ct-text-secondary, #6c757d);
-  background: var(--ct-bg-secondary, #f1f3f5);
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-}
 
-.days-in-advance select {
-  padding: 0.25rem 0.5rem;
-  border: 1px solid var(--ct-border-color, #ced4da);
-  border-radius: 4px;
-  background: var(--ct-bg-color, white);
-  color: var(--ct-text-primary, #2c3e50);
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.days-in-advance select:focus {
-  outline: none;
-  border-color: var(--ct-primary-color, #3498db);
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-}
 
 .refresh-btn {
   background: none;
@@ -560,10 +469,7 @@ onMounted(() => {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-.stat-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
-}
+
 
 .stat-value {
   display: block;
