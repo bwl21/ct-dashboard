@@ -292,6 +292,9 @@ const stopResize = () => {
 
 const daysInAdvance = ref('alle'); // Default to "alle"
 
+// Configuration - same as Card component
+const DAYS_TO_SHOW = 90;
+
 // Helper function to get appointment status
 const getAppointmentStatus = (appointment: Appointment): 'active' | 'expiring' | 'expired' => {
   const now = new Date();
@@ -315,7 +318,7 @@ const getAppointmentStatus = (appointment: Appointment): 'active' | 'expiring' |
   const daysUntilEnd = Math.ceil((effectiveEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
   
   if (effectiveEndDate < now) return 'expired';
-  if (daysUntilEnd <= 30) return 'expiring'; // 30 days threshold
+  if (daysUntilEnd <= DAYS_TO_SHOW) return 'expiring'; // Same as Card component
   return 'active';
 };
 
