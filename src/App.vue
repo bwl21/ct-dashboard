@@ -99,82 +99,82 @@ onMounted(async () => {
 
 <style scoped>
 .ct-navbar {
-  background-color: #2c3e50;
+  background-color: var(--color-text-primary);
   color: white;
-  padding: 1rem 2rem;
+  padding: var(--spacing-md) var(--spacing-xl);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .ct-navbar-brand {
-  font-weight: 600;
-  font-size: 1.2rem;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-xl);
 }
 
 .ct-navbar-text {
-  font-size: 0.9rem;
+  font-size: var(--font-size-sm);
   opacity: 0.9;
 }
 
 .ct-main {
-  padding: 2rem;
+  padding: var(--spacing-xl);
   width: 100%;
   margin: 0;
 }
 
 @media (min-width: 1400px) {
   .ct-main {
-    padding: 3rem;
+    padding: var(--spacing-xxl);
   }
 }
 
 @media (min-width: 992px) and (max-width: 1399px) {
   .ct-main {
-    padding: 2.5rem;
+    padding: calc(var(--spacing-xl) + var(--spacing-sm));
   }
 }
 
 @media (min-width: 769px) and (max-width: 991px) {
   .ct-main {
-    padding: 1.5rem;
+    padding: var(--spacing-lg);
   }
 }
 
 .admin-header {
-  margin-bottom: 2rem;
+  margin-bottom: var(--spacing-xl);
 }
 
 .back-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  border: 1px solid #007bff;
+  gap: var(--spacing-sm);
+  padding: 0.75rem var(--spacing-lg);
+  border: 1px solid var(--color-primary);
   background: transparent;
-  color: #007bff;
+  color: var(--color-primary);
   text-decoration: none;
-  border-radius: 4px;
-  font-weight: 500;
+  border-radius: var(--border-radius-sm);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .back-btn:hover {
-  background-color: #007bff;
+  background-color: var(--color-primary);
   color: white;
 }
 
 @media (max-width: 768px) {
   .ct-main {
-    padding: 1rem;
+    padding: var(--spacing-md);
   }
 
   .ct-navbar {
-    padding: 1rem;
+    padding: var(--spacing-md);
     flex-direction: column;
-    gap: 0.5rem;
+    gap: var(--spacing-sm);
   }
 
   .back-btn {

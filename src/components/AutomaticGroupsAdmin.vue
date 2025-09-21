@@ -30,7 +30,7 @@
             >
               {{ loading ? 'Lädt...' : 'Aktualisieren' }}
             </button>
-            <button
+            <button v-if="false"
               @click="loadMockData"
               class="ct-btn ct-btn-outline mock-btn"
               :disabled="loading"
@@ -600,24 +600,24 @@ onMounted(() => {
 
 .header-card {
   text-align: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-header);
   color: white;
 }
 
 .header-card .ct-card-title {
-  font-size: 2.5rem;
-  margin-bottom: 0.5rem;
-  font-weight: 700;
+  font-size: var(--font-size-display);
+  margin-bottom: var(--spacing-sm);
+  font-weight: var(--font-weight-bold);
 }
 
 .description {
-  font-size: 1.2rem;
+  font-size: var(--font-size-xl);
   opacity: 0.9;
   margin: 0;
 }
 
 .controls-card {
-  background-color: #f8f9fa;
+  background-color: var(--color-background);
 }
 
 .controls-row {
@@ -635,7 +635,7 @@ onMounted(() => {
 .search-input {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   font-size: 1rem;
 }
@@ -673,7 +673,7 @@ onMounted(() => {
 .groups-table td {
   padding: 1rem;
   text-align: left;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid var(--color-border);
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -695,12 +695,12 @@ onMounted(() => {
 }
 
 .resize-handle:hover {
-  background: #007bff;
+  background: var(--color-primary);
   opacity: 0.5;
 }
 
 .resize-handle:active {
-  background: #007bff;
+  background: var(--color-primary);
   opacity: 0.8;
 }
 
@@ -715,7 +715,7 @@ onMounted(() => {
 }
 
 .groups-table th {
-  background-color: #f8f9fa;
+  background-color: var(--color-background);
   font-weight: 600;
   color: #495057;
 }
@@ -727,7 +727,7 @@ onMounted(() => {
 }
 
 .groups-table th.sortable:hover {
-  background-color: #e9ecef;
+  background-color: var(--color-border);
 }
 
 .sort-indicator {
@@ -739,7 +739,7 @@ onMounted(() => {
 }
 
 .group-row:hover {
-  background-color: #f8f9fa;
+  background-color: var(--color-background);
 }
 
 .group-id {
@@ -748,7 +748,7 @@ onMounted(() => {
 }
 
 .group-name strong {
-  color: #2c3e50;
+  color: var(--color-text-primary);
 }
 
 .status-badge {
@@ -810,7 +810,7 @@ onMounted(() => {
   width: 40px;
   height: 40px;
   border: 4px solid #f3f3f3;
-  border-top: 4px solid #007bff;
+  border-top: 4px solid var(--color-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 1rem;
@@ -861,7 +861,7 @@ onMounted(() => {
 
 .ct-card-header {
   padding: 1.5rem;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .ct-card-body {
@@ -872,7 +872,7 @@ onMounted(() => {
   margin: 0;
   font-size: 1.5rem;
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--color-text-primary);
 }
 
 .ct-input {
@@ -917,7 +917,7 @@ onMounted(() => {
 }
 
 .ct-btn-primary {
-  background-color: #007bff;
+  background-color: var(--color-primary);
   color: white;
 }
 
@@ -936,12 +936,12 @@ onMounted(() => {
 
 .ct-btn-outline {
   background-color: transparent;
-  color: #007bff;
-  border: 1px solid #007bff;
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
 }
 
 .ct-btn-outline:hover {
-  background-color: #007bff;
+  background-color: var(--color-primary);
   color: white;
 }
 
