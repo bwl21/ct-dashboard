@@ -22,7 +22,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { churchtoolsClient } from '@churchtools/churchtools-client'
-import BaseCard from './BaseCard.vue'
+import BaseCard from '../common/BaseCard.vue'
 
 // Tag interface based on ct-labelmanager structure
 interface Tag {
