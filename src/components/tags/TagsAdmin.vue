@@ -28,7 +28,7 @@
     <div class="ct-card controls-card">
       <div class="ct-card-body">
         <div class="controls-row">
-          <button @click="refreshData" class="ct-btn ct-btn-primary" :disabled="isLoading">
+          <button type="button" @click="refreshData" class="ct-btn ct-btn-primary" :disabled="isLoading">
             {{ isLoading ? 'Laden...' : 'Aktualisieren' }}
           </button>
           <select v-model="selectedDomain" @change="refreshData" class="ct-select">
@@ -36,7 +36,7 @@
             <option value="person">Personen</option>
             <option value="song">Lieder</option>
             <option value="group">Gruppen</option>
-            <option value="appointment">Termine</option>
+
           </select>
         </div>
       </div>
@@ -96,14 +96,17 @@
 import { ref, onMounted, computed } from 'vue'
 import { churchtoolsClient } from '@churchtools/churchtools-client'
 
-// Tag interface
+// Tag interface based on ChurchTools API
 interface Tag {
   id: number
   name: string
   description?: string
   color?: string
-  domainType: 'person' | 'song' | 'group' | 'appointment'
+  domainType: 'person' | 'song' | 'group'
 }
+
+// API Response is directly an array of tags
+type TagsApiResponse = Tag[]
 
 // Props
 defineProps<{
@@ -138,14 +141,12 @@ const fetchData = async () => {
   error.value = null
 
   try {
-    const domains = selectedDomain.value ? [selectedDomain.value] : ['person', 'song', 'group', 'appointment']
+    const domains = selectedDomain.value ? [selectedDomain.value] : ['person', 'song', 'group']
     
     const tagPromises = domains.map(async (domain) => {
       try {
-        const response = await churchtoolsClient.get('/api/tags', { 
-          params: { domain_type: domain } 
-        })
-        const tagData = Array.isArray(response.data) ? response.data : response.data.data || []
+        const response = await churchtoolsClient.get<TagsApiResponse>(`/tags/${domain}`)
+        const tagData = Array.isArray(response) ? response : []
         return tagData.map((tag: any) => ({ ...tag, domainType: domain as const }))
       } catch (err) {
         console.warn(`Failed to fetch ${domain} tags:`, err)
