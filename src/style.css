@@ -4,9 +4,17 @@
   --color-primary-hover: #0056b3;
   --color-secondary: #6c757d;
   --color-success: #28a745;
+  --color-success-light: #d4edda;
+  --color-success-border: #c3e6cb;
   --color-danger: #dc3545;
+  --color-danger-light: #f8d7da;
+  --color-danger-border: #f5c6cb;
   --color-warning: #ffc107;
+  --color-warning-light: #fff3cd;
+  --color-warning-border: #ffeaa7;
   --color-info: #17a2b8;
+  --color-info-light: #d1ecf1;
+  --color-info-border: #bee5eb;
   
   --color-text-primary: #2c3e50;
   --color-text-secondary: #666;
@@ -19,6 +27,10 @@
   
   --color-link: #646cff;
   --color-link-hover: #535bf2;
+  
+  /* Gradient Colors */
+  --gradient-primary: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  --gradient-header: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   
   /* Spacing */
   --spacing-xs: 0.25rem;
