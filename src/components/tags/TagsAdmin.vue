@@ -4,6 +4,7 @@
     <div class="ct-card header-card">
       <div class="ct-card-header">
         <h1 class="ct-card-title">Tags - Admin Panel</h1>
+        <button @click="testToast" class="ct-btn ct-btn-primary">Test Toast</button>
       </div>
       <div class="ct-card-body">
         <p class="description">Verwaltung aller Tags in ChurchTools</p>
@@ -335,6 +336,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { churchtoolsClient } from '@churchtools/churchtools-client'
 import ColorPicker from '../common/ColorPicker.vue'
+import { useToast } from '../../composables/useToast'
 
 // Tag interface based on ChurchTools API
 interface Tag {
@@ -347,6 +349,9 @@ interface Tag {
 
 // API Response is directly an array of tags
 type TagsApiResponse = Tag[]
+
+// Composables
+const { showApiSuccess, showApiError, showValidationError } = useToast()
 
 // Props
 defineProps<{
@@ -518,6 +523,7 @@ const fetchData = async () => {
   } catch (err) {
     console.error('Error fetching tags:', err)
     error.value = 'Fehler beim Laden der Tags. Bitte versuchen Sie es erneut.'
+    showApiError('fetch', 'Tags konnten nicht geladen werden')
   } finally {
     isLoading.value = false
   }
@@ -557,11 +563,13 @@ const closeTagModal = () => {
 const saveTag = async () => {
   if (!tagForm.value.name.trim()) {
     tagFormError.value = 'Tag Name ist erforderlich'
+    showValidationError('Tag Name ist erforderlich')
     return
   }
   
   if (!tagForm.value.domainType) {
     tagFormError.value = 'Domain ist erforderlich'
+    showValidationError('Domain ist erforderlich')
     return
   }
   
@@ -578,16 +586,20 @@ const saveTag = async () => {
     if (editingTag.value) {
       // Update existing tag - API requires all fields: name, description, color
       await churchtoolsClient.put(`/tags/${editingTag.value.id}`, tagData)
+      showApiSuccess('update', tagData.name)
     } else {
       // Create new tag
       await churchtoolsClient.post(`/tags/${tagForm.value.domainType}`, tagData)
+      showApiSuccess('create', tagData.name)
     }
     
     closeTagModal()
     await refreshData()
   } catch (err: any) {
-    console.error('Error creating tag:', err)
-    tagFormError.value = err.message || 'Fehler beim Erstellen des Tags'
+    console.error('Error saving tag:', err)
+    const operation = editingTag.value ? 'update' : 'create'
+    showApiError(operation, err.message || 'Unbekannter Fehler')
+    tagFormError.value = err.message || `Fehler beim ${editingTag.value ? 'Aktualisieren' : 'Erstellen'} des Tags`
   } finally {
     isSubmitting.value = false
   }
@@ -685,10 +697,10 @@ const confirmBulkDelete = async () => {
     }
     
     if (successCount > 0) {
-      console.log(`✅ ${successCount} Tags erfolgreich gelöscht`)
+      showApiSuccess('bulkDelete', `${successCount} Tags`)
     }
     if (errorCount > 0) {
-      console.error(`❌ ${errorCount} Tags konnten nicht gelöscht werden`)
+      showApiError('bulkDelete', `${errorCount} Tags konnten nicht gelöscht werden`)
     }
     
     clearSelection()
@@ -805,11 +817,11 @@ const getColorHex = (colorValue: string): string => {
 // Bulk operations
 const applyBulkColor = async () => {
   if (!bulkColor.value) {
-    console.warn('⚠️ Bitte wählen Sie zuerst eine Farbe aus')
+    showValidationError('Bitte wählen Sie zuerst eine Farbe aus')
     return
   }
   if (selectedTags.value.length === 0) {
-    console.warn('⚠️ Bitte wählen Sie zuerst Tags aus')
+    showValidationError('Bitte wählen Sie zuerst Tags aus')
     return
   }
   
@@ -841,10 +853,10 @@ const applyBulkColor = async () => {
     }
     
     if (successCount > 0) {
-      console.log(`✅ ${successCount} Tags erfolgreich aktualisiert`)
+      showApiSuccess('bulkUpdate', `${successCount} Tags`)
     }
     if (errorCount > 0) {
-      console.error(`❌ ${errorCount} Tags konnten nicht aktualisiert werden`)
+      showApiError('bulkUpdate', `${errorCount} Tags konnten nicht aktualisiert werden`)
     }
     
     clearSelection()
@@ -856,6 +868,17 @@ const applyBulkColor = async () => {
 // Refresh data
 const refreshData = () => {
   fetchData()
+}
+
+// Test toast function
+const testToast = () => {
+  showSuccess('Das Toast-System funktioniert einwandfrei', { title: 'Test erfolgreich' })
+  setTimeout(() => {
+    showApiError('test', 'Das ist ein Test-Fehler für die Demonstration')
+  }, 1000)
+  setTimeout(() => {
+    showValidationError('Bitte füllen Sie alle Pflichtfelder aus')
+  }, 2000)
 }
 
 // Initialize component

@@ -28,6 +28,9 @@
         />
       </div>
     </div>
+    
+    <!-- Toast Notifications -->
+    <Toast />
   </div>
 </template>
 
@@ -45,6 +48,8 @@ import TagsCard from './components/tags/TagsCard.vue'
 import TagsAdmin from './components/tags/TagsAdmin.vue'
 import BeispielCard from './components/beispiel/BeispielCard.vue'
 import ColorPickerExample from './components/common/ColorPickerExample.vue'
+import Toast from './components/common/Toast.vue'
+import { useToast } from './composables/useToast'
 
 const modules: DashboardModule[] = [
   {
@@ -86,6 +91,22 @@ const isDevelopment = ref<boolean>(false)
 const currentView = ref<'dashboard' | string>('dashboard')
 const currentModuleId = ref<string>('')
 
+// Toast testing
+const { showSuccess, showError, showWarning, showInfo, showApiSuccess, showApiError, showValidationError } = useToast()
+
+// Make toast functions globally available for console testing
+if (typeof window !== 'undefined') {
+  (window as any).toast = {
+    success: showSuccess,
+    error: showError,
+    warning: showWarning,
+    info: showInfo,
+    apiSuccess: showApiSuccess,
+    apiError: showApiError,
+    validationError: showValidationError
+  }
+}
+
 const currentModule = computed(() => modules.find((m) => m.id === currentModuleId.value))
 
 const navigateToModule = (moduleId: string) => {
@@ -103,6 +124,8 @@ onMounted(async () => {
     console.error('Fehler beim Laden der Benutzerdaten:', error)
     userDisplayName.value = 'Benutzer'
   }
+  
+
 })
 </script>
 
