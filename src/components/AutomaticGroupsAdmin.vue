@@ -30,7 +30,7 @@
             >
               {{ loading ? 'Lädt...' : 'Aktualisieren' }}
             </button>
-            <button
+            <button v-if="false"
               @click="loadMockData"
               class="ct-btn ct-btn-outline mock-btn"
               :disabled="loading"
