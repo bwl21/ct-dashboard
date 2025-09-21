@@ -41,6 +41,8 @@ import AutomaticGroupsCard from './components/AutomaticGroupsCard.vue'
 import AutomaticGroupsAdmin from './components/AutomaticGroupsAdmin.vue'
 import ExpiringAppointmentsCard from './components/ExpiringAppointmentsCard.vue'
 import ExpiringAppointmentsAdmin from './components/ExpiringAppointmentsAdmin.vue'
+import TagsCard from './components/TagsCard.vue'
+import TagsAdmin from './components/TagsAdmin.vue'
 import BeispielCard from './components/BeispielCard.vue'
 
 const modules: DashboardModule[] = [
@@ -59,6 +61,14 @@ const modules: DashboardModule[] = [
     description: 'Verwaltung von ablaufenden Terminserienn',
     cardComponent: ExpiringAppointmentsCard,
     adminComponent: ExpiringAppointmentsAdmin,
+  },
+  {
+    id: 'tags',
+    title: 'Tags',
+    icon: '🏷️',
+    description: 'Verwaltung von Tags aus ChurchTools',
+    cardComponent: TagsCard,
+    adminComponent: TagsAdmin,
   },
 ]
 
