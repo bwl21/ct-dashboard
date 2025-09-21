@@ -39,36 +39,37 @@
           Click a color to select it, or press Escape to cancel
         </p>
         
-        <div class="color-grid">
-          <!-- No Color Option -->
+        <!-- No Color Option -->
+        <div class="no-color-section">
           <div
-            class="color-option no-color"
+            class="color-item no-color"
             :class="{ selected: !selectedColor }"
             @click="selectColor(null)"
           >
-            <div class="color-swatch no-color-swatch">
-              <span>×</span>
+            <div class="color-circle no-color-circle">
+              <span class="no-color-x">×</span>
             </div>
-            <div class="color-label">
-              <div class="color-name">Keine Farbe</div>
-              <div class="color-description">Farbe entfernen</div>
+            <div class="color-info">
+              <div class="color-name">No Color</div>
             </div>
           </div>
+        </div>
 
-          <!-- Color Options -->
+        <!-- Color Grid -->
+        <div class="color-grid">
           <div
-            v-for="color in churchToolsColors"
+            v-for="color in colors"
             :key="color.value"
-            class="color-option"
+            class="color-item"
             :class="{ selected: selectedColor === color.value }"
             @click="selectColor(color.value)"
           >
             <div
-              class="color-swatch"
+              class="color-circle"
               :style="{ backgroundColor: color.hex }"
             ></div>
-            <div class="color-label">
-              <div class="color-name">{{ color.label }}</div>
+            <div class="color-info">
+              <div class="color-name">{{ color.name }}</div>
               <div class="color-hex">{{ color.hex }}</div>
             </div>
           </div>
@@ -79,17 +80,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 // Props
 interface Props {
   modelValue?: string | null
   placeholder?: string
+  colors?: Array<{ value: string; name: string; hex: string; tailwind?: string }>
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: null,
-  placeholder: 'Select a color'
+  placeholder: 'Select a color',
+  colors: () => []
 })
 
 // Emits
@@ -101,49 +104,94 @@ const emit = defineEmits<{
 const showModal = ref(false)
 const selectedColor = ref<string | null>(props.modelValue)
 
-// ChurchTools Colors (from ct-labelmanager)
+// ChurchTools Colors (exact mapping from ct-labelmanager)
 const churchToolsColors = [
-  { value: 'aqua', label: 'Aqua', hex: '#00FFFF' },
-  { value: 'black', label: 'Black', hex: '#000000' },
-  { value: 'blue', label: 'Blue', hex: '#0000FF' },
-  { value: 'brown', label: 'Brown', hex: '#A52A2A' },
-  { value: 'cyan', label: 'Cyan', hex: '#00FFFF' },
-  { value: 'darkblue', label: 'Dark Blue', hex: '#00008B' },
-  { value: 'darkcyan', label: 'Dark Cyan', hex: '#008B8B' },
-  { value: 'darkgray', label: 'Dark Gray', hex: '#A9A9A9' },
-  { value: 'darkgreen', label: 'Dark Green', hex: '#006400' },
-  { value: 'darkmagenta', label: 'Dark Magenta', hex: '#8B008B' },
-  { value: 'darkorange', label: 'Dark Orange', hex: '#FF8C00' },
-  { value: 'darkred', label: 'Dark Red', hex: '#8B0000' },
-  { value: 'darkviolet', label: 'Dark Violet', hex: '#9400D3' },
-  { value: 'darkyellow', label: 'Dark Yellow', hex: '#B8860B' },
-  { value: 'gray', label: 'Gray', hex: '#808080' },
-  { value: 'green', label: 'Green', hex: '#008000' },
-  { value: 'lightblue', label: 'Light Blue', hex: '#ADD8E6' },
-  { value: 'lightcyan', label: 'Light Cyan', hex: '#E0FFFF' },
-  { value: 'lightgray', label: 'Light Gray', hex: '#D3D3D3' },
-  { value: 'lightgreen', label: 'Light Green', hex: '#90EE90' },
-  { value: 'lightmagenta', label: 'Light Magenta', hex: '#FF77FF' },
-  { value: 'lightorange', label: 'Light Orange', hex: '#FFE4B5' },
-  { value: 'lightred', label: 'Light Red', hex: '#FFB6C1' },
-  { value: 'lightviolet', label: 'Light Violet', hex: '#DDA0DD' },
-  { value: 'lightyellow', label: 'Light Yellow', hex: '#FFFFE0' },
-  { value: 'magenta', label: 'Magenta', hex: '#FF00FF' },
-  { value: 'orange', label: 'Orange', hex: '#FFA500' },
-  { value: 'red', label: 'Red', hex: '#FF0000' },
-  { value: 'violet', label: 'Violet', hex: '#8A2BE2' },
-  { value: 'white', label: 'White', hex: '#FFFFFF' },
-  { value: 'yellow', label: 'Yellow', hex: '#FFFF00' }
+  // System Colors
+  { value: 'parent', name: 'Parent', hex: '#6b7280', tailwind: 'gray-500' },
+  { value: 'default', name: 'Default', hex: '#6b7280', tailwind: 'gray-500' },
+  { value: 'accent', name: 'Accent', hex: '#007cba', tailwind: 'custom' },
+  { value: 'basic', name: 'Basic', hex: '#6b7280', tailwind: 'gray-500' },
+  
+  // Standard Colors
+  { value: 'amber', name: 'Amber', hex: '#f59e0b', tailwind: 'amber-500' },
+  { value: 'black', name: 'Black', hex: '#000000', tailwind: 'black' },
+  { value: 'blue', name: 'Blue', hex: '#3b82f6', tailwind: 'blue-500' },
+  { value: 'cyan', name: 'Cyan', hex: '#06b6d4', tailwind: 'cyan-500' },
+  { value: 'emerald', name: 'Emerald', hex: '#10b981', tailwind: 'emerald-500' },
+  { value: 'fuchsia', name: 'Fuchsia', hex: '#d946ef', tailwind: 'fuchsia-500' },
+  { value: 'gray', name: 'Gray', hex: '#6b7280', tailwind: 'gray-500' },
+  { value: 'green', name: 'Green', hex: '#16a34a', tailwind: 'green-600' },
+  { value: 'indigo', name: 'Indigo', hex: '#6366f1', tailwind: 'indigo-500' },
+  { value: 'lime', name: 'Lime', hex: '#84cc16', tailwind: 'lime-500' },
+  { value: 'orange', name: 'Orange', hex: '#f97316', tailwind: 'orange-500' },
+  { value: 'pink', name: 'Pink', hex: '#ec4899', tailwind: 'pink-500' },
+  { value: 'purple', name: 'Purple', hex: '#a855f7', tailwind: 'purple-500' },
+  { value: 'red', name: 'Red', hex: '#dc2626', tailwind: 'red-600' },
+  { value: 'rose', name: 'Rose', hex: '#f43f5e', tailwind: 'rose-500' },
+  { value: 'sky', name: 'Sky', hex: '#0ea5e9', tailwind: 'sky-500' },
+  { value: 'teal', name: 'Teal', hex: '#14b8a6', tailwind: 'teal-500' },
+  { value: 'violet', name: 'Violet', hex: '#8b5cf6', tailwind: 'violet-500' },
+  { value: 'white', name: 'White', hex: '#ffffff', tailwind: 'white' },
+  { value: 'yellow', name: 'Yellow', hex: '#eab308', tailwind: 'yellow-500' },
+  
+  // Semantic Colors
+  { value: 'critical', name: 'Critical', hex: '#dc2626', tailwind: 'red-600' },
+  { value: 'constructive', name: 'Constructive', hex: '#16a34a', tailwind: 'green-600' },
+  { value: 'destructive', name: 'Destructive', hex: '#dc2626', tailwind: 'red-600' },
+  { value: 'danger', name: 'Danger', hex: '#dc2626', tailwind: 'red-600' },
+  { value: 'error', name: 'Error', hex: '#dc2626', tailwind: 'red-600' },
+  { value: 'info', name: 'Info', hex: '#3b82f6', tailwind: 'blue-500' },
+  { value: 'success', name: 'Success', hex: '#16a34a', tailwind: 'green-600' },
+  { value: 'warning', name: 'Warning', hex: '#f59e0b', tailwind: 'amber-500' },
+  { value: 'magic', name: 'Magic', hex: '#8b5cf6', tailwind: 'violet-500' }
 ]
+
+// Color similarity sorting functions (from ct-labelmanager)
+const hexToHsl = (hex: string) => {
+  if (!hex || hex === '') return { h: 0, s: 0, l: 0 }
+  
+  // Remove # if present
+  hex = hex.replace('#', '')
+  
+  // Convert to RGB
+  const r = parseInt(hex.substr(0, 2), 16) / 255
+  const g = parseInt(hex.substr(2, 2), 16) / 255
+  const b = parseInt(hex.substr(4, 2), 16) / 255
+  
+  const max = Math.max(r, g, b)
+  const min = Math.min(r, g, b)
+  let h: number, s: number, l = (max + min) / 2
+  
+  if (max === min) {
+    h = s = 0 // achromatic
+  } else {
+    const d = max - min
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
+    switch (max) {
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break
+      case g: h = (b - r) / d + 2; break
+      case b: h = (r - g) / d + 4; break
+      default: h = 0
+    }
+    h /= 6
+  }
+  
+  return { h: h * 360, s: s * 100, l: l * 100 }
+}
+
+
+
+// Use provided colors or default churchtools colors
+const colors = computed(() => props.colors.length > 0 ? props.colors : churchToolsColors)
 
 // Methods
 const getColorInfo = (colorValue: string | null) => {
   if (!colorValue) {
-    return { name: 'No Color', hex: '', label: 'No Color' }
+    return { name: 'No Color', hex: '', tailwind: '' }
   }
   
-  const color = churchToolsColors.find(c => c.value === colorValue)
-  return color || { name: colorValue, hex: '#000000', label: colorValue }
+  const color = colors.value.find(c => c.value === colorValue)
+  return color || { name: colorValue, hex: '#000000', tailwind: 'gray-500' }
 }
 
 const selectColor = (colorValue: string | null) => {
@@ -317,96 +365,105 @@ watch(() => props.modelValue, (newValue) => {
   font-size: 14px;
 }
 
+/* No Color Section */
+.no-color-section {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* Color Grid */
 .color-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  max-width: 640px;
+  gap: 12px;
+  max-width: 600px;
 }
 
-.color-option {
+/* Color Items */
+.color-item {
   display: flex;
+  flex-direction: row;
   align-items: center;
   gap: 8px;
   padding: 8px;
-  border: 2px solid transparent;
+  border: 1px solid #e5e7eb;
   border-radius: 6px;
   cursor: pointer;
-  transition: all 0.2s;
-  background: #f8f9fa;
+  transition: all 0.15s ease;
+  background: #ffffff;
   min-height: 48px;
 }
 
-.color-option:hover {
-  background: #e9ecef;
-  border-color: #007bff;
-  transform: scale(1.05);
-}
-
-.color-option.selected {
-  background: #e3f2fd;
-  border-color: #007bff;
-  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
-}
-
-.color-option.no-color {
-  background: #fff;
-  border-color: #ddd;
-}
-
-.color-option.no-color:hover {
-  border-color: #007bff;
-  background: #f8f9fa;
-}
-
-.color-option.no-color.selected {
-  background: #f8f9fa;
-  border-color: #007bff;
-  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
-}
-
-.color-option .color-swatch {
-  width: 24px;
-  height: 24px;
-  border-radius: 4px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+.color-item:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  flex-shrink: 0;
 }
 
-.color-option .no-color-swatch {
+.color-item.selected {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.3);
+}
+
+/* Color Circles */
+.color-circle {
   width: 24px;
   height: 24px;
-  font-size: 12px;
-  font-weight: bold;
-  border-radius: 4px;
-  border: 1px solid #ddd;
-  background: #fff;
-  color: #999;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
   flex-shrink: 0;
 }
 
-.color-label {
+.no-color-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 3px solid #ffffff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.no-color-x {
+  font-size: 20px;
+  font-weight: bold;
+  color: #9ca3af;
+  line-height: 1;
+}
+
+/* Color Info */
+.color-info {
+  text-align: left;
   flex: 1;
   min-width: 0;
 }
 
 .color-name {
-  font-weight: 500;
   font-size: 12px;
-  color: #333;
+  font-weight: 500;
+  color: #374151;
   line-height: 1.2;
   margin-bottom: 2px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  display: block;
 }
 
 .color-hex {
   font-size: 10px;
-  color: #666;
-  font-family: monospace;
-  line-height: 1;
+  color: #6b7280;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  line-height: 1.2;
+  text-transform: uppercase;
+  display: block;
+  margin-top: 1px;
 }
 
 .color-description {

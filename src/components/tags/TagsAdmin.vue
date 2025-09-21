@@ -149,11 +149,36 @@
                     class="ct-checkbox"
                   />
                 </th>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Domain</th>
-                <th>Farbe</th>
-                <th>Beschreibung</th>
+                <th class="sortable" @click="sortBy('id')">
+                  ID
+                  <span class="sort-indicator" v-if="sortField === 'id'">
+                    {{ sortDirection === 'asc' ? '↑' : '↓' }}
+                  </span>
+                </th>
+                <th class="sortable" @click="sortBy('name')">
+                  Name
+                  <span class="sort-indicator" v-if="sortField === 'name'">
+                    {{ sortDirection === 'asc' ? '↑' : '↓' }}
+                  </span>
+                </th>
+                <th class="sortable" @click="sortBy('domainType')">
+                  Domain
+                  <span class="sort-indicator" v-if="sortField === 'domainType'">
+                    {{ sortDirection === 'asc' ? '↑' : '↓' }}
+                  </span>
+                </th>
+                <th class="sortable" @click="sortBy('color')">
+                  Farbe
+                  <span class="sort-indicator" v-if="sortField === 'color'">
+                    {{ sortDirection === 'asc' ? '↑' : '↓' }}
+                  </span>
+                </th>
+                <th class="sortable" @click="sortBy('description')">
+                  Beschreibung
+                  <span class="sort-indicator" v-if="sortField === 'description'">
+                    {{ sortDirection === 'asc' ? '↑' : '↓' }}
+                  </span>
+                </th>
                 <th>Aktionen</th>
               </tr>
             </thead>
@@ -172,8 +197,11 @@
                 <td>{{ tag.domainType }}</td>
                 <td>
                   <div class="color-display" v-if="tag.color">
-                    <div class="color-box" :style="{ backgroundColor: tag.color }"></div>
-                    {{ tag.color }}
+                    <div class="color-box" :style="{ backgroundColor: getColorInfo(tag.color).hex }"></div>
+                    <div class="color-info">
+                      <div class="color-name">{{ getColorInfo(tag.color).name }}</div>
+                      <div class="color-hex">{{ getColorInfo(tag.color).hex }}</div>
+                    </div>
                   </div>
                   <span v-else>-</span>
                 </td>
@@ -346,6 +374,10 @@ const isBulkProcessing = ref(false)
 const prefixFilter = ref('')
 const showDeleteConfirm = ref(false)
 
+// Sorting state
+const sortField = ref<string>('id')
+const sortDirection = ref<'asc' | 'desc'>('asc')
+
 // Modal state
 const showTagModal = ref(false)
 const isSubmitting = ref(false)
@@ -372,24 +404,84 @@ const songTagsCount = computed(() => {
   return tags.value.filter((tag) => tag.domainType === 'song').length
 })
 
-// Filtered tags based on regex
+// Filtered and sorted tags
 const filteredTags = computed(() => {
-  if (!regexFilter.value.trim()) {
-    return tags.value
+  let result = tags.value
+  
+  // Apply regex filter
+  if (regexFilter.value.trim()) {
+    try {
+      const regex = new RegExp(regexFilter.value, 'i')
+      regexError.value = null
+      result = result.filter(tag => 
+        regex.test(tag.name) || 
+        regex.test(tag.description || '') ||
+        regex.test(tag.domainType)
+      )
+    } catch (err) {
+      regexError.value = (err as Error).message
+    }
+  } else {
+    regexError.value = null
   }
   
-  try {
-    const regex = new RegExp(regexFilter.value, 'i')
-    regexError.value = null
-    return tags.value.filter(tag => 
-      regex.test(tag.name) || 
-      regex.test(tag.description || '') ||
-      regex.test(tag.domainType)
-    )
-  } catch (err) {
-    regexError.value = (err as Error).message
-    return tags.value
-  }
+  // Apply sorting
+  return result.sort((a, b) => {
+    let aValue: any = a[sortField.value as keyof Tag]
+    let bValue: any = b[sortField.value as keyof Tag]
+    
+    // Handle null/undefined values
+    if (aValue == null) aValue = ''
+    if (bValue == null) bValue = ''
+    
+    // Special handling for color sorting (similarity-based like ct-labelmanager)
+    if (sortField.value === 'color') {
+      const categoryA = getColorCategory(aValue)
+      const categoryB = getColorCategory(bValue)
+      
+      // First sort by category
+      if (categoryA !== categoryB) {
+        const categoryComparison = categoryA - categoryB
+        return sortDirection.value === 'asc' ? categoryComparison : -categoryComparison
+      }
+      
+      // Within same category, sort by hue
+      const hslA = hexToHsl(getColorHex(aValue))
+      const hslB = hexToHsl(getColorHex(bValue))
+      
+      // For grayscale colors, sort by lightness
+      if (categoryA === 1) {
+        const lightnessComparison = hslA.l - hslB.l
+        return sortDirection.value === 'asc' ? lightnessComparison : -lightnessComparison
+      }
+      
+      // For colored items, sort by hue, then saturation, then lightness
+      if (Math.abs(hslA.h - hslB.h) > 5) {
+        const hueComparison = hslA.h - hslB.h
+        return sortDirection.value === 'asc' ? hueComparison : -hueComparison
+      }
+      if (Math.abs(hslA.s - hslB.s) > 10) {
+        const saturationComparison = hslB.s - hslA.s // Higher saturation first
+        return sortDirection.value === 'asc' ? saturationComparison : -saturationComparison
+      }
+      const lightnessComparison = hslA.l - hslB.l
+      return sortDirection.value === 'asc' ? lightnessComparison : -lightnessComparison
+    }
+    
+    // For all other fields, use string comparison (like ct-labelmanager)
+    aValue = String(aValue).toLowerCase()
+    bValue = String(bValue).toLowerCase()
+    
+    // Use localeCompare for consistent sorting
+    let comparison = 0
+    if (sortDirection.value === 'asc') {
+      comparison = aValue.localeCompare(bValue)
+    } else {
+      comparison = bValue.localeCompare(aValue)
+    }
+    
+    return comparison
+  })
 })
 
 // Selection computed properties
@@ -507,6 +599,18 @@ const clearFilter = () => {
   regexError.value = null
 }
 
+// Sorting methods
+const sortBy = (field: string) => {
+  if (sortField.value === field) {
+    // Toggle direction if same field
+    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    // New field, start with ascending
+    sortField.value = field
+    sortDirection.value = 'asc'
+  }
+}
+
 // Selection methods
 const toggleTagSelection = (tagId: number) => {
   const index = selectedTags.value.indexOf(tagId)
@@ -600,37 +704,102 @@ const cancelBulkDelete = () => {
 
 // Helper function to get color display name
 const getColorDisplayName = (color: string) => {
-  const colorMap: Record<string, string> = {
-    'basic': 'Basic',
-    'blue': 'Blue',
-    'green': 'Green',
-    'red': 'Red',
-    'orange': 'Orange',
-    'purple': 'Purple',
-    'yellow': 'Yellow',
-    'cyan': 'Cyan',
-    'pink': 'Pink',
-    'indigo': 'Indigo',
-    'emerald': 'Emerald',
-    'rose': 'Rose',
-    'amber': 'Amber',
-    'lime': 'Lime',
-    'teal': 'Teal',
-    'violet': 'Violet',
-    'sky': 'Sky',
-    'fuchsia': 'Fuchsia',
-    'success': 'Success',
-    'warning': 'Warning',
-    'error': 'Error',
-    'info': 'Info',
-    'critical': 'Critical',
-    'constructive': 'Constructive',
-    'destructive': 'Destructive',
-    'danger': 'Danger',
-    'magic': 'Magic',
-    'accent': 'Accent'
+  return getColorInfo(color).name
+}
+
+// Color similarity sorting functions (from ct-labelmanager)
+const hexToHsl = (hex: string) => {
+  if (!hex || hex === '') return { h: 0, s: 0, l: 0 }
+  
+  // Remove # if present
+  hex = hex.replace('#', '')
+  
+  // Convert to RGB
+  const r = parseInt(hex.substr(0, 2), 16) / 255
+  const g = parseInt(hex.substr(2, 2), 16) / 255
+  const b = parseInt(hex.substr(4, 2), 16) / 255
+  
+  const max = Math.max(r, g, b)
+  const min = Math.min(r, g, b)
+  let h: number, s: number, l = (max + min) / 2
+  
+  if (max === min) {
+    h = s = 0 // achromatic
+  } else {
+    const d = max - min
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
+    switch (max) {
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break
+      case g: h = (b - r) / d + 2; break
+      case b: h = (r - g) / d + 4; break
+      default: h = 0
+    }
+    h /= 6
   }
-  return colorMap[color] || color
+  
+  return { h: h * 360, s: s * 100, l: l * 100 }
+}
+
+// Function to get color category for special sorting (from ct-labelmanager)
+const getColorCategory = (colorValue: string) => {
+  // System colors first
+  if (['parent', 'default', 'basic'].includes(colorValue)) return 0
+  // Grayscale colors
+  if (['black', 'gray', 'white'].includes(colorValue)) return 1
+  // Accent color
+  if (colorValue === 'accent') return 2
+  // Regular colors
+  return 3
+}
+
+// Get color info like ct-labelmanager
+const getColorInfo = (colorValue: string): { hex: string, name: string, tailwind: string } => {
+  const colorMap: Record<string, { hex: string, name: string, tailwind: string }> = {
+    // System Colors
+    'parent': { hex: '#6b7280', name: 'Parent', tailwind: 'gray-500' },
+    'default': { hex: '#6b7280', name: 'Default', tailwind: 'gray-500' },
+    'accent': { hex: '#007cba', name: 'Accent', tailwind: 'custom' },
+    'basic': { hex: '#6b7280', name: 'Basic', tailwind: 'gray-500' },
+    
+    // Standard Colors
+    'amber': { hex: '#f59e0b', name: 'Amber', tailwind: 'amber-500' },
+    'black': { hex: '#000000', name: 'Black', tailwind: 'black' },
+    'blue': { hex: '#3b82f6', name: 'Blue', tailwind: 'blue-500' },
+    'cyan': { hex: '#06b6d4', name: 'Cyan', tailwind: 'cyan-500' },
+    'emerald': { hex: '#10b981', name: 'Emerald', tailwind: 'emerald-500' },
+    'fuchsia': { hex: '#d946ef', name: 'Fuchsia', tailwind: 'fuchsia-500' },
+    'gray': { hex: '#6b7280', name: 'Gray', tailwind: 'gray-500' },
+    'green': { hex: '#16a34a', name: 'Green', tailwind: 'green-600' },
+    'indigo': { hex: '#6366f1', name: 'Indigo', tailwind: 'indigo-500' },
+    'lime': { hex: '#84cc16', name: 'Lime', tailwind: 'lime-500' },
+    'orange': { hex: '#f97316', name: 'Orange', tailwind: 'orange-500' },
+    'pink': { hex: '#ec4899', name: 'Pink', tailwind: 'pink-500' },
+    'purple': { hex: '#a855f7', name: 'Purple', tailwind: 'purple-500' },
+    'red': { hex: '#dc2626', name: 'Red', tailwind: 'red-600' },
+    'rose': { hex: '#f43f5e', name: 'Rose', tailwind: 'rose-500' },
+    'sky': { hex: '#0ea5e9', name: 'Sky', tailwind: 'sky-500' },
+    'teal': { hex: '#14b8a6', name: 'Teal', tailwind: 'teal-500' },
+    'violet': { hex: '#8b5cf6', name: 'Violet', tailwind: 'violet-500' },
+    'white': { hex: '#ffffff', name: 'White', tailwind: 'white' },
+    'yellow': { hex: '#eab308', name: 'Yellow', tailwind: 'yellow-500' },
+    
+    // Semantic Colors
+    'critical': { hex: '#dc2626', name: 'Critical', tailwind: 'red-600' },
+    'constructive': { hex: '#16a34a', name: 'Constructive', tailwind: 'green-600' },
+    'destructive': { hex: '#dc2626', name: 'Destructive', tailwind: 'red-600' },
+    'danger': { hex: '#dc2626', name: 'Danger', tailwind: 'red-600' },
+    'error': { hex: '#dc2626', name: 'Error', tailwind: 'red-600' },
+    'info': { hex: '#3b82f6', name: 'Info', tailwind: 'blue-500' },
+    'success': { hex: '#16a34a', name: 'Success', tailwind: 'green-600' },
+    'warning': { hex: '#f59e0b', name: 'Warning', tailwind: 'amber-500' },
+    'magic': { hex: '#8b5cf6', name: 'Magic', tailwind: 'violet-500' }
+  }
+  return colorMap[colorValue] || { hex: '#6b7280', name: colorValue, tailwind: 'gray-500' }
+}
+
+// Get color hex value for sorting
+const getColorHex = (colorValue: string): string => {
+  return getColorInfo(colorValue).hex
 }
 
 // Bulk operations
@@ -879,7 +1048,7 @@ onMounted(() => {
 .color-display {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
 .color-box {
@@ -887,6 +1056,24 @@ onMounted(() => {
   height: 20px;
   border-radius: 4px;
   border: 1px solid #dee2e6;
+  flex-shrink: 0;
+}
+
+.color-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.color-name {
+  font-weight: 500;
+  font-size: 0.875rem;
+  line-height: 1.2;
+}
+
+.color-hex {
+  font-size: 0.75rem;
+  color: #6c757d;
+  line-height: 1.2;
 }
 
 .ct-btn-success {
@@ -1203,9 +1390,7 @@ onMounted(() => {
   line-height: 1;
 }
 
-.bulk-color-picker :deep(.color-hex) {
-  display: none; /* Hide hex in dropdown view */
-}
+
 
 .bulk-color-picker :deep(.dropdown-arrow) {
   font-size: 0.75rem;
@@ -1283,6 +1468,25 @@ onMounted(() => {
 
 .ct-table tbody tr.selected:hover {
   background-color: #bbdefb;
+}
+
+/* Sortable Table Headers */
+.ct-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  transition: background-color 0.2s;
+}
+
+.ct-table th.sortable:hover {
+  background-color: #e9ecef;
+}
+
+.sort-indicator {
+  margin-left: 0.5rem;
+  font-size: 0.8rem;
+  color: #007bff;
+  font-weight: bold;
 }
 
 @media (max-width: 1024px) {
