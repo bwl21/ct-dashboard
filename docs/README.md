@@ -39,6 +39,11 @@ ChurchTools Dashboard
 ├── ⚙️ Automatische Gruppen
 │   ├── Status-Karte (BaseCard)
 │   └── Admin-Panel (Monitoring)
+├── 🏷️ Tags-Verwaltung
+│   ├── Übersichts-Karte (BaseCard)
+│   ├── Admin-Panel (CRUD + Bulk-Operationen)
+│   ├── ColorPicker (ct-labelmanager Design)
+│   └── Toast-Benachrichtigungen
 └── 🎯 BaseCard-System
     ├── Einheitliche UI-Komponenten
     ├── Props & Slots Support
@@ -61,6 +66,9 @@ ChurchTools Dashboard
 | ---------------------------- | --------- | --------------------------------------------------------- |
 | **auslaufende Terminserien** | ✅ Stabil | [API.md](./API.md#auslaufende-termine-api)                |
 | **Automatische Gruppen**     | ✅ Stabil | [API.md](./API.md#automatische-gruppen-api)               |
+| **Tags-Verwaltung**          | ✅ Stabil | [API.md](./API.md#tags-api)                               |
+| **ColorPicker-Komponente**   | ✅ Stabil | [DEVELOPMENT.md](./DEVELOPMENT.md#colorpicker-komponente) |
+| **Toast-Benachrichtigungen** | ✅ Stabil | [DEVELOPMENT.md](./DEVELOPMENT.md#toast-system)           |
 | **BaseCard-System**          | ✅ Stabil | [DEVELOPMENT.md](./DEVELOPMENT.md#basecard-architektur)   |
 | **Multi-Filter**             | ✅ Stabil | [API.md](./API.md#filter--sortierung-api)                 |
 | **Responsive Design**        | ✅ Stabil | [DEVELOPMENT.md](./DEVELOPMENT.md#styling-guidelines)     |
@@ -204,12 +212,15 @@ const data = await churchtoolsClient.get("/calendars/appointments")
 
 ### Kurzfristig (1-3 Monate)
 
+- ✅ Tags-Verwaltung mit CRUD-Operationen
+- ✅ ColorPicker-Komponente (ct-labelmanager Design)
+- ✅ Toast-Benachrichtigungssystem
 - Export-Funktionen
 - Erweiterte Filter-Optionen
-- Performance-Optimierungen
 
 ### Mittelfristig (3-6 Monate)
 
+- Weitere Module (Events, Personen, etc.)
 - Mobile App (PWA)
 - Real-time Updates
 - Erweiterte Analytics
@@ -245,6 +256,6 @@ const data = await churchtoolsClient.get("/calendars/appointments")
 
 ---
 
-**Letzte Aktualisierung:** 20. September 2025  
-**Version:** 1.0.0  
+**Letzte Aktualisierung:** 21. September 2025  
+**Version:** 1.1.0  
 **Maintainer:** ChurchTools Dashboard Team
