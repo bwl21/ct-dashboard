@@ -1,7 +1,7 @@
 <template>
   <div class="dashboard-container">
     <!-- Header Card -->
-    <div class="ct-card header-card">
+    <div class="dashboard-header-card">
       <div class="ct-card-header">
         <h1 class="ct-card-title">ChurchTools Dashboard</h1>
         <span class="version-badge">v{{ version }}</span>
@@ -46,75 +46,6 @@ defineEmits<{
 
 <style scoped>
 .dashboard-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 1rem;
-}
-
-.header-card {
-  text-align: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  margin-bottom: 2rem;
-}
-
-.header-card .ct-card-title {
-  font-size: 2.5rem;
-  margin-bottom: 0.5rem;
-  font-weight: 700;
-}
-
-.description {
-  font-size: 1.2rem;
-  opacity: 0.9;
-  margin: 0;
-}
-
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
-  margin-top: 1.5rem;
-}
-
-.module-wrapper {
-  transition: transform 0.2s;
-}
-
-.feature-card {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.feature-icon {
-  font-size: 3rem;
-  text-align: center;
-  margin: 1rem 0;
-}
-
-.feature-description {
-  color: #666;
-  margin-bottom: 1rem;
-  line-height: 1.5;
-  flex-grow: 1;
-}
-
-@media (max-width: 768px) {
-  .features-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .header-card .ct-card-title {
-    font-size: 2rem;
-  }
-
-  .description {
-    font-size: 1rem;
-  }
-}
-
-.dashboard-container {
   display: flex;
   flex-direction: column;
   gap: 2rem;
@@ -122,21 +53,37 @@ defineEmits<{
   max-width: none;
 }
 
-.header-card {
+.dashboard-header-card {
   text-align: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: var(--color-background-card);
+  color: var(--color-text-primary);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-base);
+  overflow: hidden;
 }
 
-.header-card .ct-card-title {
-  font-size: 2.5rem;
-  margin-bottom: 0.5rem;
-  font-weight: 700;
+.dashboard-header-card .ct-card-header {
+  padding: var(--spacing-lg);
+  border-bottom: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dashboard-header-card .ct-card-body {
+  padding: var(--spacing-lg);
+}
+
+.dashboard-header-card .ct-card-title {
+  margin: 0;
+  font-size: var(--font-size-display);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
 }
 
 .description {
-  font-size: 1.2rem;
-  opacity: 0.9;
+  font-size: var(--font-size-xl);
+  color: var(--color-text-secondary);
   margin: 0;
 }
 
@@ -147,47 +94,55 @@ defineEmits<{
   max-width: none;
 }
 
+.module-wrapper {
+  transition: transform var(--transition-base);
+}
+
 .feature-card {
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  transition: 
+    transform var(--transition-base),
+    box-shadow var(--transition-base);
 }
 
 .feature-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-xl);
 }
 
 .feature-icon {
   font-size: 3rem;
   text-align: center;
-  margin-bottom: 1rem;
+  margin-bottom: var(--spacing-md);
 }
 
 .feature-description {
-  color: #666;
-  margin-bottom: 1rem;
-  line-height: 1.5;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-md);
+  line-height: var(--line-height-relaxed);
+  flex-grow: 1;
 }
 
 .feature-value {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #2c3e50;
+  font-size: var(--font-size-xxl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
   text-align: center;
 }
 
 .test-card {
-  background-color: #f8f9fa;
-  border-left: 4px solid #007bff;
+  background-color: var(--color-background);
+  border-left: 4px solid var(--color-primary);
 }
 
 .test-button {
-  margin-top: 1rem;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  border-radius: 6px;
-  transition: all 0.2s ease;
+  margin-top: var(--spacing-md);
+  padding: 0.75rem var(--spacing-lg);
+  font-size: var(--font-size-base);
+  border-radius: var(--border-radius-base);
+  transition: all var(--transition-base);
 }
 
 .test-button:hover {
@@ -196,111 +151,119 @@ defineEmits<{
 }
 
 .test-result {
-  margin-top: 1rem;
-  padding: 1rem;
-  background-color: #d4edda;
-  border: 1px solid #c3e6cb;
-  border-radius: 6px;
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-md);
+  background-color: var(--color-success-light);
+  border: 1px solid var(--color-success-border);
+  border-radius: var(--border-radius-base);
   color: #155724;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 /* ChurchTools Design System Classes */
 .ct-card {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: var(--color-background-card);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-base);
   overflow: hidden;
 }
 
 .ct-card-header {
-  padding: 1.5rem;
-  border-bottom: 1px solid #e9ecef;
+  padding: var(--spacing-lg);
+  border-bottom: 1px solid var(--color-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
 .ct-card-body {
-  padding: 1.5rem;
+  padding: var(--spacing-lg);
 }
 
 .ct-card-title {
   margin: 0;
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #2c3e50;
+  font-size: var(--font-size-xxl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
 }
 
 .version-badge {
-  background: #007bff;
+  background: var(--color-primary);
   color: white;
-  padding: 0.25rem 0.75rem;
-  border-radius: 1rem;
-  font-size: 0.75rem;
-  font-weight: 500;
+  padding: var(--spacing-xs) 0.75rem;
+  border-radius: var(--border-radius-pill);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
   letter-spacing: 0.5px;
 }
 
 .ct-btn {
   display: inline-block;
-  padding: 0.5rem 1rem;
+  padding: var(--spacing-sm) var(--spacing-md);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--border-radius-sm);
   text-decoration: none;
   cursor: pointer;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   text-align: center;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .ct-btn-primary {
-  background-color: #007bff;
+  background-color: var(--color-primary);
   color: white;
 }
 
 .ct-btn-primary:hover {
-  background-color: #0056b3;
+  background-color: var(--color-primary-hover);
 }
 
 /* Responsive Design */
 @media (min-width: 1400px) {
   .features-grid {
     grid-template-columns: repeat(4, 1fr);
-    gap: 2.5rem;
+    gap: var(--spacing-xxl);
+  }
+  
+  .dashboard-container {
+    padding: var(--spacing-xxl);
   }
 }
 
 @media (min-width: 992px) and (max-width: 1399px) {
   .features-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 2rem;
+    gap: var(--spacing-xl);
+  }
+  
+  .dashboard-container {
+    padding: calc(var(--spacing-xl) + var(--spacing-sm));
   }
 }
 
 @media (min-width: 769px) and (max-width: 991px) {
   .features-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 1.5rem;
+    gap: var(--spacing-lg);
   }
-
-  .ct-main {
-    padding: 1.5rem;
+  
+  .dashboard-container {
+    padding: var(--spacing-lg);
   }
 }
 
 @media (max-width: 768px) {
   .features-grid {
     grid-template-columns: 1fr;
-    gap: 1rem;
+    gap: var(--spacing-md);
   }
 
-  .header-card .ct-card-title {
-    font-size: 2rem;
+  .dashboard-header-card .ct-card-title {
+    font-size: var(--font-size-xxxl);
   }
 
   .description {
-    font-size: 1rem;
+    font-size: var(--font-size-base);
   }
 
   .feature-icon {
@@ -308,11 +271,12 @@ defineEmits<{
   }
 
   .feature-value {
-    font-size: 1.2rem;
+    font-size: var(--font-size-xl);
   }
 
   .dashboard-container {
-    gap: 1.5rem;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-md);
   }
 }
 </style>
