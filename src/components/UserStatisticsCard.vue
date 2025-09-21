@@ -29,7 +29,7 @@ defineProps<{
 
 <style scoped>
 .user-stats-card {
-  border-left: 4px solid #4caf50;
+  border-left: 4px solid var(--color-success);
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -44,13 +44,13 @@ defineProps<{
 .feature-icon {
   font-size: 3rem;
   text-align: center;
-  margin: 1rem 0;
+  margin: var(--spacing-md) 0;
 }
 
 .stats-container {
   display: flex;
   justify-content: space-around;
-  margin: 1.5rem 0;
+  margin: var(--spacing-lg) 0;
   flex: 1;
 }
 
@@ -60,25 +60,25 @@ defineProps<{
 }
 
 .stat-value {
-  font-size: 1.8rem;
-  font-weight: 600;
-  color: #2c3e50;
-  line-height: 1;
+  font-size: var(--font-size-xxl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  line-height: var(--line-height-tight);
 }
 
 .stat-label {
-  font-size: 0.85rem;
-  color: #666;
-  margin-top: 0.25rem;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-top: var(--spacing-xs);
 }
 
 @media (max-width: 768px) {
   .stat-value {
-    font-size: 1.5rem;
+    font-size: var(--font-size-xl);
   }
 
   .stat-label {
-    font-size: 0.75rem;
+    font-size: var(--font-size-xs);
   }
 }
 </style>

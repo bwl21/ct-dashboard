@@ -109,26 +109,26 @@ onMounted(async () => {
 }
 
 .ct-main {
-  padding: 2rem;
+  padding: var(--spacing-xl);
   width: 100%;
   margin: 0;
 }
 
 @media (min-width: 1400px) {
   .ct-main {
-    padding: 3rem;
+    padding: var(--spacing-xxl);
   }
 }
 
 @media (min-width: 992px) and (max-width: 1399px) {
   .ct-main {
-    padding: 2.5rem;
+    padding: calc(var(--spacing-xl) + var(--spacing-sm));
   }
 }
 
 @media (min-width: 769px) and (max-width: 991px) {
   .ct-main {
-    padding: 1.5rem;
+    padding: var(--spacing-lg);
   }
 }
 
@@ -158,7 +158,7 @@ onMounted(async () => {
 
 @media (max-width: 768px) {
   .ct-main {
-    padding: 1rem;
+    padding: var(--spacing-md);
   }
 
   .ct-navbar {

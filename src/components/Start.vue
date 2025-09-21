@@ -153,8 +153,8 @@ defineEmits<{
 .test-result {
   margin-top: var(--spacing-md);
   padding: var(--spacing-md);
-  background-color: #d4edda;
-  border: 1px solid #c3e6cb;
+  background-color: var(--color-success-light);
+  border: 1px solid var(--color-success-border);
   border-radius: var(--border-radius-base);
   color: #155724;
   font-weight: var(--font-weight-medium);
