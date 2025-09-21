@@ -484,7 +484,12 @@ const formatDate = (dateString: string | null) => {
 const getGroupUrl = (groupId: number) => {
   // Construct URL to ChurchTools instance group dynamic settings page
   // Use the ChurchTools base URL from the client configuration
-  const churchtoolsBaseUrl = import.meta.env.VITE_BASE_URL || window.location.origin
+  const churchtoolsBaseUrl = import.meta.env.DEV
+    ? import.meta.env.VITE_BASE_URL
+    : window.location.origin
+
+  console.log('ChurchTools Base URL:', churchtoolsBaseUrl)
+
   return `${churchtoolsBaseUrl}/groups/${groupId}/settings/dynamic-group`
 }
 

@@ -3,35 +3,35 @@
 //
 // See https://aka.ms/devcontainer.json for more information.
 {
-	"name": "Ona",
-	// Use "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
-	// instead of the build to use a pre-built image.
-	"build": {
-        "context": ".",
-        "dockerfile": "Dockerfile"
+  "name": "Ona",
+  // Use "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  // instead of the build to use a pre-built image.
+  "build": {
+    "context": ".",
+    "dockerfile": "Dockerfile"
+  },
+  // Features add additional features to your environment. See https://containers.dev/features
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "nodeGypDependencies": true,
+      "version": "20"
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "installDirectlyFromGitHubRelease": true,
+      "version": "latest"
     }
-	// Features add additional features to your environment. See https://containers.dev/features
-	"features": {
-		"ghcr.io/devcontainers/features/node:1": {
-			"nodeGypDependencies": true,
-			"version": "20"
-		},
-		"ghcr.io/devcontainers/features/github-cli:1": {
-			"installDirectlyFromGitHubRelease": true,
-			"version": "latest"
-		}
-	},
+  },
 
-	// VS Code extensions to install automatically
-	"customizations": {
-		"vscode": {
-			"extensions": [
-				"Vue.volar",
-				"Vue.vscode-typescript-vue-plugin",
-				"bradlc.vscode-tailwindcss",
-				"esbenp.prettier-vscode",
-				"ms-vscode.vscode-typescript-next"
-			]
-		}
-	}
+  // VS Code extensions to install automatically
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "Vue.volar",
+        "Vue.vscode-typescript-vue-plugin",
+        "bradlc.vscode-tailwindcss",
+        "esbenp.prettier-vscode",
+        "ms-vscode.vscode-typescript-next"
+      ]
+    }
+  }
 }

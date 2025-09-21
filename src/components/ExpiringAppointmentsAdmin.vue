@@ -172,7 +172,7 @@
                   class="sortable resizable"
                   :style="{ width: columnWidths[3] + 'px' }"
                 >
-                  Nächstes Vorkommen
+                  Anfang
                   <span class="sort-indicator" v-if="sortField === 'startDate'">
                     {{ sortDirection === 'asc' ? '↑' : '↓' }}
                   </span>
@@ -183,7 +183,7 @@
                   class="sortable resizable"
                   :style="{ width: columnWidths[4] + 'px' }"
                 >
-                  Letztes Vorkommen
+                  Ende
                   <span class="sort-indicator" v-if="sortField === 'repeatUntil'">
                     {{ sortDirection === 'asc' ? '↑' : '↓' }}
                   </span>
