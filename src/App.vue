@@ -44,6 +44,7 @@ import ExpiringAppointmentsAdmin from './components/expiring-appointments/Expiri
 import TagsCard from './components/tags/TagsCard.vue'
 import TagsAdmin from './components/tags/TagsAdmin.vue'
 import BeispielCard from './components/beispiel/BeispielCard.vue'
+import ColorPickerExample from './components/common/ColorPickerExample.vue'
 
 const modules: DashboardModule[] = [
   {
@@ -69,6 +70,14 @@ const modules: DashboardModule[] = [
     description: 'Verwaltung von Tags aus ChurchTools',
     cardComponent: TagsCard,
     adminComponent: TagsAdmin,
+  },
+  {
+    id: 'colorpicker-example',
+    title: 'ColorPicker Example',
+    icon: '🎨',
+    description: 'Beispiel für die ColorPicker-Komponente',
+    cardComponent: BeispielCard,
+    adminComponent: ColorPickerExample,
   },
 ]
 
