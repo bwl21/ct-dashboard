@@ -50,8 +50,8 @@
               <span>×</span>
             </div>
             <div class="color-label">
-              <div class="color-name">No Color</div>
-              <div class="color-description">Remove color</div>
+              <div class="color-name">Keine Farbe</div>
+              <div class="color-description">Farbe entfernen</div>
             </div>
           </div>
 
@@ -270,7 +270,8 @@ watch(() => props.modelValue, (newValue) => {
   background: white;
   border-radius: 8px;
   padding: 24px;
-  max-width: 600px;
+  max-width: 720px;
+  width: 90vw;
   max-height: 80vh;
   overflow-y: auto;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
@@ -318,30 +319,34 @@ watch(() => props.modelValue, (newValue) => {
 
 .color-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 8px;
+  max-width: 640px;
 }
 
 .color-option {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
+  gap: 8px;
+  padding: 8px;
   border: 2px solid transparent;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
   background: #f8f9fa;
+  min-height: 48px;
 }
 
 .color-option:hover {
   background: #e9ecef;
   border-color: #007bff;
+  transform: scale(1.05);
 }
 
 .color-option.selected {
   background: #e3f2fd;
   border-color: #007bff;
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
 }
 
 .color-option.no-color {
@@ -351,44 +356,111 @@ watch(() => props.modelValue, (newValue) => {
 
 .color-option.no-color:hover {
   border-color: #007bff;
+  background: #f8f9fa;
 }
 
 .color-option.no-color.selected {
   background: #f8f9fa;
   border-color: #007bff;
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
 }
 
 .color-option .color-swatch {
   width: 24px;
   height: 24px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
 }
 
 .color-option .no-color-swatch {
   width: 24px;
   height: 24px;
-  font-size: 14px;
+  font-size: 12px;
+  font-weight: bold;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #999;
+  flex-shrink: 0;
 }
 
 .color-label {
   flex: 1;
+  min-width: 0;
 }
 
-.color-option .color-name {
+.color-name {
   font-weight: 500;
-  font-size: 14px;
+  font-size: 12px;
   color: #333;
+  line-height: 1.2;
   margin-bottom: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.color-option .color-hex {
-  font-size: 12px;
+.color-hex {
+  font-size: 10px;
   color: #666;
   font-family: monospace;
+  line-height: 1;
 }
 
-.color-option .color-description {
-  font-size: 12px;
+.color-description {
+  font-size: 10px;
   color: #666;
   font-style: italic;
+  line-height: 1;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .color-grid {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 320px;
+  }
+  
+  .color-picker-content {
+    max-width: 95vw;
+    padding: 16px;
+  }
+  
+  .color-name {
+    font-size: 11px;
+  }
+  
+  .color-hex,
+  .color-description {
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 480px) {
+  .color-grid {
+    grid-template-columns: 1fr;
+    max-width: 280px;
+  }
+  
+  .color-option {
+    padding: 12px;
+  }
+  
+  .color-swatch,
+  .no-color-swatch {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .color-name {
+    font-size: 12px;
+  }
+  
+  .color-hex,
+  .color-description {
+    font-size: 10px;
+  }
 }
 </style>
