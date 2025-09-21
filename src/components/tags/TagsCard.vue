@@ -24,14 +24,17 @@ import { ref, onMounted, computed } from 'vue'
 import { churchtoolsClient } from '@churchtools/churchtools-client'
 import BaseCard from '../common/BaseCard.vue'
 
-// Tag interface based on ct-labelmanager structure
+// Tag interface based on ChurchTools API
 interface Tag {
   id: number
   name: string
   description?: string
   color?: string
-  domainType: 'person' | 'song' | 'group' | 'appointment'
+  domainType: 'person' | 'song' | 'group'
 }
+
+// API Response is directly an array of tags
+type TagsApiResponse = Tag[]
 
 // Props
 defineProps<{
@@ -68,9 +71,7 @@ const groupTagsCount = computed(() => {
   return tags.value.filter((tag) => tag.domainType === 'group').length
 })
 
-const appointmentTagsCount = computed(() => {
-  return tags.value.filter((tag) => tag.domainType === 'appointment').length
-})
+
 
 const mainStat = computed(() => ({
   value: tags.value.length,
@@ -99,13 +100,7 @@ const statusStats = computed(() => [
     icon: '👥',
     type: 'warning' as const,
   },
-  {
-    key: 'appointment',
-    value: appointmentTagsCount.value,
-    label: 'Termine',
-    icon: '📅',
-    type: 'error' as const,
-  },
+
 ])
 
 const formattedLastUpdate = computed(() => {
@@ -125,38 +120,31 @@ const fetchData = async () => {
   error.value = null
 
   try {
-    // Fetch tags from different domains
-    const [personTags, songTags, groupTags, appointmentTags] = await Promise.allSettled([
-      churchtoolsClient.get('/api/tags', { params: { domain_type: 'person' } }).catch(() => ({ data: [] })),
-      churchtoolsClient.get('/api/tags', { params: { domain_type: 'song' } }).catch(() => ({ data: [] })),
-      churchtoolsClient.get('/api/tags', { params: { domain_type: 'group' } }).catch(() => ({ data: [] })),
-      churchtoolsClient.get('/api/tags', { params: { domain_type: 'appointment' } }).catch(() => ({ data: [] })),
+    // Fetch tags from different domains using modern API endpoints
+    const [personTags, songTags, groupTags] = await Promise.allSettled([
+      churchtoolsClient.get<TagsApiResponse>('/tags/person').catch(() => []),
+      churchtoolsClient.get<TagsApiResponse>('/tags/song').catch(() => []),
+      churchtoolsClient.get<TagsApiResponse>('/tags/group').catch(() => []),
     ])
 
     const allTags: Tag[] = []
 
     // Process person tags
-    if (personTags.status === 'fulfilled' && personTags.value?.data) {
-      const personTagsData = Array.isArray(personTags.value.data) ? personTags.value.data : personTags.value.data.data || []
+    if (personTags.status === 'fulfilled' && personTags.value) {
+      const personTagsData = Array.isArray(personTags.value) ? personTags.value : []
       allTags.push(...personTagsData.map((tag: any) => ({ ...tag, domainType: 'person' as const })))
     }
 
     // Process song tags
-    if (songTags.status === 'fulfilled' && songTags.value?.data) {
-      const songTagsData = Array.isArray(songTags.value.data) ? songTags.value.data : songTags.value.data.data || []
+    if (songTags.status === 'fulfilled' && songTags.value) {
+      const songTagsData = Array.isArray(songTags.value) ? songTags.value : []
       allTags.push(...songTagsData.map((tag: any) => ({ ...tag, domainType: 'song' as const })))
     }
 
     // Process group tags
-    if (groupTags.status === 'fulfilled' && groupTags.value?.data) {
-      const groupTagsData = Array.isArray(groupTags.value.data) ? groupTags.value.data : groupTags.value.data.data || []
+    if (groupTags.status === 'fulfilled' && groupTags.value) {
+      const groupTagsData = Array.isArray(groupTags.value) ? groupTags.value : []
       allTags.push(...groupTagsData.map((tag: any) => ({ ...tag, domainType: 'group' as const })))
-    }
-
-    // Process appointment tags
-    if (appointmentTags.status === 'fulfilled' && appointmentTags.value?.data) {
-      const appointmentTagsData = Array.isArray(appointmentTags.value.data) ? appointmentTags.value.data : appointmentTags.value.data.data || []
-      allTags.push(...appointmentTagsData.map((tag: any) => ({ ...tag, domainType: 'appointment' as const })))
     }
 
     tags.value = allTags
