@@ -6,7 +6,7 @@
         {{ title }}
       </h3>
       <div class="ct-card-actions">
-        <button class="ct-btn-icon" @click.stop="$emit('navigate')">
+        <button type="button" class="ct-btn-icon" @click.stop="$emit('navigate')">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="16"
@@ -34,7 +34,7 @@
       <div v-else-if="error" class="error-content">
         <p class="error-message">❌ {{ error }}</p>
         <slot name="error-actions">
-          <button @click="$emit('retry')" class="ct-btn ct-btn-sm ct-btn-outline">
+          <button type="button" @click="$emit('retry')" class="ct-btn ct-btn-sm ct-btn-outline">
             {{ retryText }}
           </button>
         </slot>
@@ -61,6 +61,7 @@
 
       <div class="ct-card-footer">
         <button
+          type="button"
           @click="$emit('refresh')"
           class="ct-btn ct-btn-primary ct-btn-sm"
           :disabled="isLoading"
@@ -68,7 +69,7 @@
           {{ isLoading ? refreshingText : refreshText }}
         </button>
         <slot name="actions">
-          <button @click="$emit('navigate')" class="ct-btn ct-btn-sm ct-btn-outline">
+          <button type="button" @click="$emit('navigate')" class="ct-btn ct-btn-sm ct-btn-outline">
             {{ detailsText }}
           </button>
         </slot>

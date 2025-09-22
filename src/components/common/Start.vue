@@ -28,7 +28,7 @@
 <script setup lang="ts">
 import type { PropType } from 'vue'
 import type { DashboardModule } from '../types/modules'
-import packageJson from '../../package.json'
+import packageJson from '../../../package.json'
 
 const version = packageJson.version
 

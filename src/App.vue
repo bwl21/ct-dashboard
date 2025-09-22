@@ -28,6 +28,9 @@
         />
       </div>
     </div>
+    
+    <!-- Toast Notifications -->
+    <Toast />
   </div>
 </template>
 
@@ -36,14 +39,17 @@ import { ref, computed, onMounted } from 'vue'
 import { churchtoolsClient } from '@churchtools/churchtools-client'
 import type { Person } from './ct-types'
 import type { DashboardModule } from './types/modules'
-import Start from './components/Start.vue'
-import AutomaticGroupsCard from './components/AutomaticGroupsCard.vue'
-import AutomaticGroupsAdmin from './components/AutomaticGroupsAdmin.vue'
-import ExpiringAppointmentsCard from './components/ExpiringAppointmentsCard.vue'
-import ExpiringAppointmentsAdmin from './components/ExpiringAppointmentsAdmin.vue'
-import TagsCard from './components/TagsCard.vue'
-import TagsAdmin from './components/TagsAdmin.vue'
-import BeispielCard from './components/BeispielCard.vue'
+import Start from './components/common/Start.vue'
+import AutomaticGroupsCard from './components/automatic-groups/AutomaticGroupsCard.vue'
+import AutomaticGroupsAdmin from './components/automatic-groups/AutomaticGroupsAdmin.vue'
+import ExpiringAppointmentsCard from './components/expiring-appointments/ExpiringAppointmentsCard.vue'
+import ExpiringAppointmentsAdmin from './components/expiring-appointments/ExpiringAppointmentsAdmin.vue'
+import TagsCard from './components/tags/TagsCard.vue'
+import TagsAdmin from './components/tags/TagsAdmin.vue'
+import BeispielCard from './components/beispiel/BeispielCard.vue'
+import ColorPickerExample from './components/common/ColorPickerExample.vue'
+import Toast from './components/common/Toast.vue'
+import { useToast } from './composables/useToast'
 
 const modules: DashboardModule[] = [
   {
@@ -70,12 +76,36 @@ const modules: DashboardModule[] = [
     cardComponent: TagsCard,
     adminComponent: TagsAdmin,
   },
+  {
+    id: 'colorpicker-example',
+    title: 'ColorPicker Example',
+    icon: '🎨',
+    description: 'Beispiel für die ColorPicker-Komponente',
+    cardComponent: BeispielCard,
+    adminComponent: ColorPickerExample,
+  },
 ]
 
 const userDisplayName = ref<string>('')
 const isDevelopment = ref<boolean>(false)
 const currentView = ref<'dashboard' | string>('dashboard')
 const currentModuleId = ref<string>('')
+
+// Toast testing
+const { showSuccess, showError, showWarning, showInfo, showApiSuccess, showApiError, showValidationError } = useToast()
+
+// Make toast functions globally available for console testing
+if (typeof window !== 'undefined') {
+  (window as any).toast = {
+    success: showSuccess,
+    error: showError,
+    warning: showWarning,
+    info: showInfo,
+    apiSuccess: showApiSuccess,
+    apiError: showApiError,
+    validationError: showValidationError
+  }
+}
 
 const currentModule = computed(() => modules.find((m) => m.id === currentModuleId.value))
 
@@ -94,6 +124,8 @@ onMounted(async () => {
     console.error('Fehler beim Laden der Benutzerdaten:', error)
     userDisplayName.value = 'Benutzer'
   }
+  
+
 })
 </script>
 
