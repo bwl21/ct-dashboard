@@ -20,12 +20,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { churchtoolsClient } from '@churchtools/churchtools-client'
-import type { Group, DynamicGroupStatus } from '../ct-types'
+import { computed, onMounted } from 'vue'
 import type { DashboardModule } from '../types/modules'
-import BaseCard from './BaseCard.vue'
-import type { MainStat, StatusStat } from './BaseCard.vue'
+import BaseCard from '../common/BaseCard.vue'
+import type { MainStat, StatusStat } from '../common/BaseCard.vue'
+import { useAutomaticGroups } from './useAutomaticGroups'
 
 defineProps<{
   module: DashboardModule
@@ -36,20 +35,7 @@ defineEmits<{
   navigate: []
 }>()
 
-interface AutomaticGroup {
-  id: number
-  name: string
-  dynamicGroupStatus: DynamicGroupStatus
-  lastExecution: string | null
-  executionStatus: 'success' | 'error' | 'running' | 'pending' | 'unknown'
-  dynamicGroupUpdateStarted: string | null
-  dynamicGroupUpdateFinished: string | null
-}
-
-const groups = ref<AutomaticGroup[]>([])
-const loading = ref(false)
-const error = ref<string | null>(null)
-const lastUpdate = ref<string | null>(null)
+const { groups, loading, error, fetchAutomaticGroups } = useAutomaticGroups()
 
 const totalGroups = computed(() => groups.value.length)
 
@@ -80,10 +66,10 @@ const mainStat = computed(
 )
 
 const formattedLastUpdate = computed(() => {
-  if (!lastUpdate.value) return null
+  if (groups.value.length === 0) return null
 
   try {
-    const date = new Date(lastUpdate.value)
+    const date = new Date()
     return date.toLocaleString('de-DE', {
       day: '2-digit',
       month: '2-digit',
@@ -117,89 +103,11 @@ const statusStats = computed((): StatusStat[] => [
   },
 ])
 
-const determineExecutionStatus = (group: Group): AutomaticGroup['executionStatus'] => {
-  const started = group.settings?.dynamicGroupUpdateStarted
-  const finished = group.settings?.dynamicGroupUpdateFinished
-
-  if (!started && !finished) return 'pending'
-  if (started && !finished) return 'running'
-  if (started && finished) {
-    const startedDate = new Date(started)
-    const finishedDate = new Date(finished)
-    if (startedDate > finishedDate) return 'running'
-    return 'success'
-  }
-
-  return 'unknown'
+const refreshData = () => {
+  fetchAutomaticGroups()
 }
 
-const refreshData = async () => {
-  loading.value = true
-  error.value = null
 
-  try {
-    console.log('Fetching automatic groups for card...')
-
-    let allGroups: Group[] = []
-    let page = 1
-    const limit = 100
-    let hasMore = true
-
-    while (hasMore) {
-      const response = await churchtoolsClient.get(
-        `/groups?include=settings&limit=${limit}&page=${page}`
-      )
-
-      let pageGroups: Group[] = []
-      if (Array.isArray(response)) {
-        pageGroups = response
-      } else if (response && response.data && Array.isArray(response.data)) {
-        pageGroups = response.data
-      } else if (response && Array.isArray(response.groups)) {
-        pageGroups = response.groups
-      }
-
-      if (pageGroups.length === 0) {
-        hasMore = false
-      } else {
-        allGroups = allGroups.concat(pageGroups)
-        if (pageGroups.length < limit) {
-          hasMore = false
-        } else {
-          page++
-          if (page > 100) break // Safety limit
-        }
-      }
-    }
-
-    // Filter for automatic groups
-    const automaticGroups = allGroups
-      .filter(
-        (group) =>
-          group.settings?.dynamicGroupStatus &&
-          group.settings.dynamicGroupStatus !== 'none' &&
-          group.settings.dynamicGroupStatus !== null
-      )
-      .map((group) => ({
-        id: group.id,
-        name: group.name || `Gruppe ${group.id}`,
-        dynamicGroupStatus: group.settings?.dynamicGroupStatus || 'none',
-        lastExecution: group.settings?.dynamicGroupUpdateFinished || null,
-        executionStatus: determineExecutionStatus(group),
-        dynamicGroupUpdateStarted: group.settings?.dynamicGroupUpdateStarted || null,
-        dynamicGroupUpdateFinished: group.settings?.dynamicGroupUpdateFinished || null,
-      }))
-
-    groups.value = automaticGroups
-    lastUpdate.value = new Date().toISOString()
-    console.log(`Found ${automaticGroups.length} automatic groups`)
-  } catch (err: any) {
-    console.error('Error loading automatic groups:', err)
-    error.value = 'Fehler beim Laden der automatischen Gruppen.'
-  } finally {
-    loading.value = false
-  }
-}
 
 const loadMockData = () => {
   groups.value = [
@@ -254,6 +162,6 @@ const loadMockData = () => {
 }
 
 onMounted(() => {
-  refreshData()
+  fetchAutomaticGroups()
 })
 </script>

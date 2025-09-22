@@ -54,58 +54,59 @@ defineProps<{
 .admin-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 0 var(--spacing-md);
 }
 
 h2 {
-  color: #2c3e50;
-  margin-bottom: 1.5rem;
-  font-size: 1.75rem;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-lg);
+  font-size: var(--font-size-xxl);
+  font-weight: var(--font-weight-semibold);
 }
 
 .admin-content {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1.5rem;
-  margin-top: 1.5rem;
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-lg);
 }
 
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
+  gap: var(--spacing-md);
 }
 
 .stat-card {
-  background: #f8f9fa;
-  border-radius: 8px;
-  padding: 1.5rem;
+  background: var(--color-background);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
   text-align: center;
   transition:
-    transform 0.2s,
-    box-shadow 0.2s;
+    transform var(--transition-base),
+    box-shadow var(--transition-base);
 }
 
 .stat-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-lg);
 }
 
 .stat-number {
-  font-size: 2rem;
-  font-weight: 600;
-  color: #2c3e50;
-  margin-bottom: 0.5rem;
+  font-size: var(--font-size-xxxl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-sm);
 }
 
 .stat-title {
-  color: #666;
-  font-size: 0.9rem;
-  line-height: 1.4;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-base);
 }
 
 .chart-container {
-  margin-top: 1.5rem;
+  margin-top: var(--spacing-lg);
 }
 
 .chart-placeholder {
@@ -113,11 +114,11 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f8f9fa;
-  border-radius: 4px;
-  color: #666;
+  background: var(--color-background);
+  border-radius: var(--border-radius-sm);
+  color: var(--color-text-secondary);
   text-align: center;
-  padding: 2rem;
+  padding: var(--spacing-xl);
 }
 
 @media (max-width: 768px) {
@@ -126,7 +127,7 @@ h2 {
   }
 
   .stat-number {
-    font-size: 1.75rem;
+    font-size: var(--font-size-xxl);
   }
 }
 
