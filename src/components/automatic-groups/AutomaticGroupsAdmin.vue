@@ -25,21 +25,6 @@
       >
         {{ loading ? 'Lädt...' : 'Aktualisieren' }}
       </button>
-      <button
-        @click="loadMockData"
-        class="ct-btn ct-btn-outline mock-btn"
-        :disabled="loading"
-        title="Lädt Beispieldaten zum Testen der Oberfläche"
-      >
-        Mock-Daten
-      </button>
-    </template>
-
-    <!-- Custom Empty Actions -->
-    <template #empty-actions>
-      <button @click="loadMockData" class="ct-btn ct-btn-secondary">
-        Mock-Daten laden (für Demo)
-      </button>
     </template>
 
     <!-- Custom Cell Rendering -->
@@ -105,6 +90,22 @@ const tableColumns: TableColumn[] = [
 ]
 
 // Helper functions
+const determineExecutionStatus = (group: any): 'success' | 'error' | 'running' | 'pending' | 'unknown' => {
+  const started = group.settings?.dynamicGroupUpdateStarted
+  const finished = group.settings?.dynamicGroupUpdateFinished
+
+  if (!started && !finished) return 'pending'
+  if (started && !finished) return 'running'
+  if (started && finished) {
+    const startedDate = new Date(started)
+    const finishedDate = new Date(finished)
+    if (startedDate > finishedDate) return 'running'
+    return 'success'
+  }
+
+  return 'unknown'
+}
+
 const getConfigStatusClass = (status: string) => {
   switch (status) {
     case 'active':
@@ -197,157 +198,59 @@ const refreshGroups = async () => {
     // Import ChurchTools client
     const { churchtoolsClient } = await import('@churchtools/churchtools-client')
 
-    // Fetch all groups with proper pagination
+    // Fetch all groups with proper pagination (using same logic as Card)
     while (hasMore) {
-      console.log(`Fetching page ${page} with limit ${limit}...`)
-
       const response = await churchtoolsClient.get(
-        `/groups?include=settings,information&limit=${limit}&page=${page}`
+        `/groups?include=settings&limit=${limit}&page=${page}`
       )
 
-      console.log(`API Response for page ${page}:`, response)
-
-      // Handle different possible response formats
       let pageGroups: any[] = []
-
       if (Array.isArray(response)) {
-        // Direct array response
         pageGroups = response
       } else if (response && response.data && Array.isArray(response.data)) {
-        // Wrapped in data property
         pageGroups = response.data
       } else if (response && Array.isArray(response.groups)) {
-        // Wrapped in groups property
         pageGroups = response.groups
-      } else {
-        console.error('Unexpected API response format:', response)
-        throw new Error(
-          `Invalid API response format. Expected array or object with data/groups property, got: ${typeof response}`
-        )
       }
 
-      console.log(`Groups found on page ${page}:`, pageGroups.length)
-
       if (pageGroups.length === 0) {
-        // No more groups
         hasMore = false
       } else {
-        // Add groups to total collection
         allGroups = allGroups.concat(pageGroups)
-
-        // Check if we should continue (if we got less than limit, we're done)
         if (pageGroups.length < limit) {
           hasMore = false
         } else {
           page++
+          if (page > 100) break // Safety limit
         }
       }
-
-      // Safety check to prevent infinite loops
-      if (page > 100) {
-        console.warn('Reached maximum page limit (100), stopping pagination')
-        hasMore = false
-      }
     }
 
-    console.log(`Total groups fetched: ${allGroups.length}`)
-
-    // Debug: Log first few groups to understand structure
-    if (allGroups.length > 0) {
-      console.log('Sample group structure:', JSON.stringify(allGroups[0], null, 2))
-      console.log('First 3 groups:', allGroups.slice(0, 3).map(g => ({
-        id: g.id,
-        name: g.name,
-        settings: g.settings,
-        information: g.information,
-        dynamicGroupStatus: g.dynamicGroupStatus,
-        automaticMembership: g.automaticMembership
-      })))
-    }
-
-    // Filter for automatic groups (groups with dynamic group settings)
-    const automaticGroups = allGroups.filter((group) => {
-      // Check if group has dynamic group configuration
-      const hasAutomaticSettings = 
-        group.settings?.dynamicGroup === true ||
-        group.information?.dynamicGroup === true ||
-        group.dynamicGroupStatus ||
-        group.automaticMembership ||
-        // Additional checks for different possible field names
-        group.isDynamic ||
-        group.isAutomatic ||
-        group.autoMembership ||
-        (group.settings && Object.keys(group.settings).some(key => 
-          key.toLowerCase().includes('dynamic') || 
-          key.toLowerCase().includes('automatic')
-        ))
-
-      if (hasAutomaticSettings) {
-        console.log('Found automatic group:', group.name, {
-          id: group.id,
-          settings: group.settings,
-          information: group.information,
-          dynamicGroupStatus: group.dynamicGroupStatus,
-          automaticMembership: group.automaticMembership
-        })
-      }
-
-      return hasAutomaticSettings
-    })
-
-    console.log(`Automatic groups found: ${automaticGroups.length}`)
-
-    // If no automatic groups found, show all groups for debugging
-    if (automaticGroups.length === 0 && allGroups.length > 0) {
-      console.warn('No automatic groups found. Showing all groups for debugging.')
-      console.log('All groups:', allGroups.map(g => ({
-        id: g.id,
-        name: g.name,
-        hasSettings: !!g.settings,
-        settingsKeys: g.settings ? Object.keys(g.settings) : [],
-        hasInformation: !!g.information,
-        informationKeys: g.information ? Object.keys(g.information) : []
-      })))
-      
-      // For debugging: show all groups temporarily
-      groups.value = allGroups.slice(0, 10).map((group) => ({
+    // Filter for automatic groups (using same logic as Card)
+    const automaticGroups = allGroups
+      .filter(
+        (group) =>
+          group.settings?.dynamicGroupStatus &&
+          group.settings.dynamicGroupStatus !== 'none' &&
+          group.settings.dynamicGroupStatus !== null
+      )
+      .map((group) => ({
         id: group.id,
-        name: group.name + ' (DEBUG)',
+        name: group.name || `Gruppe ${group.id}`,
         groupTypeId: group.groupTypeId || group.groupType?.name || 'N/A',
-        dynamicGroupStatus: 'debug',
-        lastExecution: group.lastExecution || group.lastUpdate || null,
-        executionStatus: 'debug'
+        dynamicGroupStatus: group.settings?.dynamicGroupStatus || 'none',
+        lastExecution: group.settings?.dynamicGroupUpdateFinished || null,
+        executionStatus: determineExecutionStatus(group),
+        dynamicGroupUpdateStarted: group.settings?.dynamicGroupUpdateStarted || null,
+        dynamicGroupUpdateFinished: group.settings?.dynamicGroupUpdateFinished || null,
       }))
-      return
-    }
 
-    // Transform data for display
-    groups.value = automaticGroups.map((group) => ({
-      id: group.id,
-      name: group.name,
-      groupTypeId: group.groupTypeId || group.groupType?.name || 'N/A',
-      dynamicGroupStatus: group.dynamicGroupStatus || 
-                         (group.settings?.dynamicGroup ? 'active' : 'inactive'),
-      lastExecution: group.lastExecution || group.lastUpdate || null,
-      executionStatus: group.executionStatus || 'unknown'
-    }))
+    groups.value = automaticGroups
+    console.log(`Found ${automaticGroups.length} automatic groups`)
 
-    console.log('Processed groups:', groups.value)
-
-    // If no automatic groups found, suggest using mock data
-    if (groups.value.length === 0) {
-      console.log('No automatic groups found. Consider using mock data for testing.')
-    }
   } catch (err: any) {
     console.error('Error loading groups:', err)
     error.value = 'Fehler beim Laden der automatischen Gruppen. Bitte versuchen Sie es erneut.'
-    
-    // In development mode, load mock data as fallback
-    if (isDevelopment.value) {
-      console.log('Development mode: Loading mock data as fallback')
-      loadMockData()
-      error.value = null
-    }
   } finally {
     loading.value = false
   }
