@@ -157,5 +157,8 @@ export function getAppointmentUrl(appointment: Appointment): string {
     : window.location.origin
   
   const startDate = 'base' in appointment ? appointment.base.startDate : appointment.startDate
-  return `${churchtoolsBaseUrl}?q=churchcal&startdate=${startDate}#CalView/`
+  const calendarId = 'base' in appointment ? appointment.base.calendar.id : appointment.calendar.id
+  // const appointmentId= 'base' in appointment ? appointment.base.id : appointment.id
+  // todo: @jmr wie kann ich den LInk zur Bearbeitung der Serie bekommen
+  return `${churchtoolsBaseUrl}?q=churchcal&category_id=${calendarId}&startdate=${startDate}#CalView/`
 }
