@@ -24,7 +24,7 @@ import { computed, onMounted } from 'vue'
 import type { DashboardModule } from '../types/modules'
 import BaseCard from '../common/BaseCard.vue'
 import type { MainStat, StatusStat } from '../common/BaseCard.vue'
-import { useAutomaticGroups } from '@/composables/useAutomaticGroups'
+import { useAutomaticGroups } from './useAutomaticGroups'
 
 defineProps<{
   module: DashboardModule
