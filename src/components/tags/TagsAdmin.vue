@@ -173,13 +173,21 @@
       <template #cell-color="{ item }">
         <div class="color-display" v-if="item.color">
           <div 
-            class="color-circle" 
-            :style="{ backgroundColor: item.color }"
-            :title="item.color"
+            class="color-swatch" 
+            :style="{ backgroundColor: getColorInfo(item.color).hex }"
+            :title="getColorInfo(item.color).hex"
           ></div>
-          <span class="color-text">{{ item.color }}</span>
+          <div class="color-info">
+            <div class="color-name">{{ getColorInfo(item.color).name }}</div>
+            <div class="color-hex">{{ getColorInfo(item.color).hex }}</div>
+          </div>
         </div>
-        <span v-else class="no-color">Keine Farbe</span>
+        <div v-else class="no-color-display">
+          <div class="no-color-swatch">
+            <span>×</span>
+          </div>
+          <span class="no-color-text">Keine Farbe</span>
+        </div>
       </template>
 
       <template #cell-actions="{ item }">
@@ -488,8 +496,52 @@ const showBulkDeleteConfirm = async () => {
   }
 }
 
+const getColorInfo = (colorValue: string): { hex: string, name: string, tailwind: string } => {
+  const colorMap: Record<string, { hex: string, name: string, tailwind: string }> = {
+    // System Colors
+    'parent': { hex: '#6b7280', name: 'Parent', tailwind: 'gray-500' },
+    'default': { hex: '#6b7280', name: 'Default', tailwind: 'gray-500' },
+    'accent': { hex: '#007cba', name: 'Accent', tailwind: 'custom' },
+    'basic': { hex: '#6b7280', name: 'Basic', tailwind: 'gray-500' },
+    
+    // Standard Colors
+    'amber': { hex: '#f59e0b', name: 'Amber', tailwind: 'amber-500' },
+    'black': { hex: '#000000', name: 'Black', tailwind: 'black' },
+    'blue': { hex: '#3b82f6', name: 'Blue', tailwind: 'blue-500' },
+    'cyan': { hex: '#06b6d4', name: 'Cyan', tailwind: 'cyan-500' },
+    'emerald': { hex: '#10b981', name: 'Emerald', tailwind: 'emerald-500' },
+    'fuchsia': { hex: '#d946ef', name: 'Fuchsia', tailwind: 'fuchsia-500' },
+    'gray': { hex: '#6b7280', name: 'Gray', tailwind: 'gray-500' },
+    'green': { hex: '#16a34a', name: 'Green', tailwind: 'green-600' },
+    'indigo': { hex: '#6366f1', name: 'Indigo', tailwind: 'indigo-500' },
+    'lime': { hex: '#84cc16', name: 'Lime', tailwind: 'lime-500' },
+    'orange': { hex: '#f97316', name: 'Orange', tailwind: 'orange-500' },
+    'pink': { hex: '#ec4899', name: 'Pink', tailwind: 'pink-500' },
+    'purple': { hex: '#a855f7', name: 'Purple', tailwind: 'purple-500' },
+    'red': { hex: '#dc2626', name: 'Red', tailwind: 'red-600' },
+    'rose': { hex: '#f43f5e', name: 'Rose', tailwind: 'rose-500' },
+    'sky': { hex: '#0ea5e9', name: 'Sky', tailwind: 'sky-500' },
+    'teal': { hex: '#14b8a6', name: 'Teal', tailwind: 'teal-500' },
+    'violet': { hex: '#8b5cf6', name: 'Violet', tailwind: 'violet-500' },
+    'white': { hex: '#ffffff', name: 'White', tailwind: 'white' },
+    'yellow': { hex: '#eab308', name: 'Yellow', tailwind: 'yellow-500' },
+    
+    // Semantic Colors
+    'critical': { hex: '#dc2626', name: 'Critical', tailwind: 'red-600' },
+    'constructive': { hex: '#16a34a', name: 'Constructive', tailwind: 'green-600' },
+    'destructive': { hex: '#dc2626', name: 'Destructive', tailwind: 'red-600' },
+    'danger': { hex: '#dc2626', name: 'Danger', tailwind: 'red-600' },
+    'error': { hex: '#dc2626', name: 'Error', tailwind: 'red-600' },
+    'info': { hex: '#3b82f6', name: 'Info', tailwind: 'blue-500' },
+    'success': { hex: '#16a34a', name: 'Success', tailwind: 'green-600' },
+    'warning': { hex: '#f59e0b', name: 'Warning', tailwind: 'amber-500' },
+    'magic': { hex: '#8b5cf6', name: 'Magic', tailwind: 'violet-500' }
+  }
+  return colorMap[colorValue] || { hex: '#6b7280', name: colorValue, tailwind: 'gray-500' }
+}
+
 const getColorDisplayName = (color: string) => {
-  return color
+  return getColorInfo(color).name
 }
 
 const getDomainDisplayName = (domain: string) => {
@@ -764,29 +816,73 @@ onMounted(() => {
   box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
 }
 
-/* Custom Cell Styles */
+/* Custom Cell Styles - Match ColorPicker styling */
 .color-display {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 8px;
 }
 
-.color-circle {
+.color-swatch {
   width: 20px;
   height: 20px;
-  border-radius: 50%;
-  border: 1px solid var(--ct-border-color, #e0e0e0);
+  border-radius: 3px;
+  border: 1px solid #ddd;
   flex-shrink: 0;
 }
 
-.color-text {
-  font-family: monospace;
-  font-size: 0.875rem;
+.color-info {
+  text-align: left;
+  flex: 1;
+  min-width: 0;
 }
 
-.no-color {
+.color-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: #374151;
+  line-height: 1.2;
+  margin-bottom: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+.color-hex {
+  font-size: 10px;
+  color: #6b7280;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  line-height: 1.2;
+  text-transform: uppercase;
+  display: block;
+  margin-top: 1px;
+}
+
+.no-color-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.no-color-swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  border: 1px solid #ddd;
+  background: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #666;
+  flex-shrink: 0;
+}
+
+.no-color-text {
   color: var(--ct-text-secondary, #6c757d);
   font-style: italic;
+  font-size: 12px;
 }
 
 .action-buttons {
