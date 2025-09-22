@@ -63,20 +63,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import type { DashboardModule } from '@/types/modules'
 import type { TableColumn } from '@/types/table'
 import AdminTable from '@/components/shared/AdminTable.vue'
+import { useAutomaticGroups } from '@/composables/useAutomaticGroups'
 
 defineProps<{
   module: DashboardModule
 }>()
 
-// State
-const loading = ref(false)
-const error = ref<string | null>(null)
-const groups = ref<any[]>([])
-const isDevelopment = ref(import.meta.env.MODE === 'development')
+// Use composable for data management
+const { groups, loading, error, fetchAutomaticGroups } = useAutomaticGroups()
 
 // Table configuration
 const tableColumns: TableColumn[] = [
@@ -90,21 +88,6 @@ const tableColumns: TableColumn[] = [
 ]
 
 // Helper functions
-const determineExecutionStatus = (group: any): 'success' | 'error' | 'running' | 'pending' | 'unknown' => {
-  const started = group.settings?.dynamicGroupUpdateStarted
-  const finished = group.settings?.dynamicGroupUpdateFinished
-
-  if (!started && !finished) return 'pending'
-  if (started && !finished) return 'running'
-  if (started && finished) {
-    const startedDate = new Date(started)
-    const finishedDate = new Date(finished)
-    if (startedDate > finishedDate) return 'running'
-    return 'success'
-  }
-
-  return 'unknown'
-}
 
 const getConfigStatusClass = (status: string) => {
   switch (status) {
@@ -183,129 +166,15 @@ const getGroupUrl = (groupId: number) => {
 }
 
 // Data loading
-const refreshGroups = async () => {
-  loading.value = true
-  error.value = null
-
-  try {
-    console.log('Fetching groups from ChurchTools API...')
-
-    let allGroups: any[] = []
-    let page = 1
-    const limit = 100 // ChurchTools API Standard
-    let hasMore = true
-
-    // Import ChurchTools client
-    const { churchtoolsClient } = await import('@churchtools/churchtools-client')
-
-    // Fetch all groups with proper pagination (using same logic as Card)
-    while (hasMore) {
-      const response = await churchtoolsClient.get(
-        `/groups?include=settings&limit=${limit}&page=${page}`
-      )
-
-      let pageGroups: any[] = []
-      if (Array.isArray(response)) {
-        pageGroups = response
-      } else if (response && response.data && Array.isArray(response.data)) {
-        pageGroups = response.data
-      } else if (response && Array.isArray(response.groups)) {
-        pageGroups = response.groups
-      }
-
-      if (pageGroups.length === 0) {
-        hasMore = false
-      } else {
-        allGroups = allGroups.concat(pageGroups)
-        if (pageGroups.length < limit) {
-          hasMore = false
-        } else {
-          page++
-          if (page > 100) break // Safety limit
-        }
-      }
-    }
-
-    // Filter for automatic groups (using same logic as Card)
-    const automaticGroups = allGroups
-      .filter(
-        (group) =>
-          group.settings?.dynamicGroupStatus &&
-          group.settings.dynamicGroupStatus !== 'none' &&
-          group.settings.dynamicGroupStatus !== null
-      )
-      .map((group) => ({
-        id: group.id,
-        name: group.name || `Gruppe ${group.id}`,
-        groupTypeId: group.groupTypeId || group.groupType?.name || 'N/A',
-        dynamicGroupStatus: group.settings?.dynamicGroupStatus || 'none',
-        lastExecution: group.settings?.dynamicGroupUpdateFinished || null,
-        executionStatus: determineExecutionStatus(group),
-        dynamicGroupUpdateStarted: group.settings?.dynamicGroupUpdateStarted || null,
-        dynamicGroupUpdateFinished: group.settings?.dynamicGroupUpdateFinished || null,
-      }))
-
-    groups.value = automaticGroups
-    console.log(`Found ${automaticGroups.length} automatic groups`)
-
-  } catch (err: any) {
-    console.error('Error loading groups:', err)
-    error.value = 'Fehler beim Laden der automatischen Gruppen. Bitte versuchen Sie es erneut.'
-  } finally {
-    loading.value = false
-  }
+const refreshGroups = () => {
+  fetchAutomaticGroups()
 }
 
-const loadMockData = () => {
-  console.log('Loading mock data for automatic groups...')
-  groups.value = [
-    {
-      id: 1,
-      name: 'Jugendgruppe Automatisch',
-      groupTypeId: 'Jugendgruppe',
-      dynamicGroupStatus: 'active',
-      lastExecution: '2024-01-15T10:30:00Z',
-      executionStatus: 'success'
-    },
-    {
-      id: 2,
-      name: 'Mitarbeiter Gruppe',
-      groupTypeId: 'Mitarbeitergruppe',
-      dynamicGroupStatus: 'active',
-      lastExecution: '2024-01-14T09:15:00Z',
-      executionStatus: 'success'
-    },
-    {
-      id: 3,
-      name: 'Inaktive Gruppe',
-      groupTypeId: 'Allgemeine Gruppe',
-      dynamicGroupStatus: 'inactive',
-      lastExecution: null,
-      executionStatus: 'unknown'
-    },
-    {
-      id: 4,
-      name: 'Neue Mitglieder',
-      groupTypeId: 'Besuchergruppe',
-      dynamicGroupStatus: 'active',
-      lastExecution: '2024-01-16T08:00:00Z',
-      executionStatus: 'success'
-    },
-    {
-      id: 5,
-      name: 'Fehlerhafte Gruppe',
-      groupTypeId: 'Testgruppe',
-      dynamicGroupStatus: 'error',
-      lastExecution: '2024-01-10T12:00:00Z',
-      executionStatus: 'error'
-    }
-  ]
-  console.log('Mock data loaded:', groups.value.length, 'groups')
-}
+
 
 // Initialize
 onMounted(() => {
-  refreshGroups()
+  fetchAutomaticGroups()
 })
 </script>
 
