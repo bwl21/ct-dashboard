@@ -704,6 +704,21 @@ onMounted(() => {
     -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   color: var(--ct-text-primary, #2c3e50);
   line-height: 1.5;
+  
+  /* Ensure consistent light theme variables */
+  --ct-bg-primary: #ffffff;
+  --ct-bg-secondary: #f8f9fa;
+  --ct-bg-tertiary: #e9ecef;
+  --ct-text-primary: #2c3e50;
+  --ct-text-secondary: #6c757d;
+  --ct-border-color: #e0e0e0;
+  --ct-bg-hover: #f1f3f5;
+  --ct-primary: #3498db;
+  --ct-primary-dark: #2980b9;
+  --ct-secondary: #6c757d;
+  --ct-secondary-dark: #5a6268;
+  --ct-success: #28a745;
+  --ct-danger: #dc3545;
 }
 
 /* Header Card */
@@ -1461,28 +1476,7 @@ error {
   }
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .expiring-appointments-admin {
-    --ct-bg-primary: #1e1e2d;
-    --ct-bg-secondary: #2a2a3c;
-    --ct-text-primary: #f0f0f0;
-    --ct-text-secondary: #a0a0a0;
-    --ct-border-color: #3a3a4a;
-    --ct-bg-hover: #2f2f3f;
-  }
-
-  .appointments-table {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  }
-
-  input,
-  select {
-    background-color: #2a2a3c !important;
-    border-color: #3a3a4a !important;
-    color: #f0f0f0 !important;
-  }
-}
+/* Removed duplicate CSS variables - now defined in main component selector */
 .expiring-appointments-admin {
   padding: 0;
   width: 100%;
@@ -1491,6 +1485,21 @@ error {
     -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   color: var(--ct-text-primary, #2c3e50);
   line-height: 1.5;
+  
+  /* Ensure consistent light theme variables */
+  --ct-bg-primary: #ffffff;
+  --ct-bg-secondary: #f8f9fa;
+  --ct-bg-tertiary: #e9ecef;
+  --ct-text-primary: #2c3e50;
+  --ct-text-secondary: #6c757d;
+  --ct-border-color: #e0e0e0;
+  --ct-bg-hover: #f1f3f5;
+  --ct-primary: #3498db;
+  --ct-primary-dark: #2980b9;
+  --ct-secondary: #6c757d;
+  --ct-secondary-dark: #5a6268;
+  --ct-success: #28a745;
+  --ct-danger: #dc3545;
 }
 
 .content-container {
@@ -2020,33 +2029,7 @@ tbody tr:hover {
   }
 }
 
-/* Dark mode adjustments */
-@media (prefers-color-scheme: dark) {
-  .appointments-table {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  }
-
-  .stat-card {
-    background: var(--bg-secondary);
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
-  }
-
-  .filters {
-    background: var(--bg-secondary);
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  }
-
-  .search-box input,
-  .filter-group select {
-    background: var(--bg-color);
-    border-color: var(--border-dark);
-    color: var(--text-primary);
-  }
-
-  .search-icon {
-    color: var(--text-tertiary);
-  }
-}
+/* Removed dark mode media query - using consistent light theme */
 
 .expiring-appointments-admin {
   margin: 0 auto;
