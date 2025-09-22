@@ -137,3 +137,25 @@ export async function findExpiringSeries(daysInAdvance: number = 60): Promise<Ap
   )
   return uniqueSeries
 }
+
+/**
+ * Generates a URL to open a group's dynamic settings in ChurchTools
+ */
+export function getGroupUrl(groupId: number): string {
+  const churchtoolsBaseUrl = import.meta.env.DEV
+    ? import.meta.env.VITE_BASE_URL
+    : window.location.origin
+  return `${churchtoolsBaseUrl}/groups/${groupId}`
+}
+
+/**
+ * Generates a URL to open an appointment in ChurchTools
+ */
+export function getAppointmentUrl(appointment: Appointment): string {
+  const churchtoolsBaseUrl = import.meta.env.DEV
+    ? import.meta.env.VITE_BASE_URL
+    : window.location.origin
+  
+  const startDate = 'base' in appointment ? appointment.base.startDate : appointment.startDate
+  return `${churchtoolsBaseUrl}?q=churchcal&startdate=${startDate}#CalView/`
+}

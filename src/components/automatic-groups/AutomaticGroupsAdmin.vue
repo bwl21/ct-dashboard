@@ -68,6 +68,7 @@ import type { DashboardModule } from '@/types/modules'
 import type { TableColumn } from '@/types/table'
 import AdminTable from '@/components/shared/AdminTable.vue'
 import { useAutomaticGroups } from './useAutomaticGroups'
+import { getGroupUrl } from '@/services/churchtools'
 
 defineProps<{
   module: DashboardModule
@@ -158,12 +159,7 @@ const formatDate = (dateString: string | null) => {
   }
 }
 
-const getGroupUrl = (groupId: number) => {
-  const churchtoolsBaseUrl = import.meta.env.DEV
-    ? import.meta.env.VITE_BASE_URL
-    : window.location.origin
-  return `${churchtoolsBaseUrl}?q=churchdb&view=GroupView&id=${groupId}`
-}
+// URL generation is now handled by the churchtools service
 
 // Data loading
 const refreshGroups = () => {
