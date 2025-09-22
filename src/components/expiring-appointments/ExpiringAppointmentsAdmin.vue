@@ -128,6 +128,7 @@ import type { DashboardModule } from '@/types/modules'
 import type { TableColumn } from '@/types/table'
 import {
   findExpiringSeries,
+  getAppointmentUrl,
   type Appointment,
 } from '@/services/churchtools'
 import AdminTable from '@/components/shared/AdminTable.vue'
@@ -256,12 +257,7 @@ const getEffectiveEndDate = (appointment: Appointment) => {
   return 'Kein Enddatum'
 }
 
-const getAppointmentUrl = (appointment: Appointment) => {
-  const churchtoolsBaseUrl = import.meta.env.DEV
-    ? import.meta.env.VITE_BASE_URL
-    : window.location.origin
-  return `${churchtoolsBaseUrl}?q=churchcal&startdate=${appointment.base.startDate}#CalView/`
-}
+// URL generation is now handled by the churchtools service
 
 // Filter functions
 const clearFilters = () => {
