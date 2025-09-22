@@ -18,6 +18,10 @@ Das **ChurchTools Dashboard** ist eine Vue 3 + TypeScript basierte Erweiterung f
 - **Sortierung:** Alle Spalten sortierbar (ID, Titel, Kalender, Datum)
 - **Export:** Direkte Links zu ChurchTools-Kalenderansicht
 
+## 📚 Development
+
+Siehe [Development Notes](docs/DEVELOPMENT_NOTES.md) für wichtige Entwicklungsrichtlinien und API-Patterns.
+
 ### ⚙️ Automatische Gruppen
 
 - **Status-Übersicht:** Anzeige aller automatischen Gruppen mit Ausführungsstatus

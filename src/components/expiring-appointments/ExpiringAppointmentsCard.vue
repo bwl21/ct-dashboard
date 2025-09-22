@@ -22,7 +22,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { findExpiringSeries, type Appointment } from '@/services/churchtools'
-import BaseCard from './BaseCard.vue'
+import BaseCard from '../common/BaseCard.vue'
 
 // Configuration
 const DAYS_TO_SHOW = 90

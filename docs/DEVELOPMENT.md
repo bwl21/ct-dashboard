@@ -1,5 +1,13 @@
 # Entwickler-Dokumentation
 
+## 📋 Inhaltsverzeichnis
+
+- [🏗️ BaseCard-Architektur](#basecard-architektur)
+- [🎨 ColorPicker-Komponente](#colorpicker-komponente)
+- [🔔 Toast-System](#toast-system)
+- [🏷️ Tags-Verwaltung](#tags-verwaltung)
+- [🎯 Styling-Guidelines](#styling-guidelines)
+
 ## 🏗️ BaseCard-Architektur
 
 ### Übersicht
@@ -646,4 +654,603 @@ const expensiveComputation = computed(() => {
 <template>
   <virtual-list :data-sources="largeDataSet" :data-component="ItemComponent" :estimate-size="50" />
 </template>
+```
+
+## 🎨 ColorPicker-Komponente
+
+### Übersicht
+
+Die ColorPicker-Komponente wurde exakt nach dem ct-labelmanager Design implementiert und bietet eine benutzerfreundliche Farbauswahl mit vollständiger ChurchTools-Integration.
+
+### Architektur
+
+```typescript
+interface ColorOption {
+  value: string    // Eindeutige ID der Farbe
+  name: string     // Anzeigename
+  hex: string      // Hex-Farbcode
+  tailwind?: string // Optional: Tailwind-Klasse
+}
+
+interface ColorPickerProps {
+  modelValue?: string | null
+  placeholder?: string
+  colors?: ColorOption[]
+}
+```
+
+### Verwendung
+
+```vue
+<template>
+  <ColorPicker 
+    v-model="selectedColor"
+    :colors="customColors"
+    placeholder="Farbe auswählen"
+    @update:modelValue="handleColorChange"
+  />
+</template>
+
+<script setup lang="ts">
+import ColorPicker from '@/components/common/ColorPicker.vue'
+
+const selectedColor = ref<string | null>(null)
+
+const customColors: ColorOption[] = [
+  { value: 'red', name: 'Rot', hex: '#dc2626' },
+  { value: 'blue', name: 'Blau', hex: '#3b82f6' }
+]
+
+const handleColorChange = (color: string | null) => {
+  console.log('Neue Farbe:', color)
+}
+</script>
+```
+
+### Design-Features
+
+- **Horizontales Layout**: Farbkreis links, Name und Hex-Code rechts
+- **4-spaltige Grid-Anordnung** für optimale Übersicht
+- **Runde Farbkreise** (24px) mit weißen Rahmen und Schatten
+- **Separater "No Color" Bereich** mit X-Symbol
+- **Hover-Effekte** mit sanften Animationen
+- **Responsive Design** für mobile Geräte
+
+### Standard-Farbpalette
+
+```typescript
+const churchToolsColors: ColorOption[] = [
+  // System Colors
+  { value: 'parent', name: 'Parent', hex: '#6b7280', tailwind: 'gray-500' },
+  { value: 'default', name: 'Default', hex: '#6b7280', tailwind: 'gray-500' },
+  { value: 'accent', name: 'Accent', hex: '#007cba', tailwind: 'custom' },
+  
+  // Standard Colors
+  { value: 'red', name: 'Red', hex: '#dc2626', tailwind: 'red-600' },
+  { value: 'blue', name: 'Blue', hex: '#3b82f6', tailwind: 'blue-500' },
+  { value: 'green', name: 'Green', hex: '#16a34a', tailwind: 'green-600' },
+  // ... weitere 30+ Farben
+]
+```
+
+### CSS-Struktur
+
+```scss
+.color-picker-modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  max-width: 600px;
+}
+
+.color-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  background: #ffffff;
+  min-height: 48px;
+}
+
+.color-circle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+```
+
+## 🔔 Toast-System
+
+### Übersicht
+
+Das Toast-Benachrichtigungssystem bietet benutzerfreundliches Feedback für alle Anwendungsaktionen mit einem modernen, ct-labelmanager-konformen Design.
+
+### Architektur
+
+```typescript
+interface Toast {
+  id: string
+  type: 'success' | 'error' | 'warning' | 'info'
+  title?: string
+  message: string
+  duration?: number
+  dismissible?: boolean
+  persistent?: boolean
+}
+
+interface ToastOptions {
+  title?: string
+  duration?: number
+  dismissible?: boolean
+  persistent?: boolean
+}
+```
+
+### useToast Composable
+
+```typescript
+import { useToast } from '@/composables/useToast'
+
+const {
+  // State
+  toasts,
+  
+  // Core methods
+  addToast,
+  removeToast,
+  clearAllToasts,
+  
+  // Convenience methods
+  showSuccess,
+  showError,
+  showWarning,
+  showInfo,
+  
+  // API helpers
+  showApiSuccess,
+  showApiError,
+  showValidationError,
+  showNetworkError
+} = useToast()
+```
+
+### Toast-Typen
+
+#### Success Toast
+```typescript
+showSuccess('Operation erfolgreich', { 
+  title: 'Erfolgreich',
+  duration: 5000 
+})
+
+// API-spezifisch
+showApiSuccess('create', 'Neuer Tag')
+```
+
+#### Error Toast
+```typescript
+showError('Ein Fehler ist aufgetreten', { 
+  title: 'Fehler',
+  duration: 8000 
+})
+
+// API-spezifisch
+showApiError('delete', 'Verbindung fehlgeschlagen')
+```
+
+#### Validation Toast
+```typescript
+showValidationError('Bitte füllen Sie alle Pflichtfelder aus')
+```
+
+### Toast-Komponente
+
+```vue
+<template>
+  <Teleport to="body">
+    <div class="toast-container">
+      <TransitionGroup name="toast" tag="div">
+        <div
+          v-for="toast in toasts"
+          :key="toast.id"
+          class="toast"
+          :class="[`toast-${toast.type}`, { 'toast-dismissible': toast.dismissible }]"
+          @click="toast.dismissible && removeToast(toast.id)"
+        >
+          <div class="toast-icon">{{ getIcon(toast.type) }}</div>
+          <div class="toast-content">
+            <div class="toast-title" v-if="toast.title">{{ toast.title }}</div>
+            <div class="toast-message">{{ toast.message }}</div>
+          </div>
+          <button
+            v-if="toast.dismissible"
+            class="toast-close"
+            @click.stop="removeToast(toast.id)"
+          >×</button>
+        </div>
+      </TransitionGroup>
+    </div>
+  </Teleport>
+</template>
+```
+
+### Design-Features
+
+- **Große, prominente Toasts** (min-width: 420px)
+- **Farbige Hintergründe** je nach Toast-Typ
+- **Smooth Animationen** beim Ein-/Ausblenden
+- **Auto-Dismiss** nach konfigurierbarer Zeit
+- **Manual Dismiss** durch Klick
+- **Responsive Design** für mobile Geräte
+
+### CSS-Struktur
+
+```scss
+.toast-container {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 500px;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px 24px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  border-left: 5px solid;
+  pointer-events: auto;
+  min-width: 420px;
+  transition: all 0.3s ease;
+}
+
+.toast-success {
+  border-left-color: #16a34a;
+  background: #f0fdf4;
+}
+
+.toast-error {
+  border-left-color: #dc2626;
+  background: #fef2f2;
+}
+
+.toast-warning {
+  border-left-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.toast-info {
+  border-left-color: #3b82f6;
+  background: #eff6ff;
+}
+```
+
+### Globale Verfügbarkeit
+
+Für Debugging und Tests sind Toast-Funktionen global verfügbar:
+
+```javascript
+// Browser-Konsole
+window.toast.success('Test erfolgreich!')
+window.toast.error('Test-Fehler')
+window.toast.warning('Test-Warnung')
+window.toast.info('Test-Info')
+
+// API-Toasts
+window.toast.apiSuccess('create', 'Test-Element')
+window.toast.apiError('delete', 'Verbindungsfehler')
+window.toast.validationError('Pflichtfeld fehlt')
+```
+
+## 🏷️ Tags-Verwaltung
+
+### Übersicht
+
+Die Tags-Verwaltung bietet vollständige CRUD-Operationen für ChurchTools-Tags mit erweiterten Features wie Bulk-Operationen, Filterung und Sortierung.
+
+### Komponenten-Architektur
+
+```typescript
+interface Tag {
+  id: number
+  name: string
+  description?: string
+  color?: string
+  domainType: 'person' | 'song' | 'group'
+}
+
+interface TagForm {
+  name: string
+  description: string
+  color: string | null
+  domainType: string
+}
+```
+
+### TagsCard.vue
+
+```vue
+<template>
+  <BaseCard
+    title="Tags"
+    icon="🏷️"
+    :is-loading="isLoading"
+    :error="error"
+    :main-stat="{ value: tags.length, label: 'Tags gesamt' }"
+    :status-stats="domainStats"
+    @refresh="loadData"
+    @details="navigateToAdmin"
+  />
+</template>
+
+<script setup lang="ts">
+const domainStats = computed(() => [
+  {
+    key: 'person',
+    value: personTagsCount.value,
+    label: 'Personen-Tags',
+    icon: '👤',
+    type: 'info'
+  },
+  {
+    key: 'song',
+    value: songTagsCount.value,
+    label: 'Song-Tags',
+    icon: '🎵',
+    type: 'success'
+  },
+  {
+    key: 'group',
+    value: groupTagsCount.value,
+    label: 'Gruppen-Tags',
+    icon: '👥',
+    type: 'warning'
+  }
+])
+</script>
+```
+
+### TagsAdmin.vue Features
+
+#### 1. CRUD-Operationen
+
+```typescript
+// Tag erstellen
+const createTag = async (tagData: TagForm) => {
+  try {
+    await churchtoolsClient.post(`/tags/${tagData.domainType}`, {
+      name: tagData.name,
+      description: tagData.description,
+      color: tagData.color
+    })
+    showApiSuccess('create', tagData.name)
+    await refreshData()
+  } catch (err) {
+    showApiError('create', err.message)
+  }
+}
+
+// Tag aktualisieren
+const updateTag = async (tagId: number, tagData: TagForm) => {
+  try {
+    await churchtoolsClient.put(`/tags/${tagId}`, tagData)
+    showApiSuccess('update', tagData.name)
+    await refreshData()
+  } catch (err) {
+    showApiError('update', err.message)
+  }
+}
+
+// Tag löschen
+const deleteTag = async (tagId: number) => {
+  try {
+    await churchtoolsClient.delete(`/tags/${tagId}`)
+    showApiSuccess('delete')
+    await refreshData()
+  } catch (err) {
+    showApiError('delete', err.message)
+  }
+}
+```
+
+#### 2. Bulk-Operationen
+
+```typescript
+// Bulk-Farb-Update
+const applyBulkColor = async () => {
+  if (!bulkColor.value) {
+    showValidationError('Bitte wählen Sie zuerst eine Farbe aus')
+    return
+  }
+  
+  if (selectedTags.value.length === 0) {
+    showValidationError('Bitte wählen Sie zuerst Tags aus')
+    return
+  }
+  
+  let successCount = 0
+  let errorCount = 0
+  
+  for (const tagId of selectedTags.value) {
+    try {
+      const tag = tags.value.find(t => t.id === tagId)
+      await churchtoolsClient.put(`/tags/${tagId}`, {
+        name: tag.name,
+        description: tag.description || '',
+        color: bulkColor.value
+      })
+      successCount++
+    } catch (err) {
+      errorCount++
+    }
+  }
+  
+  if (successCount > 0) {
+    showApiSuccess('bulkUpdate', `${successCount} Tags`)
+  }
+  if (errorCount > 0) {
+    showApiError('bulkUpdate', `${errorCount} Tags konnten nicht aktualisiert werden`)
+  }
+}
+
+// Bulk-Löschung
+const confirmBulkDelete = async () => {
+  let successCount = 0
+  let errorCount = 0
+  
+  for (const tagId of selectedTags.value) {
+    try {
+      await churchtoolsClient.delete(`/tags/${tagId}`)
+      successCount++
+    } catch (err) {
+      errorCount++
+    }
+  }
+  
+  if (successCount > 0) {
+    showApiSuccess('bulkDelete', `${successCount} Tags`)
+  }
+  if (errorCount > 0) {
+    showApiError('bulkDelete', `${errorCount} Tags konnten nicht gelöscht werden`)
+  }
+}
+```
+
+#### 3. Erweiterte Filterung
+
+```typescript
+// Regex-Filter
+const regexFilter = ref('')
+const regexError = ref<string | null>(null)
+
+const filteredTags = computed(() => {
+  let result = tags.value
+  
+  // Regex-Filter anwenden
+  if (regexFilter.value.trim()) {
+    try {
+      const regex = new RegExp(regexFilter.value, 'i')
+      regexError.value = null
+      result = result.filter(tag => 
+        regex.test(tag.name) || 
+        regex.test(tag.description || '') ||
+        regex.test(tag.domainType)
+      )
+    } catch (err) {
+      regexError.value = err.message
+    }
+  }
+  
+  return result
+})
+```
+
+#### 4. Similarity-basierte Sortierung
+
+```typescript
+// Farb-Sortierung wie in ct-labelmanager
+const sortBy = (field: string) => {
+  if (field === 'color') {
+    // Spezielle Farbsortierung
+    return filteredTags.value.sort((a, b) => {
+      const categoryA = getColorCategory(a.color)
+      const categoryB = getColorCategory(b.color)
+      
+      if (categoryA !== categoryB) {
+        return categoryA - categoryB
+      }
+      
+      // Innerhalb der Kategorie nach Farbton sortieren
+      const hslA = hexToHsl(getColorHex(a.color))
+      const hslB = hexToHsl(getColorHex(b.color))
+      
+      return hslA.h - hslB.h
+    })
+  }
+  
+  // Standard-Sortierung für andere Felder
+  return filteredTags.value.sort((a, b) => {
+    const aValue = String(a[field]).toLowerCase()
+    const bValue = String(b[field]).toLowerCase()
+    return aValue.localeCompare(bValue)
+  })
+}
+```
+
+### Integration mit ColorPicker und Toast
+
+```vue
+<template>
+  <div class="tags-admin">
+    <!-- Bulk-Operationen -->
+    <div class="bulk-controls">
+      <ColorPicker 
+        v-model="bulkColor" 
+        placeholder="Farbe für ausgewählte Tags"
+        class="bulk-color-picker"
+      />
+      <button 
+        @click="applyBulkColor"
+        :disabled="selectedTags.length === 0 || !bulkColor"
+        class="ct-btn ct-btn-primary"
+      >
+        Farbe anwenden ({{ selectedTags.length }})
+      </button>
+    </div>
+    
+    <!-- Tag-Formular -->
+    <div class="tag-form">
+      <ColorPicker v-model="tagForm.color" />
+      <button @click="saveTag" class="ct-btn ct-btn-success">
+        {{ editingTag ? 'Aktualisieren' : 'Erstellen' }}
+      </button>
+    </div>
+  </div>
+</template>
+```
+
+### Performance-Optimierungen
+
+```typescript
+// Debounced Search
+import { debounce } from 'lodash-es'
+
+const debouncedSearch = debounce((searchTerm: string) => {
+  // Filterung durchführen
+}, 300)
+
+// Virtualisierung für große Listen
+const visibleTags = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = start + pageSize.value
+  return filteredTags.value.slice(start, end)
+})
+
+// Memoization für teure Berechnungen
+const memoizedColorSort = useMemoize((tags: Tag[]) => {
+  return tags.sort(colorSortFunction)
+})
 ```

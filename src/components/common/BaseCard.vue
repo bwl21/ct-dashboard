@@ -6,7 +6,7 @@
         {{ title }}
       </h3>
       <div class="ct-card-actions">
-        <button class="ct-btn-icon" @click.stop="$emit('navigate')">
+        <button type="button" class="ct-btn-icon" @click.stop="$emit('navigate')">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="16"
@@ -34,7 +34,7 @@
       <div v-else-if="error" class="error-content">
         <p class="error-message">❌ {{ error }}</p>
         <slot name="error-actions">
-          <button @click="$emit('retry')" class="ct-btn ct-btn-sm ct-btn-outline">
+          <button type="button" @click="$emit('retry')" class="ct-btn ct-btn-sm ct-btn-outline">
             {{ retryText }}
           </button>
         </slot>
@@ -61,6 +61,7 @@
 
       <div class="ct-card-footer">
         <button
+          type="button"
           @click="$emit('refresh')"
           class="ct-btn ct-btn-primary ct-btn-sm"
           :disabled="isLoading"
@@ -68,7 +69,7 @@
           {{ isLoading ? refreshingText : refreshText }}
         </button>
         <slot name="actions">
-          <button @click="$emit('navigate')" class="ct-btn ct-btn-sm ct-btn-outline">
+          <button type="button" @click="$emit('navigate')" class="ct-btn ct-btn-sm ct-btn-outline">
             {{ detailsText }}
           </button>
         </slot>
@@ -119,12 +120,12 @@ defineEmits<{
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  background: var(--color-background-card);
+  border-radius: var(--border-radius-xl);
+  box-shadow: var(--shadow-base);
   transition:
-    transform 0.2s,
-    box-shadow 0.2s;
+    transform var(--transition-base),
+    box-shadow var(--transition-base);
   overflow: hidden;
 }
 
@@ -133,20 +134,20 @@ defineEmits<{
   justify-content: space-between;
   align-items: center;
   min-height: 72px;
-  padding: 0 1.5rem;
-  border-bottom: 1px solid #f0f2f5;
-  background-color: #f8f9fa;
+  padding: 0 var(--spacing-lg);
+  border-bottom: 1px solid var(--color-border-light);
+  background-color: var(--color-background);
   box-sizing: border-box;
 }
 
 .base-card .ct-card-title {
   margin: 0;
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #2c3e50;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
   display: flex;
   align-items: center;
-  line-height: 1.2;
+  line-height: var(--line-height-tight);
   padding: 1.25rem 0;
 }
 
@@ -157,12 +158,12 @@ defineEmits<{
 }
 
 .base-card .ct-card-actions {
-  margin-left: 0.5rem;
+  margin-left: var(--spacing-sm);
 }
 
 .base-card .ct-card-body {
   flex: 1;
-  padding: 1.5rem;
+  padding: var(--spacing-lg);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -374,11 +375,11 @@ defineEmits<{
 /* Responsive Design */
 @media (max-width: 768px) {
   .base-card .ct-card-header {
-    padding: 1.5rem 1.5rem 1rem 1.5rem;
+    padding: var(--spacing-lg) var(--spacing-lg) var(--spacing-md) var(--spacing-lg);
   }
 
   .base-card .ct-card-body {
-    padding: 1rem 1.5rem 1.5rem 1.5rem;
+    padding: var(--spacing-md) var(--spacing-lg) var(--spacing-lg) var(--spacing-lg);
   }
 
   .status-breakdown {
@@ -401,11 +402,11 @@ defineEmits<{
 
 @media (max-width: 576px) {
   .stat-number {
-    font-size: 2rem;
+    font-size: var(--font-size-xxxl);
   }
 
   .status-number {
-    font-size: 1rem;
+    font-size: var(--font-size-base);
   }
 }
 </style>
