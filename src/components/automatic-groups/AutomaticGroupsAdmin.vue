@@ -188,13 +188,101 @@ const refreshGroups = async () => {
   error.value = null
 
   try {
-    // Simulate API call - replace with actual ChurchTools API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // Mock data for now
-    groups.value = []
-    
-    console.log('Groups loaded:', groups.value.length)
+    console.log('Fetching groups from ChurchTools API...')
+
+    let allGroups: any[] = []
+    let page = 1
+    const limit = 100 // ChurchTools API Standard
+    let hasMore = true
+
+    // Import ChurchTools client
+    const { churchtoolsClient } = await import('@churchtools/churchtools-client')
+
+    // Fetch all groups with proper pagination
+    while (hasMore) {
+      console.log(`Fetching page ${page} with limit ${limit}...`)
+
+      const response = await churchtoolsClient.get(
+        `/groups?include=settings,information&limit=${limit}&page=${page}`
+      )
+
+      console.log(`API Response for page ${page}:`, response)
+
+      // Handle different possible response formats
+      let pageGroups: any[] = []
+
+      if (Array.isArray(response)) {
+        // Direct array response
+        pageGroups = response
+      } else if (response && response.data && Array.isArray(response.data)) {
+        // Wrapped in data property
+        pageGroups = response.data
+      } else if (response && Array.isArray(response.groups)) {
+        // Wrapped in groups property
+        pageGroups = response.groups
+      } else {
+        console.error('Unexpected API response format:', response)
+        throw new Error(
+          `Invalid API response format. Expected array or object with data/groups property, got: ${typeof response}`
+        )
+      }
+
+      console.log(`Groups found on page ${page}:`, pageGroups.length)
+
+      if (pageGroups.length === 0) {
+        // No more groups
+        hasMore = false
+      } else {
+        // Add groups to total collection
+        allGroups = allGroups.concat(pageGroups)
+
+        // Check if we should continue (if we got less than limit, we're done)
+        if (pageGroups.length < limit) {
+          hasMore = false
+        } else {
+          page++
+        }
+      }
+
+      // Safety check to prevent infinite loops
+      if (page > 100) {
+        console.warn('Reached maximum page limit (100), stopping pagination')
+        hasMore = false
+      }
+    }
+
+    console.log(`Total groups fetched: ${allGroups.length}`)
+
+    // Filter for automatic groups (groups with dynamic group settings)
+    const automaticGroups = allGroups.filter((group) => {
+      // Check if group has dynamic group configuration
+      const hasAutomaticSettings = 
+        group.settings?.dynamicGroup === true ||
+        group.information?.dynamicGroup === true ||
+        group.dynamicGroupStatus ||
+        group.automaticMembership
+
+      if (hasAutomaticSettings) {
+        console.log('Found automatic group:', group.name, group)
+      }
+
+      return hasAutomaticSettings
+    })
+
+    console.log(`Automatic groups found: ${automaticGroups.length}`)
+
+    // Transform data for display
+    groups.value = automaticGroups.map((group) => ({
+      id: group.id,
+      name: group.name,
+      groupTypeId: group.groupTypeId || group.groupType?.name || 'N/A',
+      dynamicGroupStatus: group.dynamicGroupStatus || 
+                         (group.settings?.dynamicGroup ? 'active' : 'inactive'),
+      lastExecution: group.lastExecution || group.lastUpdate || null,
+      executionStatus: group.executionStatus || 'unknown'
+    }))
+
+    console.log('Processed groups:', groups.value)
   } catch (err: any) {
     console.error('Error loading groups:', err)
     error.value = 'Fehler beim Laden der automatischen Gruppen. Bitte versuchen Sie es erneut.'
@@ -204,11 +292,12 @@ const refreshGroups = async () => {
 }
 
 const loadMockData = () => {
+  console.log('Loading mock data for automatic groups...')
   groups.value = [
     {
       id: 1,
       name: 'Jugendgruppe Automatisch',
-      groupTypeId: 'youth',
+      groupTypeId: 'Jugendgruppe',
       dynamicGroupStatus: 'active',
       lastExecution: '2024-01-15T10:30:00Z',
       executionStatus: 'success'
@@ -216,7 +305,7 @@ const loadMockData = () => {
     {
       id: 2,
       name: 'Mitarbeiter Gruppe',
-      groupTypeId: 'staff',
+      groupTypeId: 'Mitarbeitergruppe',
       dynamicGroupStatus: 'active',
       lastExecution: '2024-01-14T09:15:00Z',
       executionStatus: 'success'
@@ -224,12 +313,29 @@ const loadMockData = () => {
     {
       id: 3,
       name: 'Inaktive Gruppe',
-      groupTypeId: 'general',
+      groupTypeId: 'Allgemeine Gruppe',
       dynamicGroupStatus: 'inactive',
       lastExecution: null,
       executionStatus: 'unknown'
+    },
+    {
+      id: 4,
+      name: 'Neue Mitglieder',
+      groupTypeId: 'Besuchergruppe',
+      dynamicGroupStatus: 'active',
+      lastExecution: '2024-01-16T08:00:00Z',
+      executionStatus: 'success'
+    },
+    {
+      id: 5,
+      name: 'Fehlerhafte Gruppe',
+      groupTypeId: 'Testgruppe',
+      dynamicGroupStatus: 'error',
+      lastExecution: '2024-01-10T12:00:00Z',
+      executionStatus: 'error'
     }
   ]
+  console.log('Mock data loaded:', groups.value.length, 'groups')
 }
 
 // Initialize
