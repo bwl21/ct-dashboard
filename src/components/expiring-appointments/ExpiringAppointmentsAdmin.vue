@@ -86,6 +86,10 @@
       <span class="id-cell">{{ item.id || item.base?.id || 'NO_ID' }}</span>
     </template>
 
+    <template #cell-title="{ item }">
+      {{ item.base?.title || 'Kein Titel' }}
+    </template>
+
     <template #cell-calendar="{ item }">
       <div
         class="calendar-info"
@@ -153,7 +157,7 @@ const appointments = ref<Appointment[]>([])
 // Table configuration
 const tableColumns: TableColumn[] = [
   { key: 'id', label: 'ID', sortable: true, resizable: true, width: 55, cellSlot: 'cell-id' },
-  { key: 'base.title', label: 'Titel', sortable: true, resizable: true, width: 225 },
+  { key: 'base.title', label: 'Titel', sortable: true, resizable: true, width: 225, cellSlot: 'cell-title' },
   { key: 'base.calendar.name', label: 'Kalender', sortable: true, resizable: true, width: 200, cellSlot: 'cell-calendar' },
   { key: 'base.startDate', label: 'Anfang', sortable: true, resizable: true, width: 180, cellSlot: 'cell-startDate' },
   { key: 'base.repeatUntil', label: 'Ende', sortable: true, resizable: true, width: 180, cellSlot: 'cell-endDate' },
