@@ -67,7 +67,7 @@ import { computed, onMounted } from 'vue'
 import type { DashboardModule } from '@/types/modules'
 import type { TableColumn } from '@/types/table'
 import AdminTable from '@/components/shared/AdminTable.vue'
-import { useAutomaticGroups } from '@/composables/useAutomaticGroups'
+import { useAutomaticGroups } from './useAutomaticGroups'
 
 defineProps<{
   module: DashboardModule
