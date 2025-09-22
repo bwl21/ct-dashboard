@@ -24,8 +24,8 @@ import { ref, computed, onMounted } from 'vue'
 import { churchtoolsClient } from '@churchtools/churchtools-client'
 import type { Group, DynamicGroupStatus } from '../ct-types'
 import type { DashboardModule } from '../types/modules'
-import BaseCard from './BaseCard.vue'
-import type { MainStat, StatusStat } from './BaseCard.vue'
+import BaseCard from '../common/BaseCard.vue'
+import type { MainStat, StatusStat } from '../common/BaseCard.vue'
 
 defineProps<{
   module: DashboardModule
