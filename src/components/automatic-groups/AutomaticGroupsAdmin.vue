@@ -1,440 +1,138 @@
 <template>
-  <div class="automatic-groups-admin">
-    <!-- Header Card -->
-    <div class="ct-card header-card">
-      <div class="ct-card-header">
-        <h1 class="ct-card-title">Automatische Gruppen - Admin Panel</h1>
-      </div>
-      <div class="ct-card-body">
-        <p class="description">Überwachung und Verwaltung aller automatischen Gruppen</p>
-      </div>
-    </div>
+  <AdminTable
+    :data="groups"
+    :loading="loading"
+    :error="error"
+    :columns="tableColumns"
+    row-key="id"
+    title="Automatische Gruppen - Admin Panel"
+    description="Überwachung und Verwaltung aller automatischen Gruppen"
+    searchable
+    search-placeholder="Gruppen durchsuchen..."
+    :search-fields="['name', 'groupTypeId']"
+    default-sort-field="id"
+    loading-text="Lade automatische Gruppen..."
+    empty-text="Keine automatischen Gruppen gefunden."
+    @retry="refreshGroups"
+    @reload="refreshGroups"
+  >
+    <!-- Custom Actions -->
+    <template #actions>
+      <button
+        @click="refreshGroups"
+        class="ct-btn ct-btn-primary refresh-btn"
+        :disabled="loading"
+      >
+        {{ loading ? 'Lädt...' : 'Aktualisieren' }}
+      </button>
+      <button
+        v-if="isDevelopment"
+        @click="loadMockData"
+        class="ct-btn ct-btn-outline mock-btn"
+        :disabled="loading"
+        title="Lädt Beispieldaten zum Testen der Oberfläche"
+      >
+        Mock-Daten
+      </button>
+    </template>
 
-    <!-- Controls Card -->
-    <div class="ct-card controls-card">
-      <div class="ct-card-body">
-        <div class="controls-row">
-          <div class="search-container">
-            <input
-              v-model="searchTerm"
-              type="text"
-              placeholder="Gruppen durchsuchen..."
-              class="ct-input search-input"
-            />
-          </div>
-          <div class="button-group">
-            <button
-              @click="refreshGroups"
-              class="ct-btn ct-btn-primary refresh-btn"
-              :disabled="loading"
-            >
-              {{ loading ? 'Lädt...' : 'Aktualisieren' }}
-            </button>
-            <button v-if="false"
-              @click="loadMockData"
-              class="ct-btn ct-btn-outline mock-btn"
-              :disabled="loading"
-              title="Lädt Beispieldaten zum Testen der Oberfläche"
-            >
-              Mock-Daten
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <!-- Custom Empty Actions -->
+    <template #empty-actions>
+      <button @click="loadMockData" class="ct-btn ct-btn-secondary">
+        Mock-Daten laden (für Demo)
+      </button>
+    </template>
 
-    <!-- Groups Table Card -->
-    <div class="ct-card table-card">
-      <div class="ct-card-header">
-        <h3 class="ct-card-title">Automatische Gruppen ({{ filteredGroups.length }})</h3>
-      </div>
-      <div class="ct-card-body">
-        <div v-if="loading" class="loading-state">
-          <div class="loading-spinner"></div>
-          <p>Lade automatische Gruppen...</p>
-        </div>
+    <!-- Custom Cell Rendering -->
+    <template #cell-name="{ item }">
+      <strong>{{ item.name }}</strong>
+    </template>
 
-        <div v-else-if="error" class="error-state">
-          <p class="error-message">❌ {{ error }}</p>
-          <div class="error-actions">
-            <button @click="refreshGroups" class="ct-btn ct-btn-secondary">Erneut versuchen</button>
-            <button @click="loadMockData" class="ct-btn ct-btn-outline">Mock-Daten laden</button>
-          </div>
-          <div v-if="isDevelopment" class="dev-info">
-            <p><strong>Entwicklungsmodus:</strong></p>
-            <p>Überprüfen Sie die Browser-Konsole für detaillierte Fehlermeldungen.</p>
-            <p>Stellen Sie sicher, dass die ChurchTools-Verbindung konfiguriert ist.</p>
-          </div>
-        </div>
+    <template #cell-config="{ item }">
+      <span class="status-badge" :class="getConfigStatusClass(item.dynamicGroupStatus)">
+        {{ getConfigStatusText(item.dynamicGroupStatus) }}
+      </span>
+    </template>
 
-        <div v-else-if="filteredGroups.length === 0" class="empty-state">
-          <p>Keine automatischen Gruppen gefunden.</p>
-          <div class="empty-actions">
-            <button @click="refreshGroups" class="ct-btn ct-btn-primary">Erneut laden</button>
-            <button @click="loadMockData" class="ct-btn ct-btn-secondary">
-              Mock-Daten laden (für Demo)
-            </button>
-          </div>
-        </div>
+    <template #cell-status="{ item }">
+      <span class="status-badge" :class="getExecutionStatusClass(item.executionStatus)">
+        {{ getExecutionStatusText(item.executionStatus) }}
+      </span>
+    </template>
 
-        <div v-else class="table-container">
-          <table class="groups-table" ref="tableRef">
-            <thead>
-              <tr>
-                <th
-                  @click="sortBy('id')"
-                  class="sortable resizable"
-                  :style="{ width: columnWidths[0] + 'px' }"
-                >
-                  Gruppen-ID
-                  <span class="sort-indicator" v-if="sortField === 'id'">
-                    {{ sortDirection === 'asc' ? '↑' : '↓' }}
-                  </span>
-                  <div class="resize-handle" @mousedown="startResize($event, 0)"></div>
-                </th>
-                <th
-                  @click="sortBy('groupTypeId')"
-                  class="sortable resizable"
-                  :style="{ width: columnWidths[1] + 'px' }"
-                >
-                  Gruppentyp
-                  <span class="sort-indicator" v-if="sortField === 'groupTypeId'">
-                    {{ sortDirection === 'asc' ? '↑' : '↓' }}
-                  </span>
-                  <div class="resize-handle" @mousedown="startResize($event, 1)"></div>
-                </th>
-                <th
-                  @click="sortBy('name')"
-                  class="sortable resizable"
-                  :style="{ width: columnWidths[2] + 'px' }"
-                >
-                  Name
-                  <span class="sort-indicator" v-if="sortField === 'name'">
-                    {{ sortDirection === 'asc' ? '↑' : '↓' }}
-                  </span>
-                  <div class="resize-handle" @mousedown="startResize($event, 2)"></div>
-                </th>
-                <th
-                  @click="sortBy('dynamicGroupStatus')"
-                  class="sortable resizable"
-                  :style="{ width: columnWidths[3] + 'px' }"
-                >
-                  Konfiguration
-                  <span class="sort-indicator" v-if="sortField === 'dynamicGroupStatus'">
-                    {{ sortDirection === 'asc' ? '↑' : '↓' }}
-                  </span>
-                  <div class="resize-handle" @mousedown="startResize($event, 3)"></div>
-                </th>
-                <th
-                  @click="sortBy('lastExecution')"
-                  class="sortable resizable"
-                  :style="{ width: columnWidths[4] + 'px' }"
-                >
-                  Letzte Ausführung
-                  <span class="sort-indicator" v-if="sortField === 'lastExecution'">
-                    {{ sortDirection === 'asc' ? '↑' : '↓' }}
-                  </span>
-                  <div class="resize-handle" @mousedown="startResize($event, 4)"></div>
-                </th>
-                <th
-                  @click="sortBy('executionStatus')"
-                  class="sortable resizable"
-                  :style="{ width: columnWidths[5] + 'px' }"
-                >
-                  Status
-                  <span class="sort-indicator" v-if="sortField === 'executionStatus'">
-                    {{ sortDirection === 'asc' ? '↑' : '↓' }}
-                  </span>
-                  <div class="resize-handle" @mousedown="startResize($event, 5)"></div>
-                </th>
-                <th :style="{ width: columnWidths[6] + 'px' }">Aktionen</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="group in filteredGroups" :key="group.id" class="group-row">
-                <td class="group-id" :style="{ width: columnWidths[0] + 'px' }">{{ group.id }}</td>
-                <td class="group-type" :style="{ width: columnWidths[1] + 'px' }">
-                  {{ group.groupTypeId || 'N/A' }}
-                </td>
-                <td class="group-name" :style="{ width: columnWidths[2] + 'px' }">
-                  <strong>{{ group.name }}</strong>
-                </td>
-                <td class="group-config" :style="{ width: columnWidths[3] + 'px' }">
-                  <span
-                    class="status-badge"
-                    :class="getConfigStatusClass(group.dynamicGroupStatus)"
-                  >
-                    {{ getConfigStatusText(group.dynamicGroupStatus) }}
-                  </span>
-                </td>
-                <td class="last-execution" :style="{ width: columnWidths[4] + 'px' }">
-                  {{ formatDate(group.lastExecution) }}
-                </td>
-                <td class="execution-status" :style="{ width: columnWidths[5] + 'px' }">
-                  <span
-                    class="status-badge"
-                    :class="getExecutionStatusClass(group.executionStatus)"
-                  >
-                    {{ getExecutionStatusText(group.executionStatus) }}
-                  </span>
-                </td>
-                <td class="actions" :style="{ width: columnWidths[6] + 'px' }">
-                  <a
-                    :href="getGroupUrl(group.id)"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="ct-btn ct-btn-sm ct-btn-outline"
-                    title="Gruppe in ChurchTools öffnen"
-                  >
-                    Öffnen
-                  </a>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
+    <template #cell-lastExecution="{ item }">
+      {{ formatDate(item.lastExecution) }}
+    </template>
+
+    <template #cell-actions="{ item }">
+      <a
+        :href="getGroupUrl(item.id)"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="ct-btn ct-btn-sm ct-btn-outline"
+        title="Gruppe in ChurchTools öffnen"
+      >
+        Öffnen
+      </a>
+    </template>
+  </AdminTable>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { churchtoolsClient } from '@churchtools/churchtools-client'
-import type { Group, DynamicGroupStatus } from '../ct-types'
-import type { DashboardModule } from '../types/modules'
+import type { DashboardModule } from '@/types/modules'
+import type { TableColumn } from '@/types/table'
+import AdminTable from '@/components/shared/AdminTable.vue'
 
 defineProps<{
   module: DashboardModule
 }>()
 
-interface AutomaticGroup {
-  id: number
-  name: string
-  groupType: string
-  dynamicGroupStatus: DynamicGroupStatus
-  lastExecution: string | null
-  executionStatus: 'success' | 'error' | 'running' | 'pending' | 'unknown'
-  dynamicGroupUpdateStarted: string | null
-  dynamicGroupUpdateFinished: string | null
-}
-
-const groups = ref<AutomaticGroup[]>([])
+// State
 const loading = ref(false)
 const error = ref<string | null>(null)
-const searchTerm = ref('')
-const sortField = ref<keyof AutomaticGroup>('id')
-const sortDirection = ref<'asc' | 'desc'>('asc')
+const groups = ref<any[]>([])
 const isDevelopment = ref(import.meta.env.MODE === 'development')
 
-// Column resizing
-const tableRef = ref<HTMLTableElement>()
-const columnWidths = ref([100, 150, 250, 150, 180, 120, 100]) // Default widths
-const isResizing = ref(false)
-const resizingColumn = ref(-1)
-const startX = ref(0)
-const startWidth = ref(0)
+// Table configuration
+const tableColumns: TableColumn[] = [
+  { key: 'id', label: 'Gruppen-ID', sortable: true, resizable: true, width: 100 },
+  { key: 'groupTypeId', label: 'Gruppentyp', sortable: true, resizable: true, width: 120 },
+  { key: 'name', label: 'Name', sortable: true, resizable: true, width: 200, cellSlot: 'cell-name' },
+  { key: 'dynamicGroupStatus', label: 'Konfiguration', sortable: true, resizable: true, width: 150, cellSlot: 'cell-config' },
+  { key: 'lastExecution', label: 'Letzte Ausführung', sortable: true, resizable: true, width: 180, cellSlot: 'cell-lastExecution' },
+  { key: 'executionStatus', label: 'Status', sortable: true, resizable: true, width: 120, cellSlot: 'cell-status' },
+  { key: 'actions', label: 'Aktionen', resizable: false, width: 100, cellSlot: 'cell-actions' }
+]
 
-const filteredGroups = computed(() => {
-  let filtered = groups.value
-
-  // Filter by search term
-  if (searchTerm.value) {
-    const term = searchTerm.value.toLowerCase()
-    filtered = filtered.filter(
-      (group) => group.name.toLowerCase().includes(term) || group.id.toString().includes(term)
-    )
-  }
-
-  // Sort
-  filtered.sort((a, b) => {
-    const aVal = a[sortField.value]
-    const bVal = b[sortField.value]
-
-    let comparison = 0
-    if (aVal < bVal) comparison = -1
-    if (aVal > bVal) comparison = 1
-
-    return sortDirection.value === 'asc' ? comparison : -comparison
-  })
-
-  return filtered
-})
-
-const sortBy = (field: keyof AutomaticGroup) => {
-  if (sortField.value === field) {
-    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
-  } else {
-    sortField.value = field
-    sortDirection.value = 'asc'
-  }
-}
-
-const refreshGroups = async () => {
-  loading.value = true
-  error.value = null
-
-  try {
-    console.log('Fetching groups from ChurchTools API...')
-
-    let allGroups: Group[] = []
-    let page = 1
-    const limit = 100 // ChurchTools API Standard
-    let hasMore = true
-
-    // Fetch all groups with proper pagination
-    while (hasMore) {
-      console.log(`Fetching page ${page} with limit ${limit}...`)
-
-      const response = await churchtoolsClient.get(
-        `/groups?include=settings,information&limit=${limit}&page=${page}`
-      )
-
-      console.log(`API Response for page ${page}:`, response)
-      console.log('Response type:', typeof response)
-      console.log('Response keys:', Object.keys(response || {}))
-
-      // Handle different possible response formats
-      let pageGroups: Group[] = []
-
-      if (Array.isArray(response)) {
-        // Direct array response
-        pageGroups = response
-      } else if (response && response.data && Array.isArray(response.data)) {
-        // Wrapped in data property
-        pageGroups = response.data
-      } else if (response && Array.isArray(response.groups)) {
-        // Wrapped in groups property
-        pageGroups = response.groups
-      } else {
-        console.error('Unexpected API response format:', response)
-        throw new Error(
-          `Invalid API response format. Expected array or object with data/groups property, got: ${typeof response}`
-        )
-      }
-
-      console.log(`Groups found on page ${page}:`, pageGroups.length)
-
-      if (pageGroups.length === 0) {
-        // No more groups
-        hasMore = false
-      } else {
-        // Add groups to total collection
-        allGroups = allGroups.concat(pageGroups)
-
-        // Check if we got fewer results than the limit (indicates last page)
-        if (pageGroups.length < limit) {
-          hasMore = false
-        } else {
-          page++
-
-          // Safety limit to prevent infinite loops
-          if (page > 100) {
-            console.warn('Reached safety limit of 100 pages')
-            hasMore = false
-          }
-        }
-      }
-    }
-
-    console.log('Total groups found across all pages:', allGroups.length)
-
-    // Filter for automatic groups (those with dynamic group rules)
-    const automaticGroups = allGroups
-      .filter((group) => {
-        const hasSettings = group.settings?.dynamicGroupStatus
-        const isAutomatic =
-          hasSettings &&
-          group.settings.dynamicGroupStatus !== 'none' &&
-          group.settings.dynamicGroupStatus !== null
-
-        if (hasSettings) {
-          console.log(
-            `Group ${group.id}: ${group.information?.name}, status: ${group.settings.dynamicGroupStatus}, isAutomatic: ${isAutomatic}`
-          )
-        }
-
-        return isAutomatic
-      })
-      .map((group) => ({
-        id: group.id,
-        name: group.name || `Gruppe ${group.id}`,
-        groupTypeId: group.information?.groupTypeId || null,
-        dynamicGroupStatus: group.settings?.dynamicGroupStatus || 'none',
-        lastExecution: group.settings?.dynamicGroupUpdateFinished || null,
-        executionStatus: determineExecutionStatus(group),
-        dynamicGroupUpdateStarted: group.settings?.dynamicGroupUpdateStarted || null,
-        dynamicGroupUpdateFinished: group.settings?.dynamicGroupUpdateFinished || null,
-      }))
-
-    console.log('Automatic groups found:', automaticGroups.length)
-    groups.value = automaticGroups
-  } catch (err: any) {
-    console.error('Fehler beim Laden der automatischen Gruppen:', err)
-
-    let errorMessage = 'Fehler beim Laden der automatischen Gruppen.'
-
-    if (err.response) {
-      errorMessage += ` HTTP ${err.response.status}: ${err.response.statusText}`
-      if (err.response.status === 401) {
-        errorMessage += ' (Nicht authentifiziert)'
-      } else if (err.response.status === 403) {
-        errorMessage += ' (Keine Berechtigung)'
-      }
-    } else if (err.message) {
-      errorMessage += ` ${err.message}`
-    }
-
-    error.value = errorMessage
-  } finally {
-    loading.value = false
-  }
-}
-
-const determineExecutionStatus = (group: Group): AutomaticGroup['executionStatus'] => {
-  const started = group.settings?.dynamicGroupUpdateStarted
-  const finished = group.settings?.dynamicGroupUpdateFinished
-
-  if (!started && !finished) return 'pending'
-  if (started && !finished) return 'running'
-  if (started && finished) {
-    // Check if started is more recent than finished (indicating a running process)
-    const startedDate = new Date(started)
-    const finishedDate = new Date(finished)
-    if (startedDate > finishedDate) return 'running'
-    return 'success'
-  }
-
-  return 'unknown'
-}
-
-const getConfigStatusClass = (status: DynamicGroupStatus) => {
+// Helper functions
+const getConfigStatusClass = (status: string) => {
   switch (status) {
     case 'active':
       return 'status-active'
     case 'inactive':
       return 'status-inactive'
-    case 'manual':
-      return 'status-manual'
+    case 'error':
+      return 'status-error'
     default:
       return 'status-unknown'
   }
 }
 
-const getConfigStatusText = (status: DynamicGroupStatus) => {
+const getConfigStatusText = (status: string) => {
   switch (status) {
     case 'active':
       return 'Aktiv'
     case 'inactive':
       return 'Inaktiv'
-    case 'manual':
-      return 'Manuell'
+    case 'error':
+      return 'Fehler'
     default:
       return 'Unbekannt'
   }
 }
 
-const getExecutionStatusClass = (status: AutomaticGroup['executionStatus']) => {
+const getExecutionStatusClass = (status: string) => {
   switch (status) {
     case 'success':
       return 'status-success'
@@ -442,14 +140,12 @@ const getExecutionStatusClass = (status: AutomaticGroup['executionStatus']) => {
       return 'status-error'
     case 'running':
       return 'status-running'
-    case 'pending':
-      return 'status-pending'
     default:
       return 'status-unknown'
   }
 }
 
-const getExecutionStatusText = (status: AutomaticGroup['executionStatus']) => {
+const getExecutionStatusText = (status: string) => {
   switch (status) {
     case 'success':
       return 'Erfolgreich'
@@ -457,8 +153,6 @@ const getExecutionStatusText = (status: AutomaticGroup['executionStatus']) => {
       return 'Fehler'
     case 'running':
       return 'Läuft'
-    case 'pending':
-      return 'Ausstehend'
     default:
       return 'Unbekannt'
   }
@@ -466,7 +160,7 @@ const getExecutionStatusText = (status: AutomaticGroup['executionStatus']) => {
 
 const formatDate = (dateString: string | null) => {
   if (!dateString) return 'Nie'
-
+  
   try {
     const date = new Date(dateString)
     return date.toLocaleString('de-DE', {
@@ -482,433 +176,123 @@ const formatDate = (dateString: string | null) => {
 }
 
 const getGroupUrl = (groupId: number) => {
-  // Construct URL to ChurchTools instance group dynamic settings page
-  // Use the ChurchTools base URL from the client configuration
   const churchtoolsBaseUrl = import.meta.env.DEV
     ? import.meta.env.VITE_BASE_URL
     : window.location.origin
+  return `${churchtoolsBaseUrl}?q=churchdb&view=GroupView&id=${groupId}`
+}
 
-  console.log('ChurchTools Base URL:', churchtoolsBaseUrl)
+// Data loading
+const refreshGroups = async () => {
+  loading.value = true
+  error.value = null
 
-  return `${churchtoolsBaseUrl}/groups/${groupId}/settings/dynamic-group`
+  try {
+    // Simulate API call - replace with actual ChurchTools API call
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    // Mock data for now
+    groups.value = []
+    
+    console.log('Groups loaded:', groups.value.length)
+  } catch (err: any) {
+    console.error('Error loading groups:', err)
+    error.value = 'Fehler beim Laden der automatischen Gruppen. Bitte versuchen Sie es erneut.'
+  } finally {
+    loading.value = false
+  }
 }
 
 const loadMockData = () => {
-  console.log('Loading mock data...')
   groups.value = [
     {
       id: 1,
       name: 'Jugendgruppe Automatisch',
-      information: { groupTypeId: 3 },
+      groupTypeId: 'youth',
       dynamicGroupStatus: 'active',
-      lastExecution: '2025-09-07T10:30:00Z',
-      executionStatus: 'success',
-      dynamicGroupUpdateStarted: '2025-09-07T10:25:00Z',
-      dynamicGroupUpdateFinished: '2025-09-07T10:30:00Z',
+      lastExecution: '2024-01-15T10:30:00Z',
+      executionStatus: 'success'
     },
     {
       id: 2,
-      name: 'Neue Mitglieder',
-      information: { groupTypeId: 1 },
+      name: 'Mitarbeiter Gruppe',
+      groupTypeId: 'staff',
       dynamicGroupStatus: 'active',
-      lastExecution: '2025-09-07T08:15:00Z',
-      executionStatus: 'success',
-      dynamicGroupUpdateStarted: '2025-09-07T08:10:00Z',
-      dynamicGroupUpdateFinished: '2025-09-07T08:15:00Z',
+      lastExecution: '2024-01-14T09:15:00Z',
+      executionStatus: 'success'
     },
     {
       id: 3,
-      name: 'Inaktive Mitglieder',
-      information: { groupTypeId: 1 },
+      name: 'Inaktive Gruppe',
+      groupTypeId: 'general',
       dynamicGroupStatus: 'inactive',
-      lastExecution: '2025-09-06T22:00:00Z',
-      executionStatus: 'error',
-      dynamicGroupUpdateStarted: '2025-09-06T21:55:00Z',
-      dynamicGroupUpdateFinished: '2025-09-06T22:00:00Z',
-    },
-    {
-      id: 4,
-      name: 'Geburtstage diese Woche',
-      information: { groupTypeId: 5 },
-      dynamicGroupStatus: 'active',
       lastExecution: null,
-      executionStatus: 'pending',
-      dynamicGroupUpdateStarted: null,
-      dynamicGroupUpdateFinished: null,
-    },
-    {
-      id: 5,
-      name: 'Mitarbeiter Gottesdienst',
-      information: { groupTypeId: 2 },
-      dynamicGroupStatus: 'manual',
-      lastExecution: '2025-09-07T11:45:00Z',
-      executionStatus: 'running',
-      dynamicGroupUpdateStarted: '2025-09-07T11:45:00Z',
-      dynamicGroupUpdateFinished: null,
-    },
+      executionStatus: 'unknown'
+    }
   ]
-  error.value = null
 }
 
-const startResize = (event: MouseEvent, columnIndex: number) => {
-  event.preventDefault()
-  event.stopPropagation()
-
-  isResizing.value = true
-  resizingColumn.value = columnIndex
-  startX.value = event.clientX
-  startWidth.value = columnWidths.value[columnIndex]
-
-  document.addEventListener('mousemove', handleResize)
-  document.addEventListener('mouseup', stopResize)
-  document.body.style.cursor = 'col-resize'
-  document.body.style.userSelect = 'none'
-}
-
-const handleResize = (event: MouseEvent) => {
-  if (!isResizing.value || resizingColumn.value === -1) return
-
-  const deltaX = event.clientX - startX.value
-  const newWidth = Math.max(50, startWidth.value + deltaX) // Minimum width of 50px
-
-  columnWidths.value[resizingColumn.value] = newWidth
-}
-
-const stopResize = () => {
-  isResizing.value = false
-  resizingColumn.value = -1
-
-  document.removeEventListener('mousemove', handleResize)
-  document.removeEventListener('mouseup', stopResize)
-  document.body.style.cursor = ''
-  document.body.style.userSelect = ''
-}
-
+// Initialize
 onMounted(() => {
   refreshGroups()
 })
 </script>
 
 <style scoped>
-.automatic-groups-admin {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-  width: 100%;
-  max-width: none;
-}
-
-.header-card {
-  text-align: center;
-  background: var(--gradient-header);
-  color: white;
-}
-
-.header-card .ct-card-title {
-  font-size: var(--font-size-display);
-  margin-bottom: var(--spacing-sm);
-  font-weight: var(--font-weight-bold);
-}
-
-.description {
-  font-size: var(--font-size-xl);
-  opacity: 0.9;
-  margin: 0;
-}
-
-.controls-card {
-  background-color: var(--color-background);
-}
-
-.controls-row {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.search-container {
-  flex: 1;
-  min-width: 300px;
-}
-
-.search-input {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  font-size: 1rem;
-}
-
-.button-group {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.refresh-btn,
-.mock-btn {
-  white-space: nowrap;
-}
-
-.empty-actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  margin-top: 1rem;
-}
-
-.table-container {
-  overflow-x: auto;
-}
-
-.groups-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1rem;
-  table-layout: fixed;
-}
-
-.groups-table th,
-.groups-table td {
-  padding: 1rem;
-  text-align: left;
-  border-bottom: 1px solid var(--color-border);
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Resizable columns */
-.groups-table th.resizable {
-  position: relative;
-}
-
-.resize-handle {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 4px;
-  height: 100%;
-  background: transparent;
-  cursor: col-resize;
-  z-index: 10;
-}
-
-.resize-handle:hover {
-  background: var(--color-primary);
-  opacity: 0.5;
-}
-
-.resize-handle:active {
-  background: var(--color-primary);
-  opacity: 0.8;
-}
-
-/* Prevent text selection during resize */
-.groups-table.resizing {
-  user-select: none;
-}
-
-/* Ensure table cells respect the width */
-.groups-table td {
-  white-space: nowrap;
-}
-
-.groups-table th {
-  background-color: var(--color-background);
-  font-weight: 600;
-  color: #495057;
-}
-
-.groups-table th.sortable {
-  cursor: pointer;
-  user-select: none;
-  position: relative;
-}
-
-.groups-table th.sortable:hover {
-  background-color: var(--color-border);
-}
-
-.sort-indicator {
-  margin-left: 0.5rem;
-  font-weight: bold;
-  display: inline-block;
-  width: 12px;
-  text-align: center;
-}
-
-.group-row:hover {
-  background-color: var(--color-background);
-}
-
-.group-id {
-  font-family: monospace;
-  font-weight: 600;
-}
-
-.group-name strong {
-  color: var(--color-text-primary);
-}
-
+/* Status badges */
 .status-badge {
+  display: inline-block;
   padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  text-transform: uppercase;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
 }
 
 .status-active {
-  background-color: #d4edda;
-  color: #155724;
+  background-color: rgba(40, 167, 69, 0.1);
+  color: #28a745;
 }
 
 .status-inactive {
-  background-color: #f8d7da;
-  color: #721c24;
-}
-
-.status-manual {
-  background-color: #fff3cd;
-  color: #856404;
-}
-
-.status-success {
-  background-color: #d1ecf1;
-  color: #0c5460;
-}
-
-.status-error {
-  background-color: #f8d7da;
-  color: #721c24;
-}
-
-.status-running {
-  background-color: #cce5ff;
-  color: #004085;
-}
-
-.status-pending {
-  background-color: #e2e3e5;
-  color: #383d41;
-}
-
-.status-unknown {
-  background-color: #e2e3e5;
+  background-color: rgba(108, 117, 125, 0.1);
   color: #6c757d;
 }
 
-.loading-state,
-.error-state,
-.empty-state {
-  text-align: center;
-  padding: 3rem;
+.status-success {
+  background-color: rgba(40, 167, 69, 0.1);
+  color: #28a745;
 }
 
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid var(--color-primary);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 1rem;
+.status-error {
+  background-color: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
 }
 
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+.status-running {
+  background-color: rgba(23, 162, 184, 0.1);
+  color: #17a2b8;
 }
 
-.error-message {
-  color: #721c24;
-  margin-bottom: 1rem;
+.status-unknown {
+  background-color: rgba(108, 117, 125, 0.1);
+  color: #6c757d;
 }
 
-.error-actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  margin-bottom: 1rem;
-}
-
-.dev-info {
-  background-color: #fff3cd;
-  border: 1px solid #ffeaa7;
-  border-radius: 4px;
-  padding: 1rem;
-  margin-top: 1rem;
-  text-align: left;
-}
-
-.dev-info p {
-  margin: 0.5rem 0;
-  font-size: 0.9rem;
-}
-
-/* ChurchTools Design System Classes */
-.ct-card {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-}
-
-.ct-card-header {
-  padding: 1.5rem;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.ct-card-body {
-  padding: 1.5rem;
-}
-
-.ct-card-title {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--color-text-primary);
-}
-
-.ct-input {
-  display: block;
-  width: 100%;
-  padding: 0.375rem 0.75rem;
-  font-size: 1rem;
-  line-height: 1.5;
-  color: #495057;
-  background-color: #fff;
-  border: 1px solid #ced4da;
-  border-radius: 0.25rem;
-  transition:
-    border-color 0.15s ease-in-out,
-    box-shadow 0.15s ease-in-out;
-}
-
-.ct-input:focus {
-  color: #495057;
-  background-color: #fff;
-  border-color: #80bdff;
-  outline: 0;
-  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-}
-
+/* Button styles */
 .ct-btn {
-  display: inline-block;
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1.5rem;
   border: none;
-  border-radius: 4px;
-  text-decoration: none;
+  border-radius: 6px;
   cursor: pointer;
+  font-size: 0.9rem;
   font-weight: 500;
-  text-align: center;
-  transition: all 0.2s ease;
-  font-size: 1rem;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-decoration: none;
 }
 
 .ct-btn:disabled {
@@ -917,86 +301,39 @@ onMounted(() => {
 }
 
 .ct-btn-primary {
-  background-color: var(--color-primary);
+  background-color: var(--ct-primary, #3498db);
   color: white;
 }
 
 .ct-btn-primary:hover:not(:disabled) {
-  background-color: #0056b3;
+  background-color: var(--ct-primary-dark, #2980b9);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .ct-btn-secondary {
-  background-color: #6c757d;
+  background-color: var(--ct-secondary, #6c757d);
   color: white;
 }
 
 .ct-btn-secondary:hover:not(:disabled) {
-  background-color: #545b62;
+  background-color: var(--ct-secondary-dark, #5a6268);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .ct-btn-outline {
-  background-color: transparent;
-  color: var(--color-primary);
-  border: 1px solid var(--color-primary);
+  background: transparent;
+  border: 1px solid var(--ct-primary, #3498db);
+  color: var(--ct-primary, #3498db);
 }
 
-.ct-btn-outline:hover {
-  background-color: var(--color-primary);
-  color: white;
+.ct-btn-outline:hover:not(:disabled) {
+  background-color: rgba(52, 152, 219, 0.1);
 }
 
 .ct-btn-sm {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.875rem;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .header-card .ct-card-title {
-    font-size: 2rem;
-  }
-
-  .description {
-    font-size: 1rem;
-  }
-
-  .controls-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .search-container {
-    min-width: auto;
-  }
-
-  .button-group {
-    flex-direction: column;
-    width: 100%;
-  }
-
-  .empty-actions {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .groups-table {
-    font-size: 0.875rem;
-  }
-
-  .groups-table th,
-  .groups-table td {
-    padding: 0.5rem;
-  }
-}
-
-@media (max-width: 576px) {
-  .automatic-groups-admin {
-    gap: 1rem;
-  }
-
-  .ct-card-header,
-  .ct-card-body {
-    padding: 1rem;
-  }
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
 }
 </style>
