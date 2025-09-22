@@ -21,7 +21,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import BaseCard from './BaseCard.vue'
+import BaseCard from '../common/BaseCard.vue'
 
 // Props
 defineProps<{
