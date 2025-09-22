@@ -133,7 +133,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, readonly } from 'vue'
 import type { TableColumn, SortDirection } from '@/types/table'
 import { useTableSorting } from '@/composables/useTableSorting'
 import { useTableResize } from '@/composables/useTableResize'
@@ -180,7 +180,7 @@ const props = withDefaults(defineProps<Props>(), {
   emptyText: 'Keine Daten gefunden.'
 })
 
-defineEmits<{
+const emit = defineEmits<{
   retry: []
   reload: []
 }>()
@@ -216,6 +216,12 @@ const filteredData = computed(() => searchFilteredData.value)
 // Check if any filters are active
 const hasActiveFilters = computed(() => {
   return searchTerm.value !== ''
+})
+
+// Expose search term for parent components
+defineExpose({
+  searchTerm: readonly(searchTerm),
+  filteredData: readonly(filteredData)
 })
 </script>
 

@@ -28,12 +28,8 @@ export function useTags() {
     tags.value.filter(tag => tag.domainType === 'group').length
   )
 
-  const filteredTags = computed(() => {
-    if (!selectedDomain.value) {
-      return tags.value
-    }
-    return tags.value.filter(tag => tag.domainType === selectedDomain.value)
-  })
+  // Note: Domain filtering is now handled at API level in fetchTags
+  // No need for client-side domain filtering since we only load the selected domain
 
   // API functions
   const fetchTags = async () => {
@@ -170,7 +166,7 @@ export function useTags() {
     personTagsCount,
     songTagsCount,
     groupTagsCount,
-    filteredTags,
+
     fetchTags,
     createTag,
     updateTag,

@@ -24,83 +24,11 @@
       </div>
     </div>
 
-    <!-- Bulk Operations Card -->
-    <div class="ct-card bulk-operations-card">
-      <div class="ct-card-body">
-        <div class="bulk-operations-header">
-          <div class="bulk-title">
-            <span class="bulk-icon">🔧</span>
-            <span>Bulk Operations</span>
-          </div>
-          <div class="selection-count">
-            {{ selectedTags.length }} selected
-          </div>
-        </div>
-        
-        <div class="bulk-controls-row">
-          <button 
-            type="button" 
-            @click="toggleSelectAll" 
-            class="bulk-btn bulk-btn-outline"
-          >
-            Select All
-          </button>
-          
-          <button 
-            type="button" 
-            @click="clearSelection" 
-            class="bulk-btn bulk-btn-outline"
-          >
-            Clear Selection
-          </button>
-          
-          <input 
-            v-model="prefixFilter"
-            type="text" 
-            placeholder="e.g., L:*"
-            class="prefix-input"
-          />
-          
-          <button 
-            type="button" 
-            @click="selectByPrefix" 
-            class="bulk-btn bulk-btn-outline"
-            :disabled="!prefixFilter.trim()"
-          >
-            Select by Prefix
-          </button>
-          
-          <div class="color-picker-dropdown">
-            <ColorPicker 
-              v-model="bulkColor" 
-              :placeholder="bulkColor ? getColorDisplayName(bulkColor) : 'Select Color'"
-              class="bulk-color-picker"
-            />
-          </div>
-          
-          <button 
-            type="button" 
-            @click="applyBulkColor" 
-            class="bulk-btn bulk-btn-success"
-            :disabled="!bulkColor || isBulkProcessing || selectedTags.length === 0"
-          >
-            {{ isBulkProcessing ? 'Applying...' : 'Apply Color' }}
-          </button>
-          
-          <button 
-            type="button" 
-            @click="showBulkDeleteConfirm" 
-            class="bulk-btn bulk-btn-danger"
-            :disabled="isBulkProcessing || selectedTags.length === 0"
-          >
-            Delete Selected
-          </button>
-        </div>
-      </div>
-    </div>
+
 
     <!-- AdminTable -->
     <AdminTable
+      ref="adminTableRef"
       :data="tags"
       :loading="isLoading"
       :error="error"
@@ -117,10 +45,94 @@
       @retry="refreshData"
       @reload="refreshData"
     >
+      <!-- Bulk Operations in Header -->
+      <template #header-controls>
+        <div class="bulk-operations">
+          <div class="bulk-operations-header">
+            <div class="bulk-title">
+              <span class="bulk-icon">🔧</span>
+              <span>Bulk Operations</span>
+            </div>
+            <div class="selection-count">
+              {{ selectedTags.length }} selected
+              <span v-if="filteredTagsForBulk.length < tags.length" class="filter-info">
+                (von {{ filteredTagsForBulk.length }} gefilterten)
+              </span>
+            </div>
+          </div>
+          
+          <div class="bulk-controls-row">
+            <button 
+              type="button" 
+              @click="toggleSelectAll" 
+              class="bulk-btn bulk-btn-outline"
+            >
+              Select All
+            </button>
+            
+            <button 
+              type="button" 
+              @click="clearSelection" 
+              class="bulk-btn bulk-btn-outline"
+            >
+              Clear Selection
+            </button>
+            
+            <input 
+              v-model="prefixFilter"
+              type="text" 
+              placeholder="e.g., L:*"
+              class="prefix-input"
+            />
+            
+            <button 
+              type="button" 
+              @click="selectByPrefix" 
+              class="bulk-btn bulk-btn-outline"
+              :disabled="!prefixFilter.trim()"
+            >
+              Select by Prefix
+            </button>
+            
+            <div class="color-picker-dropdown">
+              <ColorPicker 
+                v-model="bulkColor" 
+                :placeholder="bulkColor ? getColorDisplayName(bulkColor) : 'Select Color'"
+                class="bulk-color-picker"
+              />
+            </div>
+            
+            <button 
+              type="button" 
+              @click="applyBulkColor" 
+              class="bulk-btn bulk-btn-success"
+              :disabled="!bulkColor || isBulkProcessing || selectedTags.length === 0"
+            >
+              {{ isBulkProcessing ? 'Applying...' : 'Apply Color' }}
+            </button>
+            
+            <button 
+              type="button" 
+              @click="showBulkDeleteConfirm" 
+              class="bulk-btn bulk-btn-danger"
+              :disabled="isBulkProcessing || selectedTags.length === 0"
+            >
+              Delete Selected
+            </button>
+          </div>
+        </div>
+      </template>
+
       <!-- Filters -->
       <template #filters>
         <div class="filter-container">
-          <select v-model="selectedDomain" @change="refreshData" class="ct-select filter-select">
+          <label for="domainFilter" class="filter-label">Domain:</label>
+          <select 
+            id="domainFilter"
+            v-model="selectedDomain" 
+            @change="refreshData" 
+            class="ct-select filter-select"
+          >
             <option value="">Alle Domains</option>
             <option value="person">Personen</option>
             <option value="song">Lieder</option>
@@ -272,7 +284,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import type { DashboardModule } from '@/types/modules'
 import type { TableColumn } from '@/types/table'
 import AdminTable from '@/components/shared/AdminTable.vue'
@@ -310,6 +322,10 @@ const prefixFilter = ref('')
 const bulkColor = ref('')
 const isBulkProcessing = ref(false)
 
+// Search term to coordinate with AdminTable
+const searchTerm = ref('')
+const adminTableRef = ref()
+
 // Modal state
 const showTagModal = ref(false)
 const editingTag = ref<any>(null)
@@ -335,12 +351,36 @@ const tableColumns: TableColumn[] = [
 
 // Computed properties (now from composable)
 
+// Filtered tags that match AdminTable search (for bulk operations)
+const filteredTagsForBulk = computed(() => {
+  if (!searchTerm.value.trim()) {
+    return tags.value
+  }
+  
+  const searchLower = searchTerm.value.toLowerCase()
+  return tags.value.filter(tag => 
+    tag.name.toLowerCase().includes(searchLower) ||
+    tag.domainType.toLowerCase().includes(searchLower) ||
+    (tag.description && tag.description.toLowerCase().includes(searchLower))
+  )
+})
+
 // Bulk operations
 const toggleSelectAll = () => {
-  if (selectedTags.value.length === tags.value.length) {
-    selectedTags.value = []
+  // Work on filtered data (respects domain + search filters)
+  const availableTags = filteredTagsForBulk.value
+  const availableIds = availableTags.map(tag => tag.id)
+  
+  // Check if all available tags are selected
+  const allSelected = availableIds.every(id => selectedTags.value.includes(id))
+  
+  if (allSelected) {
+    // Deselect all available tags
+    selectedTags.value = selectedTags.value.filter(id => !availableIds.includes(id))
   } else {
-    selectedTags.value = tags.value.map(tag => tag.id)
+    // Select all available tags (add missing ones)
+    const newSelections = availableIds.filter(id => !selectedTags.value.includes(id))
+    selectedTags.value = [...selectedTags.value, ...newSelections]
   }
 }
 
@@ -366,7 +406,8 @@ const selectByPrefix = () => {
   const pattern = prefix.replace('*', '.*')
   const regex = new RegExp(pattern, 'i')
   
-  selectedTags.value = tags.value
+  // Work on filtered data (respects domain + search filters)
+  selectedTags.value = filteredTagsForBulk.value
     .filter(tag => regex.test(tag.name))
     .map(tag => tag.id)
 }
@@ -506,6 +547,13 @@ const saveTag = async () => {
   }
 }
 
+// Watch AdminTable search term
+watch(() => adminTableRef.value?.searchTerm, (newSearchTerm) => {
+  if (newSearchTerm !== undefined) {
+    searchTerm.value = newSearchTerm
+  }
+}, { immediate: true })
+
 // Initialize
 onMounted(() => {
   fetchTags()
@@ -579,12 +627,13 @@ onMounted(() => {
   margin-top: 0.25rem;
 }
 
-/* Bulk Operations Card */
-.bulk-operations-card {
-  background: var(--ct-bg-primary, #ffffff);
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
+/* Bulk Operations */
+.bulk-operations {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: var(--ct-bg-secondary, #f8f9fa);
+  border-radius: 8px;
+  border: 1px solid var(--ct-border-color, #e0e0e0);
 }
 
 .bulk-operations-header {
@@ -613,6 +662,12 @@ onMounted(() => {
   border-radius: 1rem;
   font-size: 0.875rem;
   font-weight: 500;
+}
+
+.filter-info {
+  opacity: 0.8;
+  font-size: 0.8rem;
+  font-weight: 400;
 }
 
 .bulk-controls-row {
@@ -680,6 +735,16 @@ onMounted(() => {
 /* Filter Styles */
 .filter-container {
   min-width: 180px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filter-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--ct-text-primary, #2c3e50);
+  white-space: nowrap;
 }
 
 .filter-select {
