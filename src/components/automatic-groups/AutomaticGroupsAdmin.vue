@@ -26,7 +26,6 @@
         {{ loading ? 'Lädt...' : 'Aktualisieren' }}
       </button>
       <button
-        v-if="isDevelopment"
         @click="loadMockData"
         class="ct-btn ct-btn-outline mock-btn"
         :disabled="loading"
@@ -253,6 +252,19 @@ const refreshGroups = async () => {
 
     console.log(`Total groups fetched: ${allGroups.length}`)
 
+    // Debug: Log first few groups to understand structure
+    if (allGroups.length > 0) {
+      console.log('Sample group structure:', JSON.stringify(allGroups[0], null, 2))
+      console.log('First 3 groups:', allGroups.slice(0, 3).map(g => ({
+        id: g.id,
+        name: g.name,
+        settings: g.settings,
+        information: g.information,
+        dynamicGroupStatus: g.dynamicGroupStatus,
+        automaticMembership: g.automaticMembership
+      })))
+    }
+
     // Filter for automatic groups (groups with dynamic group settings)
     const automaticGroups = allGroups.filter((group) => {
       // Check if group has dynamic group configuration
@@ -260,16 +272,54 @@ const refreshGroups = async () => {
         group.settings?.dynamicGroup === true ||
         group.information?.dynamicGroup === true ||
         group.dynamicGroupStatus ||
-        group.automaticMembership
+        group.automaticMembership ||
+        // Additional checks for different possible field names
+        group.isDynamic ||
+        group.isAutomatic ||
+        group.autoMembership ||
+        (group.settings && Object.keys(group.settings).some(key => 
+          key.toLowerCase().includes('dynamic') || 
+          key.toLowerCase().includes('automatic')
+        ))
 
       if (hasAutomaticSettings) {
-        console.log('Found automatic group:', group.name, group)
+        console.log('Found automatic group:', group.name, {
+          id: group.id,
+          settings: group.settings,
+          information: group.information,
+          dynamicGroupStatus: group.dynamicGroupStatus,
+          automaticMembership: group.automaticMembership
+        })
       }
 
       return hasAutomaticSettings
     })
 
     console.log(`Automatic groups found: ${automaticGroups.length}`)
+
+    // If no automatic groups found, show all groups for debugging
+    if (automaticGroups.length === 0 && allGroups.length > 0) {
+      console.warn('No automatic groups found. Showing all groups for debugging.')
+      console.log('All groups:', allGroups.map(g => ({
+        id: g.id,
+        name: g.name,
+        hasSettings: !!g.settings,
+        settingsKeys: g.settings ? Object.keys(g.settings) : [],
+        hasInformation: !!g.information,
+        informationKeys: g.information ? Object.keys(g.information) : []
+      })))
+      
+      // For debugging: show all groups temporarily
+      groups.value = allGroups.slice(0, 10).map((group) => ({
+        id: group.id,
+        name: group.name + ' (DEBUG)',
+        groupTypeId: group.groupTypeId || group.groupType?.name || 'N/A',
+        dynamicGroupStatus: 'debug',
+        lastExecution: group.lastExecution || group.lastUpdate || null,
+        executionStatus: 'debug'
+      }))
+      return
+    }
 
     // Transform data for display
     groups.value = automaticGroups.map((group) => ({
@@ -283,9 +333,21 @@ const refreshGroups = async () => {
     }))
 
     console.log('Processed groups:', groups.value)
+
+    // If no automatic groups found, suggest using mock data
+    if (groups.value.length === 0) {
+      console.log('No automatic groups found. Consider using mock data for testing.')
+    }
   } catch (err: any) {
     console.error('Error loading groups:', err)
     error.value = 'Fehler beim Laden der automatischen Gruppen. Bitte versuchen Sie es erneut.'
+    
+    // In development mode, load mock data as fallback
+    if (isDevelopment.value) {
+      console.log('Development mode: Loading mock data as fallback')
+      loadMockData()
+      error.value = null
+    }
   } finally {
     loading.value = false
   }
