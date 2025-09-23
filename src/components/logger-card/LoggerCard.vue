@@ -42,10 +42,10 @@ const isLoading = ref(false)
 const error = ref<string | null>(null)
 const data = ref({
   total: 0,
-  info: 0,
-  warning: 0,
-  error: 0,
-  debug: 0,
+  systemErrors: 0,
+  failedLogins: 0,
+  emailsSent: 0,
+  successfulLogins: 0,
 })
 const lastUpdate = ref<string | null>(null)
 
@@ -57,31 +57,31 @@ const mainStat = computed(() => ({
 
 const statusStats = computed(() => [
   {
-    key: 'info',
-    value: data.value.info,
-    label: 'Info',
-    icon: 'ℹ️',
-    type: 'info' as const,
-  },
-  {
-    key: 'warning',
-    value: data.value.warning,
-    label: 'Warnungen',
-    icon: '⚠️',
-    type: 'warning' as const,
-  },
-  {
-    key: 'error',
-    value: data.value.error,
-    label: 'Fehler',
-    icon: '❌',
+    key: 'systemErrors',
+    value: data.value.systemErrors,
+    label: 'Systemfehler',
+    icon: '🚨',
     type: 'error' as const,
   },
   {
-    key: 'debug',
-    value: data.value.debug,
-    label: 'Debug',
-    icon: '🔍',
+    key: 'failedLogins',
+    value: data.value.failedLogins,
+    label: 'Login-Fehler',
+    icon: '🔒',
+    type: 'warning' as const,
+  },
+  {
+    key: 'emailsSent',
+    value: data.value.emailsSent,
+    label: 'E-Mails',
+    icon: '📧',
+    type: 'info' as const,
+  },
+  {
+    key: 'successfulLogins',
+    value: data.value.successfulLogins,
+    label: 'Anmeldungen',
+    icon: '✅',
     type: 'success' as const,
   },
 ])
@@ -106,19 +106,19 @@ const fetchData = async () => {
     // Simulate network delay
     await new Promise((resolve) => setTimeout(resolve, 1200))
 
-    // Simulate random log data
-    const total = Math.floor(Math.random() * 500) + 200
-    const error = Math.floor(total * 0.05) // 5% errors
-    const warning = Math.floor(total * 0.15) // 15% warnings
-    const debug = Math.floor(total * 0.25) // 25% debug
-    const info = total - error - warning - debug
+    // Simulate realistic log data for the last 24 hours
+    const systemErrors = Math.floor(Math.random() * 5) + 1 // 1-5 system errors
+    const failedLogins = Math.floor(Math.random() * 25) + 10 // 10-35 failed login attempts
+    const emailsSent = Math.floor(Math.random() * 150) + 50 // 50-200 emails sent
+    const successfulLogins = Math.floor(Math.random() * 200) + 100 // 100-300 successful logins
+    const total = systemErrors + failedLogins + emailsSent + successfulLogins
 
     data.value = {
       total,
-      info,
-      warning,
-      error,
-      debug,
+      systemErrors,
+      failedLogins,
+      emailsSent,
+      successfulLogins,
     }
 
     lastUpdate.value = new Date().toISOString()
@@ -135,11 +135,11 @@ const fetchData = async () => {
 const loadMockData = () => {
   console.log('Lade Mock-Daten für Logger...')
   data.value = {
-    total: 342,
-    info: 205,
-    warning: 85,
-    error: 17,
-    debug: 35,
+    total: 287,
+    systemErrors: 3,
+    failedLogins: 18,
+    emailsSent: 124,
+    successfulLogins: 142,
   }
   lastUpdate.value = new Date().toISOString()
   error.value = null

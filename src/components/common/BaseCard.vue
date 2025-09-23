@@ -242,18 +242,19 @@ defineEmits<{
 }
 
 .status-breakdown {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 1rem;
-  justify-content: space-around;
-  flex-wrap: wrap;
+  justify-items: center;
 }
 
 .status-item {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  flex: 1;
+  width: 100%;
   min-width: 0;
+  justify-content: center;
 }
 
 .status-icon {
@@ -262,7 +263,8 @@ defineEmits<{
 }
 
 .status-info {
-  text-align: left;
+  text-align: center;
+  min-width: 0;
 }
 
 .status-number {
@@ -275,6 +277,8 @@ defineEmits<{
   font-size: 0.75rem;
   color: #666;
   margin-top: 0.25rem;
+  word-wrap: break-word;
+  hyphens: auto;
 }
 
 .status-item.success .status-number {
@@ -383,7 +387,7 @@ defineEmits<{
   }
 
   .status-breakdown {
-    flex-direction: column;
+    grid-template-columns: 1fr;
     gap: 0.75rem;
   }
 
