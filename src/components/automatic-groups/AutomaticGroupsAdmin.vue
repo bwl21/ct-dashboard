@@ -66,7 +66,7 @@
 import { computed, onMounted } from 'vue'
 import type { DashboardModule } from '@/types/modules'
 import type { TableColumn } from '@/types/table'
-import AdminTable from '@/components/shared/AdminTable.vue'
+import AdminTable from '@/components/common/AdminTable.vue'
 import { useAutomaticGroups } from './useAutomaticGroups'
 import { getGroupUrl } from '@/services/churchtools'
 

@@ -135,7 +135,7 @@ import {
   getAppointmentUrl,
   type Appointment,
 } from '@/services/churchtools'
-import AdminTable from '@/components/shared/AdminTable.vue'
+import AdminTable from '@/components/common/AdminTable.vue'
 
 defineProps<{
   module: DashboardModule

@@ -48,6 +48,8 @@ import TagsCard from './components/tags/TagsCard.vue'
 import TagsAdmin from './components/tags/TagsAdmin.vue'
 import BeispielCard from './components/beispiel/BeispielCard.vue'
 import ColorPickerExample from './components/common/ColorPickerExample.vue'
+import LoggerCard from './components/logger-card/LoggerCard.vue'
+import LoggerAdmin from './components/logger-card/LoggerAdmin.vue'
 import Toast from './components/common/Toast.vue'
 import { useToast } from './composables/useToast'
 
@@ -75,6 +77,14 @@ const modules: DashboardModule[] = [
     description: 'Verwaltung von Tags aus ChurchTools',
     cardComponent: TagsCard,
     adminComponent: TagsAdmin,
+  },
+  {
+    id: 'logger-card',
+    title: 'Logger System',
+    icon: '📋',
+    description: 'Überwachung und Verwaltung von Log-Einträgen',
+    cardComponent: LoggerCard,
+    adminComponent: LoggerAdmin,
   },
   {
     id: 'colorpicker-example',
