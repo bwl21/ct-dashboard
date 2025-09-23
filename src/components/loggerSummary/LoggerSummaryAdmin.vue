@@ -1,6 +1,6 @@
 <template>
   <AdminTable
-    :data="logEntries"
+    :data="filteredLogs"
     :loading="loading"
     :error="error"
     :columns="tableColumns"
@@ -152,7 +152,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import AdminTable from '../common/AdminTable.vue'
-import { useLoggerCard, type ProcessedLogEntry } from './useLoggerCard'
+import { useLoggerSummary, type ProcessedLogEntry } from './useLoggerSummary'
 
 // Use the ProcessedLogEntry type from the composable
 type LogEntry = ProcessedLogEntry
@@ -175,7 +175,7 @@ const {
   loadDetailedLogs,
   filterLogsByCategory,
   filterLogsBySearch
-} = useLoggerCard()
+} = useLoggerSummary()
 
 // Local state
 const selectedCategory = ref('')
@@ -186,33 +186,50 @@ const selectedLog = ref<LogEntry | null>(null)
 const tableColumns = [
   {
     key: 'level',
+    label: 'Level',
+    sortable: true,
+    width: 100,
+    resizable: true,
+    cellSlot: 'cell-level',
+  },
+  {
+    key: 'category',
     label: 'Kategorie',
     sortable: true,
-    width: '150px',
+    width: 140,
+    resizable: true,
   },
   {
     key: 'timestamp',
     label: 'Zeitstempel',
     sortable: true,
-    width: '180px',
+    width: 160,
+    resizable: true,
+    cellSlot: 'cell-timestamp',
   },
   {
     key: 'source',
     label: 'Quelle',
     sortable: true,
-    width: '120px',
+    width: 120,
+    resizable: true,
+    cellSlot: 'cell-source',
   },
   {
     key: 'message',
     label: 'Nachricht',
     sortable: true,
-    width: 'auto',
+    width: 400,
+    resizable: true,
+    cellSlot: 'cell-message',
   },
   {
     key: 'actions',
     label: 'Aktionen',
     sortable: false,
-    width: '120px',
+    width: 120,
+    resizable: false,
+    cellSlot: 'cell-actions',
   },
 ]
 

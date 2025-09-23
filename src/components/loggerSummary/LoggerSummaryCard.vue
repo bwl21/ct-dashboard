@@ -22,7 +22,7 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import BaseCard from '../common/BaseCard.vue'
-import { useLoggerCard } from './useLoggerCard'
+import { useLoggerSummary } from './useLoggerSummary'
 
 // Props
 defineProps<{
@@ -45,7 +45,7 @@ const {
   statistics, 
   formattedLastUpdate,
   loadLogStatistics 
-} = useLoggerCard()
+} = useLoggerSummary()
 
 // Computed properties
 const mainStat = computed(() => ({
