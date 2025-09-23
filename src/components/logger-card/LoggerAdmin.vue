@@ -20,19 +20,27 @@
     <!-- Custom Actions -->
     <template #actions>
       <div class="admin-actions">
+        <select v-model="selectedDays" @change="changeDaysFilter" class="ct-select">
+          <option value="1">Letzter Tag</option>
+          <option value="3">Letzte 3 Tage</option>
+          <option value="7">Letzte 7 Tage</option>
+          <option value="14">Letzte 14 Tage</option>
+          <option value="30">Letzter Monat</option>
+        </select>
         <select v-model="selectedCategory" @change="filterByCategory" class="ct-select">
           <option value="">Alle Kategorien</option>
           <option value="system_error">Systemfehler</option>
           <option value="failed_login">Falsche Passwörter</option>
           <option value="email_sent">Versendete Mails</option>
           <option value="successful_login">Erfolgreiche Anmeldungen</option>
+          <option value="other">Sonstige</option>
         </select>
         <button
           @click="clearLogs"
           class="ct-btn ct-btn-danger"
           :disabled="loading"
         >
-          Logs löschen
+          Ansicht leeren
         </button>
         <button
           @click="refreshLogs"
@@ -144,20 +152,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import AdminTable from '../common/AdminTable.vue'
+import { useLoggerCard, type ProcessedLogEntry } from './useLoggerCard'
 
-interface LogEntry {
-  id: string
-  level: 'info' | 'warning' | 'error' | 'success'
-  category: 'system_error' | 'failed_login' | 'email_sent' | 'successful_login'
-  message: string
-  details?: string
-  source: string
-  timestamp: string
-  stackTrace?: string
-  userId?: string
-  email?: string
-  ipAddress?: string
-}
+// Use the ProcessedLogEntry type from the composable
+type LogEntry = ProcessedLogEntry
 
 // Props
 defineProps<{
@@ -169,11 +167,19 @@ defineProps<{
   }
 }>()
 
-// State
-const loading = ref(false)
-const error = ref<string | null>(null)
-const logEntries = ref<LogEntry[]>([])
+// Use composable
+const { 
+  loading, 
+  error, 
+  logs: logEntries, 
+  loadDetailedLogs,
+  filterLogsByCategory,
+  filterLogsBySearch
+} = useLoggerCard()
+
+// Local state
 const selectedCategory = ref('')
+const selectedDays = ref(3)
 const selectedLog = ref<LogEntry | null>(null)
 
 // Table configuration
@@ -213,7 +219,7 @@ const tableColumns = [
 // Computed
 const filteredLogs = computed(() => {
   if (!selectedCategory.value) return logEntries.value
-  return logEntries.value.filter(log => log.category === selectedCategory.value)
+  return filterLogsByCategory(logEntries.value, selectedCategory.value)
 })
 
 // Methods
@@ -258,113 +264,12 @@ const formatTimestamp = (timestamp: string) => {
   })
 }
 
-const generateMockLogs = (): LogEntry[] => {
-  const categories: LogEntry['category'][] = ['system_error', 'failed_login', 'email_sent', 'successful_login']
-  const sources = ['AuthService', 'EmailService', 'DatabaseManager', 'UserManager', 'SystemMonitor']
-  
-  const logTemplates = {
-    system_error: [
-      'Datenbankverbindung fehlgeschlagen',
-      'API-Timeout bei externer Schnittstelle',
-      'Speicher-Limit erreicht',
-      'Konfigurationsfehler beim Laden',
-      'Backup-Prozess fehlgeschlagen',
-    ],
-    failed_login: [
-      'Fehlgeschlagener Anmeldeversuch',
-      'Ungültiges Passwort eingegeben',
-      'Zu viele Anmeldeversuche',
-      'Gesperrtes Benutzerkonto',
-      'Unbekannte E-Mail-Adresse',
-    ],
-    email_sent: [
-      'Willkommens-E-Mail versendet',
-      'Passwort-Reset E-Mail versendet',
-      'Benachrichtigung versendet',
-      'Newsletter versendet',
-      'Erinnerungs-E-Mail versendet',
-    ],
-    successful_login: [
-      'Benutzer erfolgreich angemeldet',
-      'Admin-Anmeldung erfolgreich',
-      'Mobile App Anmeldung',
-      'SSO-Anmeldung erfolgreich',
-      'API-Token Authentifizierung',
-    ]
-  }
-
-  const emails = ['max.mustermann@example.com', 'anna.schmidt@test.de', 'john.doe@company.org', 'maria.garcia@mail.com']
-  const ips = ['192.168.1.100', '10.0.0.45', '172.16.0.23', '203.0.113.42']
-
-  return Array.from({ length: 100 }, (_, i) => {
-    const category = categories[Math.floor(Math.random() * categories.length)]
-    const source = sources[Math.floor(Math.random() * sources.length)]
-    const messages = logTemplates[category]
-    const message = messages[Math.floor(Math.random() * messages.length)]
-    
-    let level: LogEntry['level']
-    switch (category) {
-      case 'system_error':
-        level = 'error'
-        break
-      case 'failed_login':
-        level = 'warning'
-        break
-      case 'email_sent':
-        level = 'info'
-        break
-      case 'successful_login':
-        level = 'success'
-        break
-      default:
-        level = 'info'
-    }
-
-    const entry: LogEntry = {
-      id: `log-${i + 1}`,
-      level,
-      category,
-      message,
-      source,
-      timestamp: new Date(Date.now() - Math.random() * 86400000 * 7).toISOString(), // Last 7 days
-    }
-
-    // Add specific details based on category
-    if (category === 'failed_login' || category === 'successful_login') {
-      entry.email = emails[Math.floor(Math.random() * emails.length)]
-      entry.userId = `user-${Math.floor(Math.random() * 1000) + 1}`
-      entry.ipAddress = ips[Math.floor(Math.random() * ips.length)]
-    }
-
-    if (category === 'email_sent') {
-      entry.email = emails[Math.floor(Math.random() * emails.length)]
-      entry.details = `E-Mail-ID: ${Math.random().toString(36).substr(2, 9)}`
-    }
-
-    if (category === 'system_error') {
-      entry.stackTrace = `at Function.${source}.process (${source.toLowerCase()}.js:${Math.floor(Math.random() * 200) + 1}:${Math.floor(Math.random() * 50) + 1})\nat Object.handler (app.js:${Math.floor(Math.random() * 100) + 1}:${Math.floor(Math.random() * 50) + 1})`
-      entry.details = 'Kritischer Systemfehler - Administrator benachrichtigt'
-    }
-
-    return entry
-  }).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-}
+// generateMockLogs function removed - using composable instead
 
 const refreshLogs = async () => {
-  loading.value = true
-  error.value = null
-
-  try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    logEntries.value = generateMockLogs()
-    console.log('Log-Einträge geladen:', logEntries.value.length)
-  } catch (err) {
-    console.error('Fehler beim Laden der Log-Einträge:', err)
-    error.value = 'Fehler beim Laden der Log-Einträge'
-  } finally {
-    loading.value = false
-  }
+  await loadDetailedLogs(selectedDays.value, {
+    category: selectedCategory.value
+  })
 }
 
 const filterByCategory = () => {
@@ -372,24 +277,24 @@ const filterByCategory = () => {
   console.log('Filter nach Kategorie:', selectedCategory.value)
 }
 
+const changeDaysFilter = () => {
+  console.log('Zeitraum geändert:', selectedDays.value, 'Tage')
+  refreshLogs() // Reload logs with new time range
+}
+
 const clearLogs = async () => {
-  if (!confirm('Möchten Sie wirklich alle Log-Einträge löschen?')) return
+  if (!confirm('Möchten Sie wirklich alle angezeigten Log-Einträge aus der Ansicht entfernen?')) return
   
-  loading.value = true
-  try {
-    await new Promise(resolve => setTimeout(resolve, 500))
-    logEntries.value = []
-    console.log('Alle Logs gelöscht')
-  } finally {
-    loading.value = false
-  }
+  // Clear the logs array (this doesn't delete from ChurchTools, just clears the view)
+  logEntries.value = []
+  console.log('Alle Logs aus der Ansicht entfernt')
 }
 
 const deleteLog = async (id: string) => {
-  if (!confirm('Möchten Sie diesen Log-Eintrag löschen?')) return
+  if (!confirm('Möchten Sie diesen Log-Eintrag aus der Ansicht entfernen?')) return
   
   logEntries.value = logEntries.value.filter(log => log.id !== id)
-  console.log('Log gelöscht:', id)
+  console.log('Log aus Ansicht entfernt:', id)
 }
 
 const viewDetails = (log: LogEntry) => {
