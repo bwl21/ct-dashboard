@@ -1300,6 +1300,105 @@ debug('Logs loaded', { count: logs.value.length })
 - Limit maximum displayed entries
 - Proper cleanup in composable
 
+## AdminTable Column Width Configuration Fix
+
+### Problem Identified
+During testing, it was discovered that the LoggerAdmin component's column widths were not properly configurable:
+- Columns appeared too narrow for log content
+- No resize handles were visible
+- Users couldn't adjust column widths manually
+
+### Root Cause Analysis
+1. **Missing Width Properties**: Column definitions lacked proper `width` values
+2. **No Resizable Flags**: Missing `resizable: true` properties
+3. **Inconsistent Data Types**: Mixed string (`'150px'`) and numeric width values
+4. **Missing Cell Slots**: Custom rendering wasn't properly connected
+
+### Solution Implementation
+
+#### Before (Broken Configuration)
+```typescript
+const tableColumns = [
+  {
+    key: 'level',
+    label: 'Kategorie',
+    sortable: true,
+    width: '150px', // ❌ String format
+  },
+  {
+    key: 'timestamp',
+    label: 'Zeitstempel',
+    sortable: true,
+    width: '180px', // ❌ String format
+  },
+  // ❌ Missing resizable and cellSlot properties
+]
+```
+
+#### After (Fixed Configuration)
+```typescript
+const tableColumns = [
+  {
+    key: 'level',
+    label: 'Level',
+    sortable: true,
+    width: 100,              // ✅ Numeric value
+    resizable: true,         // ✅ Enable resizing
+    cellSlot: 'cell-level',  // ✅ Custom rendering
+  },
+  {
+    key: 'category',
+    label: 'Kategorie',
+    sortable: true,
+    width: 140,
+    resizable: true,
+  },
+  {
+    key: 'message',
+    label: 'Nachricht',
+    sortable: true,
+    width: 400,              // ✅ More space for messages
+    resizable: true,
+    cellSlot: 'cell-message',
+  },
+  {
+    key: 'actions',
+    label: 'Aktionen',
+    sortable: false,
+    width: 120,
+    resizable: false,        // ✅ Fixed width for actions
+    cellSlot: 'cell-actions',
+  },
+]
+```
+
+### Key Improvements Made
+1. **Numeric Width Values**: Changed from string to numeric format for proper processing
+2. **Resizable Columns**: Added `resizable: true` to enable user column resizing
+3. **Optimal Width Distribution**: Allocated appropriate space based on content type
+4. **Cell Slot Mapping**: Connected custom rendering templates
+5. **Fixed Action Column**: Kept actions column at fixed width for consistency
+
+### AdminTable System Architecture
+The column width system works through three layers:
+1. **Component Layer**: Column definitions with width/resizable properties
+2. **Composable Layer**: `useTableResize()` manages reactive width state
+3. **DOM Layer**: CSS styles applied dynamically with resize handles
+
+### Documentation Created
+- **Comprehensive Guide**: `docs/AdminTable_Column_Width_Configuration.md`
+- **System Architecture**: Data flow and reactive updates
+- **Troubleshooting**: Common issues and solutions
+- **Performance**: Optimization techniques for smooth resizing
+- **Browser Compatibility**: Cross-browser support and fallbacks
+
+### Result
+✅ **Column widths now work correctly** with:
+- Proper initial width distribution
+- User-resizable columns via drag handles
+- Custom cell rendering for better UX
+- Comprehensive documentation for future development
+
 ## Future Enhancements
 
 ### Planned Improvements
@@ -1308,12 +1407,15 @@ debug('Logs loaded', { count: logs.value.length })
 3. **Export Functionality**: CSV/JSON export capabilities
 4. **Log Retention**: Automatic cleanup of old logs
 5. **Performance Metrics**: Response time and error rate tracking
+6. **Column Persistence**: Save user column width preferences
+7. **Auto-sizing**: Automatic column width based on content
 
 ### Technical Debt
 1. **Type Safety**: Improve TypeScript definitions for ChurchTools API
 2. **Error Boundaries**: Add Vue error boundaries for better error handling
-3. **Unit Tests**: Add comprehensive test coverage
+3. **Unit Tests**: Add comprehensive test coverage for column resizing
 4. **Documentation**: API documentation for log endpoints
+5. **Mobile Optimization**: Better touch support for column resizing
 
 ## Files Modified/Created
 
@@ -1321,6 +1423,7 @@ debug('Logs loaded', { count: logs.value.length })
 - `src/components/logger-card/LoggerCard.vue`
 - `src/components/logger-card/LoggerAdmin.vue`
 - `src/components/logger-card/useLoggerCard.ts`
+- `docs/AdminTable_Column_Width_Configuration.md`
 
 ### Modified Files
 - Router configuration (if applicable)
@@ -1330,6 +1433,8 @@ debug('Logs loaded', { count: logs.value.length })
 
 ```bash
 # Key commits from this session
+cad48de docs: add comprehensive AdminTable column width configuration guide
+39902d2 docs: add comprehensive Logger module development session documentation
 8905ee7 refactor: improve LoggerCard layout and implement specific log categories
 6f1744d feat: add LoggerCard module with admin interface
 ```
@@ -1350,6 +1455,12 @@ debug('Logs loaded', { count: logs.value.length })
 1. **Separation of Concerns**: Keep components focused on presentation
 2. **Reusable Logic**: Extract shared logic into composables
 3. **Type Safety**: Use TypeScript for better development experience
+
+### AdminTable Integration
+1. **Column Configuration**: Always specify numeric width values and resizable flags
+2. **Custom Rendering**: Use cellSlot properties for complex cell content
+3. **User Experience**: Provide resizable columns for better content visibility
+4. **Performance**: Optimize resize operations for smooth interaction
 
 ## Next Steps
 
