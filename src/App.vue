@@ -86,14 +86,6 @@ const modules: DashboardModule[] = [
     cardComponent: LoggerSummaryCard,
     adminComponent: LoggerSummaryAdmin,
   },
-  {
-    id: 'colorpicker-example',
-    title: 'ColorPicker Example',
-    icon: '🎨',
-    description: 'Beispiel für die ColorPicker-Komponente',
-    cardComponent: BeispielCard,
-    adminComponent: ColorPickerExample,
-  },
 ]
 
 const userDisplayName = ref<string>('')
