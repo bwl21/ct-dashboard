@@ -50,7 +50,7 @@ export interface LogFilter {
   days?: number
 }
 
-export function useLoggerCard() {
+export function useLoggerSummary() {
   // State
   const loading = ref(false)
   const error = ref<string | null>(null)
