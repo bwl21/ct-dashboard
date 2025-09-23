@@ -9,7 +9,7 @@
     description="Überwachung und Verwaltung aller Log-Einträge"
     searchable
     search-placeholder="Log-Einträge durchsuchen..."
-    :search-fields="['message', 'level', 'source']"
+    :search-fields="['message', 'level', 'source', 'email', 'userId']"
     default-sort-field="timestamp"
     default-sort-order="desc"
     loading-text="Lade Log-Einträge..."
@@ -20,12 +20,12 @@
     <!-- Custom Actions -->
     <template #actions>
       <div class="admin-actions">
-        <select v-model="selectedLevel" @change="filterByLevel" class="ct-select">
-          <option value="">Alle Level</option>
-          <option value="debug">Debug</option>
-          <option value="info">Info</option>
-          <option value="warning">Warning</option>
-          <option value="error">Error</option>
+        <select v-model="selectedCategory" @change="filterByCategory" class="ct-select">
+          <option value="">Alle Kategorien</option>
+          <option value="system_error">Systemfehler</option>
+          <option value="failed_login">Falsche Passwörter</option>
+          <option value="email_sent">Versendete Mails</option>
+          <option value="successful_login">Erfolgreiche Anmeldungen</option>
         </select>
         <button
           @click="clearLogs"
@@ -47,15 +47,17 @@
     <!-- Custom Cell Rendering -->
     <template #cell-level="{ item }">
       <span class="log-level-badge" :class="getLevelClass(item.level)">
-        {{ getLevelIcon(item.level) }} {{ item.level.toUpperCase() }}
+        {{ getLevelIcon(item.level) }} {{ getCategoryLabel(item.category) }}
       </span>
     </template>
 
     <template #cell-message="{ item }">
       <div class="log-message">
         <div class="message-text">{{ item.message }}</div>
-        <div v-if="item.details" class="message-details">
-          <small>{{ item.details }}</small>
+        <div v-if="item.email || item.userId" class="message-details">
+          <small v-if="item.email">E-Mail: {{ item.email }}</small>
+          <small v-if="item.userId">User ID: {{ item.userId }}</small>
+          <small v-if="item.ipAddress">IP: {{ item.ipAddress }}</small>
         </div>
       </div>
     </template>
@@ -97,9 +99,9 @@
       </div>
       <div class="modal-body">
         <div class="log-detail-item">
-          <strong>Level:</strong>
+          <strong>Kategorie:</strong>
           <span class="log-level-badge" :class="getLevelClass(selectedLog.level)">
-            {{ getLevelIcon(selectedLog.level) }} {{ selectedLog.level.toUpperCase() }}
+            {{ getLevelIcon(selectedLog.level) }} {{ getCategoryLabel(selectedLog.category) }}
           </span>
         </div>
         <div class="log-detail-item">
@@ -113,6 +115,18 @@
         <div class="log-detail-item">
           <strong>Nachricht:</strong>
           <p>{{ selectedLog.message }}</p>
+        </div>
+        <div v-if="selectedLog.email" class="log-detail-item">
+          <strong>E-Mail:</strong>
+          <span>{{ selectedLog.email }}</span>
+        </div>
+        <div v-if="selectedLog.userId" class="log-detail-item">
+          <strong>Benutzer-ID:</strong>
+          <span>{{ selectedLog.userId }}</span>
+        </div>
+        <div v-if="selectedLog.ipAddress" class="log-detail-item">
+          <strong>IP-Adresse:</strong>
+          <span>{{ selectedLog.ipAddress }}</span>
         </div>
         <div v-if="selectedLog.details" class="log-detail-item">
           <strong>Details:</strong>
@@ -133,12 +147,16 @@ import AdminTable from '../common/AdminTable.vue'
 
 interface LogEntry {
   id: string
-  level: 'debug' | 'info' | 'warning' | 'error'
+  level: 'info' | 'warning' | 'error' | 'success'
+  category: 'system_error' | 'failed_login' | 'email_sent' | 'successful_login'
   message: string
   details?: string
   source: string
   timestamp: string
   stackTrace?: string
+  userId?: string
+  email?: string
+  ipAddress?: string
 }
 
 // Props
@@ -155,16 +173,16 @@ defineProps<{
 const loading = ref(false)
 const error = ref<string | null>(null)
 const logEntries = ref<LogEntry[]>([])
-const selectedLevel = ref('')
+const selectedCategory = ref('')
 const selectedLog = ref<LogEntry | null>(null)
 
 // Table configuration
 const tableColumns = [
   {
     key: 'level',
-    label: 'Level',
+    label: 'Kategorie',
     sortable: true,
-    width: '100px',
+    width: '150px',
   },
   {
     key: 'timestamp',
@@ -176,7 +194,7 @@ const tableColumns = [
     key: 'source',
     label: 'Quelle',
     sortable: true,
-    width: '150px',
+    width: '120px',
   },
   {
     key: 'message',
@@ -194,14 +212,14 @@ const tableColumns = [
 
 // Computed
 const filteredLogs = computed(() => {
-  if (!selectedLevel.value) return logEntries.value
-  return logEntries.value.filter(log => log.level === selectedLevel.value)
+  if (!selectedCategory.value) return logEntries.value
+  return logEntries.value.filter(log => log.category === selectedCategory.value)
 })
 
 // Methods
 const getLevelClass = (level: string) => {
   const classes = {
-    debug: 'level-debug',
+    success: 'level-success',
     info: 'level-info',
     warning: 'level-warning',
     error: 'level-error',
@@ -211,12 +229,22 @@ const getLevelClass = (level: string) => {
 
 const getLevelIcon = (level: string) => {
   const icons = {
-    debug: '🔍',
-    info: 'ℹ️',
-    warning: '⚠️',
-    error: '❌',
+    success: '✅',
+    info: '📧',
+    warning: '🔒',
+    error: '🚨',
   }
   return icons[level as keyof typeof icons] || 'ℹ️'
+}
+
+const getCategoryLabel = (category: string) => {
+  const labels = {
+    system_error: 'Systemfehler',
+    failed_login: 'Falsches Passwort',
+    email_sent: 'E-Mail versendet',
+    successful_login: 'Anmeldung erfolgreich',
+  }
+  return labels[category as keyof typeof labels] || category
 }
 
 const formatTimestamp = (timestamp: string) => {
@@ -231,35 +259,94 @@ const formatTimestamp = (timestamp: string) => {
 }
 
 const generateMockLogs = (): LogEntry[] => {
-  const levels: LogEntry['level'][] = ['debug', 'info', 'warning', 'error']
-  const sources = ['AuthService', 'DatabaseManager', 'ApiController', 'UserManager', 'EmailService']
-  const messages = [
-    'Benutzer erfolgreich angemeldet',
-    'Datenbankverbindung hergestellt',
-    'API-Anfrage verarbeitet',
-    'Cache wurde geleert',
-    'Backup erstellt',
-    'Konfiguration geladen',
-    'Session abgelaufen',
-    'Fehler beim Laden der Daten',
-    'Warnung: Hohe CPU-Auslastung',
-    'Debug: Variable gesetzt',
-  ]
+  const categories: LogEntry['category'][] = ['system_error', 'failed_login', 'email_sent', 'successful_login']
+  const sources = ['AuthService', 'EmailService', 'DatabaseManager', 'UserManager', 'SystemMonitor']
+  
+  const logTemplates = {
+    system_error: [
+      'Datenbankverbindung fehlgeschlagen',
+      'API-Timeout bei externer Schnittstelle',
+      'Speicher-Limit erreicht',
+      'Konfigurationsfehler beim Laden',
+      'Backup-Prozess fehlgeschlagen',
+    ],
+    failed_login: [
+      'Fehlgeschlagener Anmeldeversuch',
+      'Ungültiges Passwort eingegeben',
+      'Zu viele Anmeldeversuche',
+      'Gesperrtes Benutzerkonto',
+      'Unbekannte E-Mail-Adresse',
+    ],
+    email_sent: [
+      'Willkommens-E-Mail versendet',
+      'Passwort-Reset E-Mail versendet',
+      'Benachrichtigung versendet',
+      'Newsletter versendet',
+      'Erinnerungs-E-Mail versendet',
+    ],
+    successful_login: [
+      'Benutzer erfolgreich angemeldet',
+      'Admin-Anmeldung erfolgreich',
+      'Mobile App Anmeldung',
+      'SSO-Anmeldung erfolgreich',
+      'API-Token Authentifizierung',
+    ]
+  }
 
-  return Array.from({ length: 50 }, (_, i) => {
-    const level = levels[Math.floor(Math.random() * levels.length)]
+  const emails = ['max.mustermann@example.com', 'anna.schmidt@test.de', 'john.doe@company.org', 'maria.garcia@mail.com']
+  const ips = ['192.168.1.100', '10.0.0.45', '172.16.0.23', '203.0.113.42']
+
+  return Array.from({ length: 100 }, (_, i) => {
+    const category = categories[Math.floor(Math.random() * categories.length)]
     const source = sources[Math.floor(Math.random() * sources.length)]
+    const messages = logTemplates[category]
     const message = messages[Math.floor(Math.random() * messages.length)]
     
-    return {
+    let level: LogEntry['level']
+    switch (category) {
+      case 'system_error':
+        level = 'error'
+        break
+      case 'failed_login':
+        level = 'warning'
+        break
+      case 'email_sent':
+        level = 'info'
+        break
+      case 'successful_login':
+        level = 'success'
+        break
+      default:
+        level = 'info'
+    }
+
+    const entry: LogEntry = {
       id: `log-${i + 1}`,
       level,
+      category,
       message,
-      details: level === 'error' ? 'Zusätzliche Fehlerdetails...' : undefined,
       source,
-      timestamp: new Date(Date.now() - Math.random() * 86400000).toISOString(),
-      stackTrace: level === 'error' ? 'at Function.example (file.js:123:45)\nat Object.handler (app.js:67:89)' : undefined,
+      timestamp: new Date(Date.now() - Math.random() * 86400000 * 7).toISOString(), // Last 7 days
     }
+
+    // Add specific details based on category
+    if (category === 'failed_login' || category === 'successful_login') {
+      entry.email = emails[Math.floor(Math.random() * emails.length)]
+      entry.userId = `user-${Math.floor(Math.random() * 1000) + 1}`
+      entry.ipAddress = ips[Math.floor(Math.random() * ips.length)]
+    }
+
+    if (category === 'email_sent') {
+      entry.email = emails[Math.floor(Math.random() * emails.length)]
+      entry.details = `E-Mail-ID: ${Math.random().toString(36).substr(2, 9)}`
+    }
+
+    if (category === 'system_error') {
+      entry.stackTrace = `at Function.${source}.process (${source.toLowerCase()}.js:${Math.floor(Math.random() * 200) + 1}:${Math.floor(Math.random() * 50) + 1})\nat Object.handler (app.js:${Math.floor(Math.random() * 100) + 1}:${Math.floor(Math.random() * 50) + 1})`
+      entry.details = 'Kritischer Systemfehler - Administrator benachrichtigt'
+    }
+
+    return entry
   }).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
 }
 
@@ -280,9 +367,9 @@ const refreshLogs = async () => {
   }
 }
 
-const filterByLevel = () => {
+const filterByCategory = () => {
   // Filter is handled by computed property
-  console.log('Filter nach Level:', selectedLevel.value)
+  console.log('Filter nach Kategorie:', selectedCategory.value)
 }
 
 const clearLogs = async () => {
@@ -347,14 +434,14 @@ onMounted(() => {
   text-transform: uppercase;
 }
 
-.level-debug {
-  background-color: #e3f2fd;
-  color: #1976d2;
+.level-success {
+  background-color: #e8f5e8;
+  color: #2e7d32;
 }
 
 .level-info {
-  background-color: #e8f5e8;
-  color: #2e7d32;
+  background-color: #e3f2fd;
+  color: #1976d2;
 }
 
 .level-warning {
