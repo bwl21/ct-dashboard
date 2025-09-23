@@ -295,7 +295,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import type { DashboardModule } from '@/types/modules'
 import type { TableColumn } from '@/types/table'
-import AdminTable from '@/components/shared/AdminTable.vue'
+import AdminTable from '@/components/common/AdminTable.vue'
 import ColorPicker from '@/components/common/ColorPicker.vue'
 import { useToast } from '@/composables/useToast'
 
