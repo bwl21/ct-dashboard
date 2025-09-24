@@ -82,15 +82,15 @@
       <div class="row-actions">
         <button
           @click="viewDetails(item)"
-          class="ct-btn ct-btn-sm ct-btn-outline"
+          class="action-btn action-btn-view"
           title="Details anzeigen"
         >
           👁️
         </button>
         <button
           @click="deleteLog(item.id)"
-          class="ct-btn ct-btn-sm ct-btn-danger"
-          title="Löschen"
+          class="action-btn action-btn-delete"
+          title="Aus Ansicht entfernen"
         >
           🗑️
         </button>
@@ -400,7 +400,76 @@ onMounted(() => {
 
 .row-actions {
   display: flex;
-  gap: 0.25rem;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Action Button Styles */
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--ct-border-color, #e0e0e0);
+  border-radius: var(--border-radius-sm, 4px);
+  background: var(--ct-bg-primary, #ffffff);
+  color: var(--ct-text-secondary, #6c757d);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+  text-decoration: none;
+}
+
+.action-btn:hover {
+  border-color: var(--ct-primary, #3498db);
+  background: var(--ct-bg-hover, #f8f9fa);
+  color: var(--ct-primary, #3498db);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.action-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.action-btn-view {
+  border-color: var(--ct-info, #17a2b8);
+  color: var(--ct-info, #17a2b8);
+}
+
+.action-btn-view:hover {
+  background: var(--ct-info, #17a2b8);
+  color: white;
+  border-color: var(--ct-info, #17a2b8);
+}
+
+.action-btn-delete {
+  border-color: var(--ct-warning, #ffc107);
+  color: var(--ct-warning, #ffc107);
+}
+
+.action-btn-delete:hover {
+  background: var(--ct-warning, #ffc107);
+  color: white;
+  border-color: var(--ct-warning, #ffc107);
+}
+
+.action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.action-btn:disabled:hover {
+  background: var(--ct-bg-primary, #ffffff);
+  color: var(--ct-text-secondary, #6c757d);
+  border-color: var(--ct-border-color, #e0e0e0);
+  transform: none;
+  box-shadow: none;
 }
 
 /* Modal Styles */
@@ -493,6 +562,83 @@ onMounted(() => {
 .stack-trace {
   color: var(--color-error);
   white-space: pre-wrap;
+}
+
+/* Ensure ct-btn styles are available */
+.ct-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border: 1px solid transparent;
+  border-radius: var(--border-radius-sm, 4px);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.5;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  gap: 0.5rem;
+}
+
+.ct-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ct-btn-primary {
+  background: var(--ct-primary, #3498db);
+  border-color: var(--ct-primary, #3498db);
+  color: white;
+}
+
+.ct-btn-primary:hover:not(:disabled) {
+  background: var(--ct-primary-dark, #2980b9);
+  border-color: var(--ct-primary-dark, #2980b9);
+}
+
+.ct-btn-danger {
+  background: var(--ct-danger, #dc3545);
+  border-color: var(--ct-danger, #dc3545);
+  color: white;
+}
+
+.ct-btn-danger:hover:not(:disabled) {
+  background: #c82333;
+  border-color: #bd2130;
+}
+
+.ct-btn-outline {
+  background: transparent;
+  border-color: var(--ct-border-color, #e0e0e0);
+  color: var(--ct-text-primary, #2c3e50);
+}
+
+.ct-btn-outline:hover:not(:disabled) {
+  background: var(--ct-bg-hover, #f8f9fa);
+  border-color: var(--ct-primary, #3498db);
+  color: var(--ct-primary, #3498db);
+}
+
+.ct-btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+.ct-select {
+  padding: 0.5rem;
+  border: 1px solid var(--ct-border-color, #e0e0e0);
+  border-radius: var(--border-radius-sm, 4px);
+  background: var(--ct-bg-primary, #ffffff);
+  color: var(--ct-text-primary, #2c3e50);
+  font-size: 0.875rem;
+  min-width: 150px;
+}
+
+.ct-select:focus {
+  outline: none;
+  border-color: var(--ct-primary, #3498db);
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
 }
 
 /* Responsive */
