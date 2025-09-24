@@ -106,8 +106,11 @@
       <div class="modal-body">
         <div class="log-detail-item">
           <strong>Kategorie:</strong>
-          <span class="log-level-badge" :class="getLevelClass(selectedLog.level)">
-            {{ getLevelIcon(selectedLog.level) }} {{ getCategoryLabel(selectedLog.category) }}
+          <span class="category-detail">
+            <span class="log-level-badge" :class="getLevelClass(selectedLog.level)">
+              <span class="icon">{{ getLevelIcon(selectedLog.level) }}</span>
+            </span>
+            <span class="category-text">{{ getCategoryLabel(selectedLog.category) }}</span>
           </span>
         </div>
         <div class="log-detail-item">
@@ -544,6 +547,17 @@ onMounted(() => {
 
 .log-detail-item {
   margin-bottom: var(--spacing-md);
+}
+
+.category-detail {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.category-text {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
 }
 
 .log-detail-item strong {
