@@ -30,12 +30,9 @@
         </select>
         <select v-model="selectedCategory" @change="filterByCategory" class="ct-select">
           <option value="">Alle Kategorien</option>
-          <option value="system_error">Systemfehler</option>
-          <option value="failed_login">Login-Fehler</option>
-          <option value="email_sent">Versendete Mails</option>
-          <option value="successful_login">Erfolgreiche Anmeldungen</option>
-          <option value="person_viewed">Personen angesehen</option>
-          <option value="other">Sonstige</option>
+          <option v-for="category in availableCategories" :key="category" :value="category">
+            {{ getCategoryDisplayName(category) }}
+          </option>
         </select>
         <button
           @click="resetFilters"
@@ -56,13 +53,13 @@
 
     <!-- Custom Cell Rendering -->
     <template #cell-level="{ item }">
-      <span class="log-level-badge" :class="getCategoryClass(item.category)">
+      <span class="log-level-badge" :class="getCategoryCssClass(item.category)">
         <span class="icon">{{ getCategoryIcon(item.category) }}</span>
       </span>
     </template>
 
     <template #cell-category="{ item }">
-      <span class="category-label">{{ getCategoryLabel(item.category) }}</span>
+      <span class="category-label">{{ getCategoryDisplayName(item.category) }}</span>
     </template>
 
     <template #cell-message="{ item }">
@@ -107,10 +104,10 @@
         <div class="log-detail-item">
           <strong>Kategorie:</strong>
           <span class="category-detail">
-            <span class="log-level-badge" :class="getCategoryClass(selectedLog.category)">
+            <span class="log-level-badge" :class="getCategoryCssClass(selectedLog.category)">
               <span class="icon">{{ getCategoryIcon(selectedLog.category) }}</span>
             </span>
-            <span class="category-text">{{ getCategoryLabel(selectedLog.category) }}</span>
+            <span class="category-text">{{ getCategoryDisplayName(selectedLog.category) }}</span>
           </span>
         </div>
         <div class="log-detail-item">
@@ -157,7 +154,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import AdminTable from '../common/AdminTable.vue'
-import { useLoggerSummary, type ProcessedLogEntry } from './useLoggerSummary'
+import { useLoggerSummary, type ProcessedLogEntry, LogCategory, getCategoryDisplayName, getCategoryIcon, getCategoryCssClass, getAllCategories } from './useLoggerSummary'
 
 // Use the ProcessedLogEntry type from the composable
 type LogEntry = ProcessedLogEntry
@@ -189,6 +186,9 @@ const adminTableRef = ref()
 const selectedCategory = ref('')
 const selectedDays = ref(3)
 const selectedLog = ref<LogEntry | null>(null)
+
+// Available categories for filter dropdown
+const availableCategories = getAllCategories()
 
 // Table configuration
 const tableColumns = [
@@ -254,42 +254,8 @@ const filteredLogs = computed(() => {
   return filtered
 })
 
-// Methods
-const getCategoryClass = (category: string) => {
-  const classes = {
-    system_error: 'category-error',
-    failed_login: 'category-warning',
-    email_sent: 'category-info',
-    successful_login: 'category-success',
-    person_viewed: 'category-info',
-    other: 'category-neutral'
-  }
-  return classes[category as keyof typeof classes] || 'category-neutral'
-}
-
-const getCategoryIcon = (category: string) => {
-  const icons = {
-    system_error: '🚨',
-    failed_login: '🔒',
-    email_sent: '📧',
-    successful_login: '✅',
-    person_viewed: '👤',
-    other: 'ℹ️'
-  }
-  return icons[category as keyof typeof icons] || 'ℹ️'
-}
-
-const getCategoryLabel = (category: string) => {
-  const labels = {
-    system_error: 'Systemfehler',
-    failed_login: 'Login-Fehler',
-    email_sent: 'E-Mails',
-    successful_login: 'Anmeldungen',
-    person_viewed: 'Personen angesehen',
-    other: 'Sonstige'
-  }
-  return labels[category as keyof typeof labels] || category
-}
+// Methods - now using centralized functions from useLoggerSummary
+// getCategoryDisplayName, getCategoryIcon, getCategoryCssClass are imported
 
 const formatTimestamp = (timestamp: string) => {
   return new Date(timestamp).toLocaleString('de-DE', {

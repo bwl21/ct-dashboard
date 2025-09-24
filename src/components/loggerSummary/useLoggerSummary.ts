@@ -15,11 +15,36 @@ export interface ChurchToolsLogEntry {
 
 // LogsApiResponse not needed - ChurchTools returns array directly
 
+// Log Categories
+export const LogCategory = {
+  SYSTEM_ERROR: 'system_error',
+  FAILED_LOGIN: 'failed_login', 
+  EMAIL_SENT: 'email_sent',
+  SUCCESSFUL_LOGIN: 'successful_login',
+  PERSON_VIEWED: 'person_viewed',
+  OTHER: 'other'
+} as const
+
+export type LogCategory = typeof LogCategory[keyof typeof LogCategory]
+
+// Category Rule Interface
+export interface CategoryRule {
+  category: LogCategory
+  priority: number
+  condition: (log: ChurchToolsLogEntry) => boolean
+  description: string
+  ui: {
+    displayName: string
+    icon: string
+    cssClass: string
+  }
+}
+
 // Processed Log Entry for Dashboard
 export interface ProcessedLogEntry {
   id: string
   level: 'info' | 'warning' | 'error' | 'success'
-  category: 'system_error' | 'failed_login' | 'email_sent' | 'successful_login' | 'person_viewed' | 'other'
+  category: LogCategory
   message: string
   details?: string
   source: string
@@ -50,6 +75,136 @@ export interface LogFilter {
   category?: string
   days?: number
 }
+
+// Helper functions for categorization conditions
+const messageIncludes = (...keywords: string[]) => 
+  (log: ChurchToolsLogEntry) => {
+    const message = log.message.toLowerCase()
+    return keywords.some(keyword => message.includes(keyword.toLowerCase()))
+  }
+
+const domainTypeIs = (...types: string[]) => 
+  (log: ChurchToolsLogEntry) => {
+    const domainType = log.domainType?.toLowerCase() || ''
+    return types.some(type => domainType.includes(type.toLowerCase()))
+  }
+
+const levelIs = (level: number) => 
+  (log: ChurchToolsLogEntry) => log.level === level
+
+const and = (...conditions: ((log: ChurchToolsLogEntry) => boolean)[]) => 
+  (log: ChurchToolsLogEntry) => conditions.every(condition => condition(log))
+
+const or = (...conditions: ((log: ChurchToolsLogEntry) => boolean)[]) => 
+  (log: ChurchToolsLogEntry) => conditions.some(condition => condition(log))
+
+// Categorization Rules (sorted by priority)
+const CATEGORIZATION_RULES: CategoryRule[] = [
+  {
+    category: LogCategory.FAILED_LOGIN,
+    priority: 100,
+    condition: and(
+        messageIncludes('Username or password'),
+        domainTypeIs('login')
+    ),
+    description: 'Fehlgeschlagene Login-Versuche',
+    ui: {
+      displayName: 'Login-Fehler',
+      icon: '🔒',
+      cssClass: 'category-warning'
+    }
+  },
+
+  {
+    category: LogCategory.SUCCESSFUL_LOGIN,
+    priority: 90,
+    condition: and(
+        messageIncludes('Erfolgreich angemeldet'),
+        domainTypeIs('login')
+
+    ),
+    description: 'Erfolgreiche Anmeldungen',
+    ui: {
+      displayName: 'Anmeldungen',
+      icon: '✅',
+      cssClass: 'category-success'
+    }
+  },
+
+  {
+    category: LogCategory.SYSTEM_ERROR,
+    priority: 80,
+    condition: and(
+      levelIs(1), // Warning-Level,
+      domainTypeIs('system')
+    ),
+    description: 'Systemfehler und Exceptions',
+    ui: {
+      displayName: 'Systemfehler',
+      icon: '🚨',
+      cssClass: 'category-error'
+    }
+  },
+
+  {
+    category: LogCategory.EMAIL_SENT,
+    priority: 70,
+    condition: and(
+      or(
+        domainTypeIs('mail', 'email'),
+        messageIncludes('mail', 'email')
+      ),
+      messageIncludes('Speichere Mail an')
+    ),
+    description: 'Versendete E-Mails',
+    ui: {
+      displayName: 'E-Mails',
+      icon: '📧',
+      cssClass: 'category-info'
+    }
+  },
+
+  {
+    category: LogCategory.PERSON_VIEWED,
+    priority: 60,
+    condition: and(levelIs(3),
+    messageIncludes('getpersondetails')),
+    description: 'Angesehene Personen',
+    ui: {
+      displayName: 'Personen angesehen',
+      icon: '👤',
+      cssClass: 'category-info'
+    }
+  },
+
+  {
+    category: LogCategory.OTHER,
+    priority: 10,
+    condition: () => false, // Fallback - always matches
+    description: 'Sonstige Log-Einträge',
+    ui: {
+      displayName: 'Sonstige',
+      icon: 'ℹ️',
+      cssClass: 'category-neutral'
+    }
+  }
+]
+
+// Helper functions for UI mappings
+export const getCategoryRule = (category: LogCategory) => 
+  CATEGORIZATION_RULES.find(rule => rule.category === category)
+
+export const getAllCategories = () => 
+  CATEGORIZATION_RULES.map(rule => rule.category)
+
+export const getCategoryDisplayName = (category: LogCategory) => 
+  getCategoryRule(category)?.ui.displayName || category
+
+export const getCategoryIcon = (category: LogCategory) => 
+  getCategoryRule(category)?.ui.icon || 'ℹ️'
+
+export const getCategoryCssClass = (category: LogCategory) => 
+  getCategoryRule(category)?.ui.cssClass || 'category-neutral'
 
 export function useLoggerSummary() {
   // State
@@ -196,65 +351,40 @@ export function useLoggerSummary() {
    * Map log level based on category for better visual representation
    * Note: Level is only used for categorization support, not for display
    */
-  function mapLogLevelByCategory(originalLevel: number, category: ProcessedLogEntry['category']): ProcessedLogEntry['level'] {
+  function mapLogLevelByCategory(originalLevel: number, category: LogCategory): ProcessedLogEntry['level'] {
     switch (category) {
-      case 'system_error':
+      case LogCategory.SYSTEM_ERROR:
         return 'error'
-      case 'failed_login':
+      case LogCategory.FAILED_LOGIN:
         return 'warning'
-      case 'email_sent':
+      case LogCategory.EMAIL_SENT:
         return 'info'
-      case 'successful_login':
+      case LogCategory.SUCCESSFUL_LOGIN:
         return 'success'
-      case 'person_viewed':
+      case LogCategory.PERSON_VIEWED:
         return 'info'
-      case 'other':
+      case LogCategory.OTHER:
       default:
         return mapLogLevel(originalLevel)
     }
   }
 
   /**
-   * Categorize logs based on content and domain type
+   * Categorize logs based on priority-ordered rules
    */
-  function categorizeLog(log: ChurchToolsLogEntry): ProcessedLogEntry['category'] {
-    const message = log.message.toLowerCase()
-    const domainType = log.domainType?.toLowerCase() || ''
+  function categorizeLog(log: ChurchToolsLogEntry): LogCategory {
+    // Find all matching rules and sort by priority
+    const matchingRules = CATEGORIZATION_RULES
+      .filter(rule => rule.condition(log))
+      .sort((a, b) => b.priority - a.priority)
 
-    // System errors
-    if (log.level === 1 || message.includes('error') || message.includes('fehler') || 
-        message.includes('exception') || message.includes('failed') || 
-        message.includes('timeout') || message.includes('connection')) {
-      return 'system_error'
+    // Optional: Logging for debugging
+    if (process.env.NODE_ENV === 'development' && matchingRules.length > 1) {
+      console.log(`Log "${log.message}" matches multiple rules:`, 
+        matchingRules.map(r => `${r.category} (${r.priority})`))
     }
 
-    // Person viewed (getPersonDetails API calls)
-    if (message.includes('getpersondetails') || message.includes('person details') ||
-        message.includes('person viewed') || message.includes('person angesehen')) {
-      return 'person_viewed'
-    }
-
-    // Login related
-    if (domainType === 'login' || message.includes('login') || message.includes('anmeld') ||
-        message.includes('password') || message.includes('passwort') || 
-        message.includes('authentication') || message.includes('session')) {
-      
-      if (message.includes('successful') || message.includes('erfolgreich') || 
-          message.includes('logged in') || log.level === 3) {
-        return 'successful_login'
-      } else {
-        return 'failed_login'
-      }
-    }
-
-    // Email related
-    if (domainType === 'mail' || domainType === 'email' || 
-        message.includes('mail') || message.includes('email') ||
-        message.includes('sent') || message.includes('versendet')) {
-      return 'email_sent'
-    }
-
-    return 'other'
+    return matchingRules.length > 0 ? matchingRules[0].category : LogCategory.OTHER
   }
 
   /**
@@ -293,19 +423,19 @@ export function useLoggerSummary() {
 
     processedLogs.forEach(log => {
       switch (log.category) {
-        case 'system_error':
+        case LogCategory.SYSTEM_ERROR:
           stats.systemErrors++
           break
-        case 'failed_login':
+        case LogCategory.FAILED_LOGIN:
           stats.failedLogins++
           break
-        case 'email_sent':
+        case LogCategory.EMAIL_SENT:
           stats.emailsSent++
           break
-        case 'successful_login':
+        case LogCategory.SUCCESSFUL_LOGIN:
           stats.successfulLogins++
           break
-        case 'person_viewed':
+        case LogCategory.PERSON_VIEWED:
           stats.personViewed++
           break
       }
