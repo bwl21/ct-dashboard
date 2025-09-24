@@ -36,11 +36,11 @@
           <option value="other">Sonstige</option>
         </select>
         <button
-          @click="clearLogs"
-          class="ct-btn ct-btn-danger"
+          @click="resetFilters"
+          class="ct-btn ct-btn-secondary"
           :disabled="loading"
         >
-          Ansicht leeren
+          Filter zurücksetzen
         </button>
         <button
           @click="refreshLogs"
@@ -86,13 +86,6 @@
           title="Details anzeigen"
         >
           👁️
-        </button>
-        <button
-          @click="deleteLog(item.id)"
-          class="action-btn action-btn-delete"
-          title="Aus Ansicht entfernen"
-        >
-          🗑️
         </button>
       </div>
     </template>
@@ -299,19 +292,15 @@ const changeDaysFilter = () => {
   refreshLogs() // Reload logs with new time range
 }
 
-const clearLogs = async () => {
-  if (!confirm('Möchten Sie wirklich alle angezeigten Log-Einträge aus der Ansicht entfernen?')) return
+const resetFilters = () => {
+  // Reset all filters to default values
+  selectedCategory.value = ''
+  selectedDays.value = 3
   
-  // Clear the logs array (this doesn't delete from ChurchTools, just clears the view)
-  logEntries.value = []
-  console.log('Alle Logs aus der Ansicht entfernt')
-}
-
-const deleteLog = async (id: string) => {
-  if (!confirm('Möchten Sie diesen Log-Eintrag aus der Ansicht entfernen?')) return
+  // Reload logs with default settings
+  refreshLogs()
   
-  logEntries.value = logEntries.value.filter(log => log.id !== id)
-  console.log('Log aus Ansicht entfernt:', id)
+  console.log('Filter zurückgesetzt')
 }
 
 const viewDetails = (log: LogEntry) => {
@@ -447,16 +436,7 @@ onMounted(() => {
   border-color: var(--ct-info, #17a2b8);
 }
 
-.action-btn-delete {
-  border-color: var(--ct-warning, #ffc107);
-  color: var(--ct-warning, #ffc107);
-}
 
-.action-btn-delete:hover {
-  background: var(--ct-warning, #ffc107);
-  color: white;
-  border-color: var(--ct-warning, #ffc107);
-}
 
 .action-btn:disabled {
   opacity: 0.5;
@@ -606,6 +586,17 @@ onMounted(() => {
 .ct-btn-danger:hover:not(:disabled) {
   background: #c82333;
   border-color: #bd2130;
+}
+
+.ct-btn-secondary {
+  background: var(--ct-secondary, #6c757d);
+  border-color: var(--ct-secondary, #6c757d);
+  color: white;
+}
+
+.ct-btn-secondary:hover:not(:disabled) {
+  background: var(--ct-secondary-dark, #5a6268);
+  border-color: var(--ct-secondary-dark, #5a6268);
 }
 
 .ct-btn-outline {
