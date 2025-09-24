@@ -1,5 +1,5 @@
 <template>
-  <div class="ct-card feature-card base-card" :class="{ loading: isLoading }">
+  <div class="ct-card feature-card base-card" :class="{ loading: isLoading }" :style="cardStyle">
     <div class="ct-card-header">
       <div class="header-content">
         <div class="large-icon">{{ icon }}</div>
@@ -93,6 +93,8 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+
 interface StatItem {
   key: string
   value: number | string
@@ -106,7 +108,7 @@ interface MainStat {
   label: string
 }
 
-defineProps<{
+const props = defineProps<{
   title: string
   icon: string
   isLoading?: boolean
@@ -121,6 +123,22 @@ defineProps<{
   detailsText?: string
   lastUpdateText?: string
 }>()
+
+// Calculate card height based on number of categories
+const cardStyle = computed(() => {
+  const headerHeight = 80 // Large icon header
+  const tableHeaderHeight = 32 // Table header
+  const rowHeight = 40 // Each table row
+  const footerHeight = 40 // Footer
+  const padding = 16 // Card padding
+  
+  const expectedRows = props.statusStats.length
+  const calculatedHeight = headerHeight + tableHeaderHeight + (expectedRows * rowHeight) + footerHeight + padding
+  
+  return {
+    minHeight: `${calculatedHeight}px`
+  }
+})
 
 defineEmits<{
   navigate: []
