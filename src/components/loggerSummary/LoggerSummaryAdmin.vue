@@ -57,8 +57,11 @@
     <template #cell-level="{ item }">
       <span class="log-level-badge" :class="getLevelClass(item.level)">
         <span class="icon">{{ getLevelIcon(item.level) }}</span>
-        {{ getCategoryLabel(item.category) }}
       </span>
+    </template>
+
+    <template #cell-category="{ item }">
+      <span class="category-label">{{ getCategoryLabel(item.category) }}</span>
     </template>
 
     <template #cell-message="{ item }">
@@ -196,6 +199,7 @@ const tableColumns = [
     sortable: true,
     width: 140,
     resizable: true,
+    cellSlot: 'cell-category',
   },
   {
     key: 'timestamp',
@@ -350,11 +354,14 @@ onMounted(() => {
 .log-level-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.375rem 0.75rem;
-  border-radius: var(--border-radius-sm);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  min-width: 60px;
+  text-align: center;
 }
 
 .log-level-badge .icon {
@@ -383,6 +390,11 @@ onMounted(() => {
   background-color: rgba(220, 53, 69, 0.1);
   color: #dc3545;
   border: 1px solid rgba(220, 53, 69, 0.2);
+}
+
+.category-label {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
 }
 
 .log-message {

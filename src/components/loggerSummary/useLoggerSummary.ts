@@ -161,10 +161,12 @@ export function useLoggerSummary() {
    */
   function processLogs(rawLogs: ChurchToolsLogEntry[]): ProcessedLogEntry[] {
     return rawLogs.map(log => {
+      const category = categorizeLog(log)
+      
       const processed: ProcessedLogEntry = {
         id: `ct-log-${log.id}`,
-        level: mapLogLevel(log.level),
-        category: categorizeLog(log),
+        level: mapLogLevelByCategory(log.level, category),
+        category: category,
         message: log.message,
         source: log.domainType || 'System',
         timestamp: log.date,
@@ -190,10 +192,29 @@ export function useLoggerSummary() {
    */
   function mapLogLevel(level: number): ProcessedLogEntry['level'] {
     switch (level) {
-      case 1: return 'warning' // Warning
+      case 1: return 'error'   // Warning -> Error (for system errors)
       case 2: return 'info'    // Notice  
       case 3: return 'info'    // Info
       default: return 'info'
+    }
+  }
+
+  /**
+   * Map log level based on category for better visual representation
+   */
+  function mapLogLevelByCategory(originalLevel: number, category: ProcessedLogEntry['category']): ProcessedLogEntry['level'] {
+    switch (category) {
+      case 'system_error':
+        return 'error'
+      case 'failed_login':
+        return 'warning'
+      case 'email_sent':
+        return 'info'
+      case 'successful_login':
+        return 'success'
+      case 'other':
+      default:
+        return mapLogLevel(originalLevel)
     }
   }
 
