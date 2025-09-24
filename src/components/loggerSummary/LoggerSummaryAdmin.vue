@@ -56,7 +56,8 @@
     <!-- Custom Cell Rendering -->
     <template #cell-level="{ item }">
       <span class="log-level-badge" :class="getLevelClass(item.level)">
-        {{ getLevelIcon(item.level) }} {{ getCategoryLabel(item.category) }}
+        <span class="icon">{{ getLevelIcon(item.level) }}</span>
+        {{ getCategoryLabel(item.category) }}
       </span>
     </template>
 
@@ -183,7 +184,7 @@ const selectedLog = ref<LogEntry | null>(null)
 const tableColumns = [
   {
     key: 'level',
-    label: 'Level',
+    label: 'Typ',
     sortable: true,
     width: 100,
     resizable: true,
@@ -232,7 +233,6 @@ const tableColumns = [
 
 // Computed
 const filteredLogs = computed(() => {
-  console.log('filteredLogs computed - Category:', selectedCategory.value, 'Logs count:', logEntries.value.length)
   if (!selectedCategory.value) return logEntries.value
   return filterLogsByCategory(logEntries.value, selectedCategory.value)
 })
@@ -261,9 +261,10 @@ const getLevelIcon = (level: string) => {
 const getCategoryLabel = (category: string) => {
   const labels = {
     system_error: 'Systemfehler',
-    failed_login: 'Falsches Passwort',
-    email_sent: 'E-Mail versendet',
-    successful_login: 'Anmeldung erfolgreich',
+    failed_login: 'Login-Fehler',
+    email_sent: 'E-Mails',
+    successful_login: 'Anmeldungen',
+    other: 'Sonstige'
   }
   return labels[category as keyof typeof labels] || category
 }
@@ -349,32 +350,39 @@ onMounted(() => {
 .log-level-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.25rem 0.5rem;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
   border-radius: var(--border-radius-sm);
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  text-transform: uppercase;
+}
+
+.log-level-badge .icon {
+  font-size: 1.2em;
 }
 
 .level-success {
-  background-color: #e8f5e8;
-  color: #2e7d32;
+  background-color: rgba(40, 167, 69, 0.1);
+  color: #28a745;
+  border: 1px solid rgba(40, 167, 69, 0.2);
 }
 
 .level-info {
-  background-color: #e3f2fd;
-  color: #1976d2;
+  background-color: rgba(52, 152, 219, 0.1);
+  color: #3498db;
+  border: 1px solid rgba(52, 152, 219, 0.2);
 }
 
 .level-warning {
-  background-color: #fff3e0;
-  color: #f57c00;
+  background-color: rgba(243, 156, 18, 0.1);
+  color: #f39c12;
+  border: 1px solid rgba(243, 156, 18, 0.2);
 }
 
 .level-error {
-  background-color: #ffebee;
-  color: #d32f2f;
+  background-color: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+  border: 1px solid rgba(220, 53, 69, 0.2);
 }
 
 .log-message {
