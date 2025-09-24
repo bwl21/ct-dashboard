@@ -1,10 +1,13 @@
 <template>
   <div class="ct-card feature-card base-card" :class="{ loading: isLoading }">
     <div class="ct-card-header">
-      <h3 class="ct-card-title">
-        <span class="card-icon">{{ icon }}</span>
-        {{ title }}
-      </h3>
+      <div class="header-content">
+        <div class="large-icon">{{ icon }}</div>
+        <div class="title-section">
+          <h3 class="ct-card-title">{{ title }}</h3>
+          <span class="total-count">{{ mainStat.value }} Einträge</span>
+        </div>
+      </div>
       <div class="ct-card-actions">
         <button type="button" class="ct-btn-icon" @click.stop="$emit('navigate')">
           <svg
@@ -40,39 +43,50 @@
         </slot>
       </div>
 
-      <div v-else class="card-stats">
-        <div class="main-stat">
-          <div class="stat-number">{{ mainStat.value }}</div>
-          <div class="stat-label">{{ mainStat.label }}</div>
-        </div>
-
-        <div class="status-breakdown">
-          <div v-for="stat in statusStats" :key="stat.key" class="status-item" :class="stat.type">
-            <div class="status-icon">{{ stat.icon }}</div>
-            <div class="status-info">
-              <div class="status-number">{{ stat.value }}</div>
-              <div class="status-label">{{ stat.label }}</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="last-update" v-if="lastUpdate">{{ lastUpdateText }}: {{ lastUpdate }}</div>
+      <!-- Compact Table Layout -->
+      <div v-else class="table-content">
+        <table class="stats-table">
+          <thead>
+            <tr>
+              <th class="col-icon">Typ</th>
+              <th class="col-category">Anzahl Kategorie</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="stat in statusStats" :key="stat.key" class="table-row">
+              <td class="icon-cell">
+                <span class="status-badge" :class="getStatusClass(stat.type)">
+                  <span class="icon">{{ stat.icon }}</span>
+                </span>
+              </td>
+              <td class="category-cell">
+                <div class="category-info">
+                  <span class="category-count">{{ stat.value }}</span>
+                  <span class="category-name">{{ stat.label }}</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       <div class="ct-card-footer">
-        <button
-          type="button"
-          @click="$emit('refresh')"
-          class="ct-btn ct-btn-primary ct-btn-sm"
-          :disabled="isLoading"
-        >
-          {{ isLoading ? refreshingText : refreshText }}
-        </button>
-        <slot name="actions">
-          <button type="button" @click="$emit('navigate')" class="ct-btn ct-btn-sm ct-btn-outline">
-            {{ detailsText }}
+        <span v-if="lastUpdate" class="last-update">{{ lastUpdate }}</span>
+        <div class="footer-actions">
+          <button
+            type="button"
+            @click="$emit('refresh')"
+            class="ct-btn ct-btn-primary ct-btn-sm"
+            :disabled="isLoading"
+          >
+            {{ isLoading ? refreshingText : refreshText }}
           </button>
-        </slot>
+          <slot name="actions">
+            <button type="button" @click="$emit('navigate')" class="ct-btn ct-btn-sm ct-btn-outline">
+              {{ detailsText }}
+            </button>
+          </slot>
+        </div>
       </div>
     </div>
   </div>
@@ -113,6 +127,17 @@ defineEmits<{
   refresh: []
   retry: []
 }>()
+
+// Status class mapping for table layout
+const getStatusClass = (type?: string) => {
+  const classMap = {
+    error: 'status-error',
+    warning: 'status-warning',
+    info: 'status-info',
+    success: 'status-success',
+  }
+  return classMap[type as keyof typeof classMap] || 'status-neutral'
+}
 </script>
 
 <style scoped>
@@ -132,9 +157,9 @@ defineEmits<{
 .base-card .ct-card-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  min-height: 72px;
-  padding: 0 var(--spacing-lg);
+  align-items: flex-start;
+  min-height: 60px;
+  padding: var(--spacing-md) var(--spacing-lg);
   border-bottom: 1px solid var(--color-border-light);
   background-color: var(--color-background);
   box-sizing: border-box;
@@ -148,7 +173,6 @@ defineEmits<{
   display: flex;
   align-items: center;
   line-height: var(--line-height-tight);
-  padding: 1.25rem 0;
 }
 
 .base-card .card-icon {
@@ -163,7 +187,7 @@ defineEmits<{
 
 .base-card .ct-card-body {
   flex: 1;
-  padding: var(--spacing-lg);
+  padding: 0;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -376,6 +400,178 @@ defineEmits<{
   color: #007bff;
 }
 
+/* Header Layout */
+.header-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.large-icon {
+  width: 60px;
+  height: 60px;
+  background: var(--color-background-secondary);
+  border-radius: var(--border-radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border-light);
+}
+
+.title-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.ct-card-title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  line-height: var(--line-height-tight);
+}
+
+.total-count {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-normal);
+}
+
+.table-content {
+  padding: 0;
+  flex: 1;
+}
+
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.stats-table th {
+  text-align: left;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  background: var(--color-background);
+  border-bottom: 1px solid var(--color-border);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  height: 32px;
+}
+
+.col-icon {
+  width: 40px;
+}
+
+.col-category {
+  width: auto;
+}
+
+.table-row {
+  transition: var(--transition-fast);
+}
+
+.table-row:hover {
+  background: var(--color-background);
+}
+
+.icon-cell {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  width: 40px;
+}
+
+.category-cell {
+  padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
+}
+
+.category-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.category-count {
+  font-weight: var(--font-weight-bold);
+  min-width: 40px;
+  text-align: right;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+}
+
+.category-name {
+  flex: 1;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-xs);
+}
+
+/* Status Badge Colors */
+.status-error {
+  background-color: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+  border: 1px solid rgba(220, 53, 69, 0.2);
+}
+
+.status-warning {
+  background-color: rgba(243, 156, 18, 0.1);
+  color: #f39c12;
+  border: 1px solid rgba(243, 156, 18, 0.2);
+}
+
+.status-info {
+  background-color: rgba(52, 152, 219, 0.1);
+  color: #3498db;
+  border: 1px solid rgba(52, 152, 219, 0.2);
+}
+
+.status-success {
+  background-color: rgba(40, 167, 69, 0.1);
+  color: #28a745;
+  border: 1px solid rgba(40, 167, 69, 0.2);
+}
+
+.status-neutral {
+  background-color: rgba(108, 117, 125, 0.1);
+  color: #6c757d;
+  border: 1px solid rgba(108, 117, 125, 0.2);
+}
+
+/* Compact Footer */
+.ct-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-background);
+  min-height: 40px;
+}
+
+.ct-card-footer .last-update {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.footer-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .base-card .ct-card-header {
@@ -401,6 +597,22 @@ defineEmits<{
 
   .ct-btn {
     width: 100%;
+  }
+
+  .table-layout .header-left {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+  }
+
+  .compact-footer {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    align-items: flex-start;
+  }
+
+  .footer-actions {
+    align-self: flex-end;
   }
 }
 
