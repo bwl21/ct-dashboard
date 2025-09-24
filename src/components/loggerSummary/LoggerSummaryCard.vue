@@ -22,7 +22,7 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import BaseCard from '../common/BaseCard.vue'
-import { useLoggerSummary } from './useLoggerSummary'
+import { useLoggerSummary, LogCategory, getCategoryDisplayName, getCategoryIcon } from './useLoggerSummary'
 
 // Props
 defineProps<{
@@ -57,36 +57,36 @@ const statusStats = computed(() => [
   {
     key: 'systemErrors',
     value: statistics.value.systemErrors,
-    label: 'Systemfehler',
-    icon: '🚨',
+    label: getCategoryDisplayName(LogCategory.SYSTEM_ERROR),
+    icon: getCategoryIcon(LogCategory.SYSTEM_ERROR),
     type: 'error' as const,
   },
   {
     key: 'failedLogins',
     value: statistics.value.failedLogins,
-    label: 'Login-Fehler',
-    icon: '🔒',
+    label: getCategoryDisplayName(LogCategory.FAILED_LOGIN),
+    icon: getCategoryIcon(LogCategory.FAILED_LOGIN),
     type: 'warning' as const,
   },
   {
     key: 'emailsSent',
     value: statistics.value.emailsSent,
-    label: 'E-Mails',
-    icon: '📧',
+    label: getCategoryDisplayName(LogCategory.EMAIL_SENT),
+    icon: getCategoryIcon(LogCategory.EMAIL_SENT),
     type: 'info' as const,
   },
   {
     key: 'successfulLogins',
     value: statistics.value.successfulLogins,
-    label: 'Anmeldungen',
-    icon: '✅',
+    label: getCategoryDisplayName(LogCategory.SUCCESSFUL_LOGIN),
+    icon: getCategoryIcon(LogCategory.SUCCESSFUL_LOGIN),
     type: 'success' as const,
   },
   {
     key: 'personViewed',
     value: statistics.value.personViewed,
-    label: 'Personen angesehen',
-    icon: '👤',
+    label: getCategoryDisplayName(LogCategory.PERSON_VIEWED),
+    icon: getCategoryIcon(LogCategory.PERSON_VIEWED),
     type: 'info' as const,
   },
 ])
