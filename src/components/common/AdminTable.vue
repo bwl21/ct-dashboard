@@ -357,6 +357,8 @@ defineExpose({
   padding: 1rem 1.5rem;
   border-bottom: 1px solid var(--ct-border-color, #e0e0e0);
   margin: 0 -1.5rem 0 -1.5rem;
+  height: 80px;
+  box-sizing: border-box;
 }
 
 .table-title {
@@ -459,10 +461,9 @@ defineExpose({
 .admin-data-table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed;
+  table-layout: auto;
   margin: 0;
   padding: 0;
-  min-width: 1150px;
 }
 
 .admin-data-table th {
@@ -474,10 +475,9 @@ defineExpose({
   background-color: var(--ct-bg-secondary, #f8f9fa);
   white-space: nowrap;
   position: sticky;
-  top: 0;
-  z-index: 10;
+  top: 80px;
+  z-index: 15;
   letter-spacing: 0.02em;
-  overflow: visible;
   box-sizing: border-box;
   border-bottom: 2px solid var(--ct-border-color, #e0e0e0);
 }
@@ -494,7 +494,6 @@ defineExpose({
 .admin-data-table th.sortable {
   cursor: pointer;
   user-select: none;
-  position: relative;
 }
 
 .admin-data-table th.sortable:hover {
@@ -504,6 +503,9 @@ defineExpose({
 .admin-data-table th.active {
   color: var(--ct-primary, #3498db);
   font-weight: 600;
+  position: sticky;
+  top: 80px;
+  z-index: 15;
 }
 
 .sort-indicator {

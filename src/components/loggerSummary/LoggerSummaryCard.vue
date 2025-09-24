@@ -11,7 +11,7 @@
     retry-text="Mock-Daten laden"
     refresh-text="Aktualisieren"
     refreshing-text="Lädt..."
-    details-text="Details anzeigen"
+    details-text="Details"
     last-update-text="Letzte Aktualisierung"
     @navigate="handleNavigate"
     @refresh="refreshData"
@@ -50,7 +50,7 @@ const {
 // Computed properties
 const mainStat = computed(() => ({
   value: statistics.value.total,
-  label: 'Log Einträge',
+  label: 'Einträge',
 }))
 
 const statusStats = computed(() => [
@@ -81,6 +81,13 @@ const statusStats = computed(() => [
     label: 'Anmeldungen',
     icon: '✅',
     type: 'success' as const,
+  },
+  {
+    key: 'personViewed',
+    value: statistics.value.personViewed,
+    label: 'Personen angesehen',
+    icon: '👤',
+    type: 'info' as const,
   },
 ])
 

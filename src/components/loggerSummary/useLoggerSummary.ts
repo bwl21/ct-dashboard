@@ -19,7 +19,7 @@ export interface ChurchToolsLogEntry {
 export interface ProcessedLogEntry {
   id: string
   level: 'info' | 'warning' | 'error' | 'success'
-  category: 'system_error' | 'failed_login' | 'email_sent' | 'successful_login' | 'other'
+  category: 'system_error' | 'failed_login' | 'email_sent' | 'successful_login' | 'person_viewed' | 'other'
   message: string
   details?: string
   source: string
@@ -37,6 +37,7 @@ export interface LogStatistics {
   failedLogins: number
   emailsSent: number
   successfulLogins: number
+  personViewed: number
 }
 
 // Filter Options
@@ -192,6 +193,7 @@ export function useLoggerSummary() {
 
   /**
    * Map log level based on category for better visual representation
+   * Note: Level is only used for categorization support, not for display
    */
   function mapLogLevelByCategory(originalLevel: number, category: ProcessedLogEntry['category']): ProcessedLogEntry['level'] {
     switch (category) {
@@ -203,6 +205,8 @@ export function useLoggerSummary() {
         return 'info'
       case 'successful_login':
         return 'success'
+      case 'person_viewed':
+        return 'info'
       case 'other':
       default:
         return mapLogLevel(originalLevel)
@@ -221,6 +225,12 @@ export function useLoggerSummary() {
         message.includes('exception') || message.includes('failed') || 
         message.includes('timeout') || message.includes('connection')) {
       return 'system_error'
+    }
+
+    // Person viewed (getPersonDetails API calls)
+    if (message.includes('getpersondetails') || message.includes('person details') ||
+        message.includes('person viewed') || message.includes('person angesehen')) {
+      return 'person_viewed'
     }
 
     // Login related
@@ -276,7 +286,8 @@ export function useLoggerSummary() {
       systemErrors: 0,
       failedLogins: 0,
       emailsSent: 0,
-      successfulLogins: 0
+      successfulLogins: 0,
+      personViewed: 0
     }
 
     processedLogs.forEach(log => {
@@ -292,6 +303,9 @@ export function useLoggerSummary() {
           break
         case 'successful_login':
           stats.successfulLogins++
+          break
+        case 'person_viewed':
+          stats.personViewed++
           break
       }
     })
@@ -323,6 +337,7 @@ export function useLoggerSummary() {
         failedLogins: 0,
         emailsSent: 0,
         successfulLogins: 0,
+        personViewed: 0,
       }
     } finally {
       loading.value = false
@@ -389,6 +404,7 @@ export function useLoggerSummary() {
         failedLogins: 0,
         emailsSent: 0,
         successfulLogins: 0,
+        personViewed: 0,
       }
     } finally {
       loading.value = false
