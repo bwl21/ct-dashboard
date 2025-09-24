@@ -122,9 +122,13 @@
           <strong>Nachricht:</strong>
           <p>{{ selectedLog.message }}</p>
         </div>
-        <div v-if="selectedLog.userId" class="log-detail-item">
-          <strong>Benutzer-ID:</strong>
-          <span>{{ selectedLog.userId }}</span>
+        <div class="log-detail-item">
+          <strong>Akteur:</strong>
+          <span>{{ getActorDisplay(selectedLog) }}</span>
+        </div>
+        <div v-if="selectedLog.simulatePersonId" class="log-detail-item">
+          <strong>Simuliert von:</strong>
+          <span>Person ID: {{ selectedLog.simulatePersonId }}</span>
         </div>
         <div v-if="selectedLog.domainType" class="log-detail-item">
           <strong>Domain-Typ:</strong>
@@ -256,6 +260,16 @@ const filteredLogs = computed(() => {
 
 // Methods - now using centralized functions from useLoggerSummary
 // getCategoryDisplayName, getCategoryIcon, getCategoryCssClass are imported
+
+const getActorDisplay = (log: LogEntry) => {
+  if (log.personId === -1) {
+    return 'System'
+  } else if (log.personId) {
+    return `Person ID: ${log.personId}`
+  } else {
+    return 'Unbekannt'
+  }
+}
 
 const formatTimestamp = (timestamp: string) => {
   return new Date(timestamp).toLocaleString('de-DE', {

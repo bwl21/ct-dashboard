@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue'
 import { churchtoolsClient } from '@churchtools/churchtools-client'
 
-// ChurchTools Log API Types
+// ChurchTools Log API Types (raw from API)
 export interface ChurchToolsLogEntry {
   id: number
   date: string // ISO timestamp
@@ -10,7 +10,7 @@ export interface ChurchToolsLogEntry {
   domainType: string
   domainId: number
   personId: number // -1 = system
-  simultePersonId?: number | null
+  simulatePersonId?: number | null // NOTE: OpenAPI spec has typo "simultePersonId" but API actually returns "simulatePersonId"
 }
 
 // LogsApiResponse not needed - ChurchTools returns array directly
@@ -40,7 +40,7 @@ export interface CategoryRule {
   }
 }
 
-// Processed Log Entry for Dashboard
+// Processed Log Entry for Dashboard (using correct naming internally)
 export interface ProcessedLogEntry {
   id: string
   level: 'info' | 'warning' | 'error' | 'success'
@@ -50,6 +50,8 @@ export interface ProcessedLogEntry {
   source: string
   timestamp: string
   userId?: string
+  personId: number
+  simulatePersonId?: number | null // Correct spelling used internally
   originalLevel: number
   domainType: string
   domainId: number
@@ -206,6 +208,8 @@ export const getCategoryIcon = (category: LogCategory) =>
 export const getCategoryCssClass = (category: LogCategory) => 
   getCategoryRule(category)?.ui.cssClass || 'category-neutral'
 
+// Helper function is no longer needed since API uses correct spelling
+
 export function useLoggerSummary() {
   // State
   const loading = ref(false)
@@ -320,7 +324,9 @@ export function useLoggerSummary() {
         timestamp: log.date,
         originalLevel: log.level,
         domainType: log.domainType,
-        domainId: log.domainId
+        domainId: log.domainId,
+        personId: log.personId,
+        simulatePersonId: log.simulatePersonId // API correctly uses simulatePersonId
       }
 
       // Add user information
@@ -397,8 +403,8 @@ export function useLoggerSummary() {
       details.push(`${log.domainType} ID: ${log.domainId}`)
     }
 
-    if (log.simultePersonId) {
-      details.push(`Simuliert von Person ID: ${log.simultePersonId}`)
+    if (log.simulatePersonId) {
+      details.push(`Simuliert von Person ID: ${log.simulatePersonId}`)
     }
 
     if (log.personId === -1) {
