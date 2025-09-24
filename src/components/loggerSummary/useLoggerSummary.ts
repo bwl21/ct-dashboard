@@ -77,8 +77,6 @@ export function useLoggerSummary() {
     const maxLogsPerRequest = 100 // ChurchTools API limit
     const maxTotalLogs = 1000 // Safety limit
 
-    console.log('Fetching logs from ChurchTools API with pagination...')
-
     while (hasMorePages && allLogs.length < maxTotalLogs) {
       try {
         const params = new URLSearchParams()
@@ -97,11 +95,7 @@ export function useLoggerSummary() {
         params.append('limit', maxLogsPerRequest.toString())
 
         const url = `/logs?${params.toString()}`
-        console.log(`Fetching page ${currentPage} from: ${url}`)
-
         const response = await churchtoolsClient.get<ChurchToolsLogEntry[]>(url)
-        
-        console.log(`API Response for page ${currentPage}:`, response)
         
         // ChurchTools client returns the logs array directly
         if (!Array.isArray(response)) {
@@ -109,7 +103,6 @@ export function useLoggerSummary() {
           throw new Error('Expected array response from logs API')
         }
         
-        console.log(`Page ${currentPage}: ${response.length} logs fetched`)
         allLogs.push(...response)
 
         // Since we get direct array, we can't know total pages
@@ -120,7 +113,6 @@ export function useLoggerSummary() {
 
         // Safety break
         if (currentPage > 50) {
-          console.warn('Reached maximum page limit (50), stopping pagination')
           break
         }
 
@@ -138,7 +130,6 @@ export function useLoggerSummary() {
       }
     }
 
-    console.log(`Total logs fetched: ${allLogs.length}`)
     loadingProgress.value = null // Clear progress
     return allLogs
   }
@@ -316,15 +307,11 @@ export function useLoggerSummary() {
     error.value = null
 
     try {
-      console.log(`Loading log statistics for last ${days} days...`)
-      
       const rawLogs = await getLogsLastDays(days)
       const processedLogs = processLogs(rawLogs)
       
       statistics.value = calculateStatistics(processedLogs)
       lastUpdate.value = new Date().toISOString()
-      
-      console.log('Log statistics loaded:', statistics.value)
     } catch (err) {
       console.error('Error loading log statistics:', err)
       error.value = 'Fehler beim Laden der Log-Statistiken von ChurchTools'
@@ -373,8 +360,6 @@ export function useLoggerSummary() {
     error.value = null
 
     try {
-      console.log(`Loading detailed logs for last ${days} days...`)
-      
       const rawLogs = await getLogsLastDays(days)
       const processedLogs = processLogs(rawLogs)
       
@@ -392,8 +377,6 @@ export function useLoggerSummary() {
       logs.value = filteredLogs
       statistics.value = calculateStatistics(processedLogs) // Stats from all logs
       lastUpdate.value = new Date().toISOString()
-      
-      console.log(`Detailed logs loaded: ${filteredLogs.length} entries`)
     } catch (err) {
       console.error('Error loading detailed logs:', err)
       error.value = 'Fehler beim Laden der detaillierten Logs von ChurchTools'

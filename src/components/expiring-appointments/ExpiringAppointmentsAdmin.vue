@@ -287,9 +287,8 @@ const fetchData = async () => {
 
   try {
     const expiringSeries = await findExpiringSeries(300000)
-    console.log('Fetched appointments:', expiringSeries)
     if (expiringSeries.length > 0) {
-      console.log('First appointment structure:', JSON.parse(JSON.stringify(expiringSeries[0])))
+      // First appointment structure available
     }
 
     // Apply filters

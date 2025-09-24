@@ -411,14 +411,14 @@ const clearSearch = () => {
 }
 
 const toggleTagSelection = (tagId: number) => {
-  console.log('Toggle tag selection:', tagId)
+  // Toggle tag selection
   const index = selectedTags.value.indexOf(tagId)
   if (index > -1) {
     selectedTags.value.splice(index, 1)
   } else {
     selectedTags.value.push(tagId)
   }
-  console.log('Selected tags:', selectedTags.value)
+  // Selected tags updated
 }
 
 const selectByPrefix = () => {
@@ -465,7 +465,7 @@ const editTag = (tag: any) => {
 
 const deleteTagHandler = async (tag: any) => {
   try {
-    console.log('Delete tag clicked:', tag)
+    // Delete tag clicked
     const confirmed = confirm(`Möchten Sie das Tag "${tag.name}" wirklich löschen?`)
     if (!confirmed) return
     
