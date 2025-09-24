@@ -88,10 +88,10 @@
       <div class="row-actions">
         <button
           @click="viewDetails(item)"
-          class="action-btn action-btn-view"
+          class="ct-btn ct-btn-sm ct-btn-outline"
           title="Details anzeigen"
         >
-          👁️
+          Details
         </button>
       </div>
     </template>
