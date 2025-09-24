@@ -123,7 +123,7 @@ const fetchData = async () => {
 
     lastUpdate.value = new Date().toISOString()
 
-    console.log('Beispieldaten geladen:', data.value)
+    // Beispieldaten geladen
   } catch (err) {
     console.error('Fehler beim Laden der Beispieldaten:', err)
     error.value = 'Fehler beim Laden der Beispieldaten'
@@ -133,7 +133,7 @@ const fetchData = async () => {
 }
 
 const loadMockData = () => {
-  console.log('Lade Mock-Daten für Beispiel...')
+  // Lade Mock-Daten für Beispiel
   data.value = {
     total: 75,
     active: 45,

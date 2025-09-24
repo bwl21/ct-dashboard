@@ -2,13 +2,7 @@
   <div class="admin-table">
     <!-- Header Card -->
     <div class="ct-card header-card">
-      <div class="ct-card-header">
-        <h1 class="ct-card-title">{{ title }}</h1>
-      </div>
-      <div class="ct-card-body">
-        <p class="description">{{ description }}</p>
         <slot name="header-controls"></slot>
-      </div>
     </div>
 
     <!-- Controls Card -->
@@ -38,9 +32,6 @@
 
     <!-- Table Card -->
     <div class="ct-card table-card">
-      <div class="ct-card-header">
-        <h3 class="ct-card-title">{{ title }} ({{ filteredData.length }})</h3>
-      </div>
       <div class="ct-card-body">
         <!-- Loading State -->
         <div v-if="loading" class="loading-state">
@@ -76,10 +67,13 @@
 
         <!-- Table -->
         <div v-else class="table-container">
-          <div v-if="hasActiveFilters" class="active-filters">
-            <strong>Aktive Filter:</strong>
-            <span v-if="searchTerm">Suche: "{{ searchTerm }}"</span>
-            | Ergebnisse: {{ filteredData.length }}
+          <div class="table-header-sticky">
+            <h3 class="table-title">{{ title }} ({{ filteredData.length }})</h3>
+            <div v-if="hasActiveFilters" class="active-filters">
+              <strong>Aktive Filter:</strong>
+              <span v-if="searchTerm">Suche: "{{ searchTerm }}"</span>
+              | Ergebnisse: {{ filteredData.length }}
+            </div>
           </div>
           
           <table class="admin-data-table" ref="tableRef">
@@ -218,10 +212,16 @@ const hasActiveFilters = computed(() => {
   return searchTerm.value !== ''
 })
 
-// Expose search term for parent components
+// Clear search function for parent components
+const clearSearch = () => {
+  searchTerm.value = ''
+}
+
+// Expose search term and clear function for parent components
 defineExpose({
   searchTerm: readonly(searchTerm),
-  filteredData: readonly(filteredData)
+  filteredData: readonly(filteredData),
+  clearSearch
 })
 </script>
 
@@ -346,6 +346,26 @@ defineExpose({
   display: flex;
   flex-direction: column;
   min-height: 500px;
+  position: relative;
+}
+
+.table-header-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--ct-bg-primary, #ffffff);
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--ct-border-color, #e0e0e0);
+  margin: 0 -1.5rem 0 -1.5rem;
+  height: 80px;
+  box-sizing: border-box;
+}
+
+.table-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--ct-text-primary, #2c3e50);
 }
 
 .table-card:hover {
@@ -417,18 +437,20 @@ defineExpose({
 .table-container {
   width: 100%;
   max-width: 100%;
-  overflow-x: auto;
+  overflow: auto;
   border-radius: 8px;
   background: var(--ct-bg-primary, #ffffff);
   margin-bottom: 0;
   -webkit-overflow-scrolling: touch;
   display: block;
   flex: 1;
+  height: 60vh;
+  max-height: 600px;
   min-height: 400px;
 }
 
 .active-filters {
-  margin-bottom: 1rem;
+  margin-top: 0.5rem;
   padding: 0.5rem;
   background: #e3f2fd;
   border-radius: 4px;
@@ -439,10 +461,9 @@ defineExpose({
 .admin-data-table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed;
+  table-layout: auto;
   margin: 0;
   padding: 0;
-  min-width: 1150px;
 }
 
 .admin-data-table th {
@@ -453,10 +474,12 @@ defineExpose({
   color: var(--ct-text-secondary, #6c757d);
   background-color: var(--ct-bg-secondary, #f8f9fa);
   white-space: nowrap;
-  position: relative;
+  position: sticky;
+  top: 80px;
+  z-index: 15;
   letter-spacing: 0.02em;
-  overflow: visible;
   box-sizing: border-box;
+  border-bottom: 2px solid var(--ct-border-color, #e0e0e0);
 }
 
 .admin-data-table td {
@@ -471,7 +494,6 @@ defineExpose({
 .admin-data-table th.sortable {
   cursor: pointer;
   user-select: none;
-  position: relative;
 }
 
 .admin-data-table th.sortable:hover {
@@ -481,6 +503,9 @@ defineExpose({
 .admin-data-table th.active {
   color: var(--ct-primary, #3498db);
   font-weight: 600;
+  position: sticky;
+  top: 80px;
+  z-index: 15;
 }
 
 .sort-indicator {

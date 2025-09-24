@@ -88,7 +88,7 @@ export async function findExpiringSeries(daysInAdvance: number = 60): Promise<Ap
     (v, i, a) => a.indexOf(v) === i
   ) // Remove duplicates
 
-  console.log('Fetching appointments for calendar IDs:', allCalendarIds)
+  // Fetching appointments for calendar IDs
   // Fetch appointments
   const appointments = await fetchAppointments(allCalendarIds, now, endDate)
 

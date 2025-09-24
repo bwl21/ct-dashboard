@@ -48,6 +48,8 @@ import TagsCard from './components/tags/TagsCard.vue'
 import TagsAdmin from './components/tags/TagsAdmin.vue'
 import BeispielCard from './components/beispiel/BeispielCard.vue'
 import ColorPickerExample from './components/common/ColorPickerExample.vue'
+import LoggerSummaryCard from './components/loggerSummary/LoggerSummaryCard.vue'
+import LoggerSummaryAdmin from './components/loggerSummary/LoggerSummaryAdmin.vue'
 import Toast from './components/common/Toast.vue'
 import { useToast } from './composables/useToast'
 
@@ -77,12 +79,12 @@ const modules: DashboardModule[] = [
     adminComponent: TagsAdmin,
   },
   {
-    id: 'colorpicker-example',
-    title: 'ColorPicker Example',
-    icon: '🎨',
-    description: 'Beispiel für die ColorPicker-Komponente',
-    cardComponent: BeispielCard,
-    adminComponent: ColorPickerExample,
+    id: 'loggerSummary',
+    title: 'Logger System',
+    icon: '📋',
+    description: 'Überwachung und Verwaltung von Log-Einträgen',
+    cardComponent: LoggerSummaryCard,
+    adminComponent: LoggerSummaryAdmin,
   },
 ]
 

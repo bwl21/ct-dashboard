@@ -1,5 +1,6 @@
 <template>
   <AdminTable
+    ref="adminTableRef"
     :data="appointments"
     :loading="isLoading"
     :error="error"
@@ -135,7 +136,7 @@ import {
   getAppointmentUrl,
   type Appointment,
 } from '@/services/churchtools'
-import AdminTable from '@/components/shared/AdminTable.vue'
+import AdminTable from '@/components/common/AdminTable.vue'
 
 defineProps<{
   module: DashboardModule
@@ -150,6 +151,9 @@ const error = ref<string | null>(null)
 const calendarFilter = ref('')
 const statusFilter = ref('')
 const daysInAdvance = ref('alle') // Default to "alle"
+
+// AdminTable reference
+const adminTableRef = ref()
 
 // Data
 const appointments = ref<Appointment[]>([])
@@ -265,9 +269,15 @@ const getEffectiveEndDate = (appointment: Appointment) => {
 
 // Filter functions
 const clearFilters = () => {
+  // Reset own filters
   calendarFilter.value = ''
   statusFilter.value = ''
   daysInAdvance.value = 'alle'
+  
+  // Reset AdminTable search
+  if (adminTableRef.value?.clearSearch) {
+    adminTableRef.value.clearSearch()
+  }
 }
 
 // Data loading
@@ -277,9 +287,8 @@ const fetchData = async () => {
 
   try {
     const expiringSeries = await findExpiringSeries(300000)
-    console.log('Fetched appointments:', expiringSeries)
     if (expiringSeries.length > 0) {
-      console.log('First appointment structure:', JSON.parse(JSON.stringify(expiringSeries[0])))
+      // First appointment structure available
     }
 
     // Apply filters

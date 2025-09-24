@@ -1,31 +1,5 @@
 <template>
   <div class="tags-admin">
-    <!-- Header Card with Stats -->
-    <div class="ct-card header-card">
-      <div class="ct-card-header">
-        <h1 class="ct-card-title">Tags - Admin Panel</h1>
-      </div>
-      <div class="ct-card-body">
-        <p class="description">Verwaltung aller Tags in ChurchTools</p>
-        <div class="stats-row">
-          <div class="stat-item">
-            <span class="stat-number">{{ tags.length }}</span>
-            <span class="stat-label">Tags gesamt</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-number">{{ personTagsCount }}</span>
-            <span class="stat-label">Personen-Tags</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-number">{{ songTagsCount }}</span>
-            <span class="stat-label">Lieder-Tags</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-
-
     <!-- AdminTable -->
     <AdminTable
       ref="adminTableRef"
@@ -143,6 +117,14 @@
 
       <!-- Custom Actions -->
       <template #actions>
+        <button 
+          type="button" 
+          @click="clearSearch" 
+          class="ct-btn ct-btn-secondary"
+          title="Suchfeld zurücksetzen"
+        >
+          Suche zurücksetzen
+        </button>
         <button 
           type="button" 
           @click="refreshData" 
@@ -295,7 +277,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import type { DashboardModule } from '@/types/modules'
 import type { TableColumn } from '@/types/table'
-import AdminTable from '@/components/shared/AdminTable.vue'
+import AdminTable from '@/components/common/AdminTable.vue'
 import ColorPicker from '@/components/common/ColorPicker.vue'
 import { useToast } from '@/composables/useToast'
 
@@ -396,15 +378,21 @@ const clearSelection = () => {
   selectedTags.value = []
 }
 
+const clearSearch = () => {
+  if (adminTableRef.value?.clearSearch) {
+    adminTableRef.value.clearSearch()
+  }
+}
+
 const toggleTagSelection = (tagId: number) => {
-  console.log('Toggle tag selection:', tagId)
+  // Toggle tag selection
   const index = selectedTags.value.indexOf(tagId)
   if (index > -1) {
     selectedTags.value.splice(index, 1)
   } else {
     selectedTags.value.push(tagId)
   }
-  console.log('Selected tags:', selectedTags.value)
+  // Selected tags updated
 }
 
 const selectByPrefix = () => {
@@ -451,7 +439,7 @@ const editTag = (tag: any) => {
 
 const deleteTagHandler = async (tag: any) => {
   try {
-    console.log('Delete tag clicked:', tag)
+    // Delete tag clicked
     const confirmed = confirm(`Möchten Sie das Tag "${tag.name}" wirklich löschen?`)
     if (!confirmed) return
     

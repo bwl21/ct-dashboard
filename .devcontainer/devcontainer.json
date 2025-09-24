@@ -30,7 +30,8 @@
         "Vue.vscode-typescript-vue-plugin",
         "bradlc.vscode-tailwindcss",
         "esbenp.prettier-vscode",
-        "ms-vscode.vscode-typescript-next"
+        "ms-vscode.vscode-typescript-next",
+        "mhutchie.git-graph"
       ]
     }
   }
