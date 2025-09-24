@@ -7,6 +7,36 @@ und dieses Projekt folgt [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [1.0.4] - 2025-09-24
+
+### ✨ Added
+- **Priority-basierte Log-Kategorisierung** mit intelligenter Konfliktauflösung
+- **Funktionale Filter-Bedingungen** (messageIncludes, domainTypeIs, and, or)
+- **Zentrale UI-Konfiguration** für Log-Kategorien (Icons, Labels, CSS-Klassen)
+- **Akteur-Informationen** in Log-Details Modal
+- **Simulation-Support** für simulatePersonId Anzeige
+- **Automatische Filter-Generierung** aus Kategorisierungs-Regeln
+
+### 🔄 Changed
+- **Log-Kategorisierung** von if-else Kette zu rule-basiertem System
+- **UI-Mappings** zentralisiert statt verteilt in Komponenten
+- **Button-Terminologie** standardisiert: "Details" statt "Details anzeigen"
+- **Login-Fehler Terminologie** konsolidiert: "Login-Fehler" statt "Falsche Passwörter"
+- **Modal z-index** erhöht für bessere Overlay-Darstellung
+
+### 🐛 Fixed
+- **Modal-Overlay** deckt jetzt vollständig das Admin Panel ab
+- **Überlappende Log-Kategorien** durch Priority-System gelöst
+- **String-Duplikation** eliminiert durch LogCategory-Konstanten
+- **ChurchTools API Kompatibilität** für simulatePersonId (OpenAPI-Spec Typo dokumentiert)
+
+### 🔧 Technical Improvements
+- **TypeScript-Typsicherheit** durch LogCategory-Konstanten
+- **Testbarkeit** durch isolierte Kategorisierungs-Regeln
+- **Erweiterbarkeit** durch einfaches Hinzufügen neuer Regeln
+- **Debugging-Support** für Entwicklungsumgebung
+- **Code-Wartbarkeit** durch zentrale Konfiguration
+
 ## [1.0.3] - 2025-09-24
 
 ### ✨ Added

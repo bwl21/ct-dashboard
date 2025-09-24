@@ -27,10 +27,12 @@ Das **ChurchTools Dashboard** ist eine Vue 3 + TypeScript basierte Erweiterung, 
 - Toast-Benachrichtigungen
 
 ### 📋 Logger System
-- Kategorisierte Log-Übersicht
-- Admin-Panel mit Filterung und Suche
-- Modal-Details für Log-Einträge
-- Kategorie-basierte Klassifizierung
+- **Priority-basierte Kategorisierung** mit intelligenter Konfliktauflösung
+- **Funktionale Filter-Bedingungen** für flexible Log-Klassifizierung
+- **Zentrale UI-Konfiguration** (Icons, Labels, CSS-Klassen)
+- **Akteur-Informationen** mit System/Benutzer-Unterscheidung
+- **Modal-Details** mit vollständigen Log-Informationen
+- **Admin-Panel** mit erweiterten Filter- und Suchfunktionen
 
 ### 🎯 BaseCard-System
 - Einheitliche Karten-Layouts
@@ -110,6 +112,7 @@ npm run deploy
 | Automatische Gruppen | ✅ Stabil | [API.md](docs/API.md) |
 | Tags-Verwaltung | ✅ Stabil | [Features](docs/FEATURES_TAGS_COLORPICKER_TOAST.md) |
 | Logger System | ✅ Stabil | [Session](docs/DEVELOPMENT_SESSION_2025-09-24_Logger_UI_Improvements.md) |
+| Log-Kategorisierung | ✅ Stabil | Priority-basiertes System |
 | BaseCard-System | ✅ Stabil | [Development](docs/DEVELOPMENT.md) |
 
 ## 🤝 Beitragen
