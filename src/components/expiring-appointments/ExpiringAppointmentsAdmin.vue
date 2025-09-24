@@ -1,5 +1,6 @@
 <template>
   <AdminTable
+    ref="adminTableRef"
     :data="appointments"
     :loading="isLoading"
     :error="error"
@@ -151,6 +152,9 @@ const calendarFilter = ref('')
 const statusFilter = ref('')
 const daysInAdvance = ref('alle') // Default to "alle"
 
+// AdminTable reference
+const adminTableRef = ref()
+
 // Data
 const appointments = ref<Appointment[]>([])
 
@@ -265,9 +269,15 @@ const getEffectiveEndDate = (appointment: Appointment) => {
 
 // Filter functions
 const clearFilters = () => {
+  // Reset own filters
   calendarFilter.value = ''
   statusFilter.value = ''
   daysInAdvance.value = 'alle'
+  
+  // Reset AdminTable search
+  if (adminTableRef.value?.clearSearch) {
+    adminTableRef.value.clearSearch()
+  }
 }
 
 // Data loading

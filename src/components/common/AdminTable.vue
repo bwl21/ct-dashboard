@@ -218,10 +218,16 @@ const hasActiveFilters = computed(() => {
   return searchTerm.value !== ''
 })
 
-// Expose search term for parent components
+// Clear search function for parent components
+const clearSearch = () => {
+  searchTerm.value = ''
+}
+
+// Expose search term and clear function for parent components
 defineExpose({
   searchTerm: readonly(searchTerm),
-  filteredData: readonly(filteredData)
+  filteredData: readonly(filteredData),
+  clearSearch
 })
 </script>
 

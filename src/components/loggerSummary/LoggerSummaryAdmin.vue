@@ -1,5 +1,6 @@
 <template>
   <AdminTable
+    ref="adminTableRef"
     :data="filteredLogs"
     :loading="loading"
     :error="error"
@@ -170,6 +171,9 @@ const {
   filterLogsBySearch
 } = useLoggerSummary()
 
+// AdminTable reference
+const adminTableRef = ref()
+
 // Local state
 const selectedCategory = ref('')
 const selectedDays = ref(3)
@@ -228,6 +232,7 @@ const tableColumns = [
 
 // Computed
 const filteredLogs = computed(() => {
+  console.log('filteredLogs computed - Category:', selectedCategory.value, 'Logs count:', logEntries.value.length)
   if (!selectedCategory.value) return logEntries.value
   return filterLogsByCategory(logEntries.value, selectedCategory.value)
 })
@@ -284,7 +289,9 @@ const refreshLogs = async () => {
 
 const filterByCategory = () => {
   // Filter is handled by computed property
-  console.log('Filter nach Kategorie:', selectedCategory.value)
+  console.log('Filter nach Kategorie geändert:', selectedCategory.value)
+  // Force reactivity update
+  console.log('Aktuelle Logs:', logEntries.value.length)
 }
 
 const changeDaysFilter = () => {
@@ -297,10 +304,15 @@ const resetFilters = () => {
   selectedCategory.value = ''
   selectedDays.value = 3
   
+  // Reset AdminTable search
+  if (adminTableRef.value?.clearSearch) {
+    adminTableRef.value.clearSearch()
+  }
+  
   // Reload logs with default settings
   refreshLogs()
   
-  console.log('Filter zurückgesetzt')
+  console.log('Filter zurückgesetzt - Kategorie:', selectedCategory.value, 'Tage:', selectedDays.value)
 }
 
 const viewDetails = (log: LogEntry) => {

@@ -1,5 +1,6 @@
 <template>
   <AdminTable
+    ref="adminTableRef"
     :data="groups"
     :loading="loading"
     :error="error"
@@ -18,6 +19,13 @@
   >
     <!-- Custom Actions -->
     <template #actions>
+      <button
+        @click="clearSearch"
+        class="ct-btn ct-btn-secondary"
+        title="Suchfeld zurücksetzen"
+      >
+        Suche zurücksetzen
+      </button>
       <button
         @click="refreshGroups"
         class="ct-btn ct-btn-primary refresh-btn"
@@ -63,7 +71,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import type { DashboardModule } from '@/types/modules'
 import type { TableColumn } from '@/types/table'
 import AdminTable from '@/components/common/AdminTable.vue'
@@ -76,6 +84,9 @@ defineProps<{
 
 // Use composable for data management
 const { groups, loading, error, fetchAutomaticGroups } = useAutomaticGroups()
+
+// AdminTable reference
+const adminTableRef = ref()
 
 // Table configuration
 const tableColumns: TableColumn[] = [
@@ -164,6 +175,12 @@ const formatDate = (dateString: string | null) => {
 // Data loading
 const refreshGroups = () => {
   fetchAutomaticGroups()
+}
+
+const clearSearch = () => {
+  if (adminTableRef.value?.clearSearch) {
+    adminTableRef.value.clearSearch()
+  }
 }
 
 
