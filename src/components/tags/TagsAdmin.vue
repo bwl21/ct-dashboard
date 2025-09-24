@@ -1,31 +1,5 @@
 <template>
   <div class="tags-admin">
-    <!-- Header Card with Stats -->
-    <div class="ct-card header-card">
-      <div class="ct-card-header">
-        <h1 class="ct-card-title">Tags - Admin Panel</h1>
-      </div>
-      <div class="ct-card-body">
-        <p class="description">Verwaltung aller Tags in ChurchTools</p>
-        <div class="stats-row">
-          <div class="stat-item">
-            <span class="stat-number">{{ tags.length }}</span>
-            <span class="stat-label">Tags gesamt</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-number">{{ personTagsCount }}</span>
-            <span class="stat-label">Personen-Tags</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-number">{{ songTagsCount }}</span>
-            <span class="stat-label">Lieder-Tags</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-
-
     <!-- AdminTable -->
     <AdminTable
       ref="adminTableRef"

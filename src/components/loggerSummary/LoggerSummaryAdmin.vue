@@ -34,6 +34,7 @@
           <option value="failed_login">Falsche Passwörter</option>
           <option value="email_sent">Versendete Mails</option>
           <option value="successful_login">Erfolgreiche Anmeldungen</option>
+          <option value="person_viewed">Personen angesehen</option>
           <option value="other">Sonstige</option>
         </select>
         <button
@@ -55,8 +56,8 @@
 
     <!-- Custom Cell Rendering -->
     <template #cell-level="{ item }">
-      <span class="log-level-badge" :class="getLevelClass(item.level)">
-        <span class="icon">{{ getLevelIcon(item.level) }}</span>
+      <span class="log-level-badge" :class="getCategoryClass(item.category)">
+        <span class="icon">{{ getCategoryIcon(item.category) }}</span>
       </span>
     </template>
 
@@ -107,8 +108,8 @@
         <div class="log-detail-item">
           <strong>Kategorie:</strong>
           <span class="category-detail">
-            <span class="log-level-badge" :class="getLevelClass(selectedLog.level)">
-              <span class="icon">{{ getLevelIcon(selectedLog.level) }}</span>
+            <span class="log-level-badge" :class="getCategoryClass(selectedLog.category)">
+              <span class="icon">{{ getCategoryIcon(selectedLog.category) }}</span>
             </span>
             <span class="category-text">{{ getCategoryLabel(selectedLog.category) }}</span>
           </span>
@@ -245,24 +246,28 @@ const filteredLogs = computed(() => {
 })
 
 // Methods
-const getLevelClass = (level: string) => {
+const getCategoryClass = (category: string) => {
   const classes = {
-    success: 'level-success',
-    info: 'level-info',
-    warning: 'level-warning',
-    error: 'level-error',
+    system_error: 'category-error',
+    failed_login: 'category-warning',
+    email_sent: 'category-info',
+    successful_login: 'category-success',
+    person_viewed: 'category-info',
+    other: 'category-neutral'
   }
-  return classes[level as keyof typeof classes] || 'level-info'
+  return classes[category as keyof typeof classes] || 'category-neutral'
 }
 
-const getLevelIcon = (level: string) => {
+const getCategoryIcon = (category: string) => {
   const icons = {
-    success: '✅',
-    info: '📧',
-    warning: '🔒',
-    error: '🚨',
+    system_error: '🚨',
+    failed_login: '🔒',
+    email_sent: '📧',
+    successful_login: '✅',
+    person_viewed: '👤',
+    other: 'ℹ️'
   }
-  return icons[level as keyof typeof icons] || 'ℹ️'
+  return icons[category as keyof typeof icons] || 'ℹ️'
 }
 
 const getCategoryLabel = (category: string) => {
@@ -271,6 +276,7 @@ const getCategoryLabel = (category: string) => {
     failed_login: 'Login-Fehler',
     email_sent: 'E-Mails',
     successful_login: 'Anmeldungen',
+    person_viewed: 'Personen angesehen',
     other: 'Sonstige'
   }
   return labels[category as keyof typeof labels] || category
@@ -365,28 +371,34 @@ onMounted(() => {
   font-size: 1.2em;
 }
 
-.level-success {
+.category-success {
   background-color: rgba(40, 167, 69, 0.1);
   color: #28a745;
   border: 1px solid rgba(40, 167, 69, 0.2);
 }
 
-.level-info {
+.category-info {
   background-color: rgba(52, 152, 219, 0.1);
   color: #3498db;
   border: 1px solid rgba(52, 152, 219, 0.2);
 }
 
-.level-warning {
+.category-warning {
   background-color: rgba(243, 156, 18, 0.1);
   color: #f39c12;
   border: 1px solid rgba(243, 156, 18, 0.2);
 }
 
-.level-error {
+.category-error {
   background-color: rgba(220, 53, 69, 0.1);
   color: #dc3545;
   border: 1px solid rgba(220, 53, 69, 0.2);
+}
+
+.category-neutral {
+  background-color: rgba(108, 117, 125, 0.1);
+  color: #6c757d;
+  border: 1px solid rgba(108, 117, 125, 0.2);
 }
 
 .category-label {
