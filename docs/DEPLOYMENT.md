@@ -1,234 +1,87 @@
-# Deployment-Dokumentation
+# Deployment Guide
 
-## 🚀 Übersicht
+## 🚀 Quick Deployment
 
-Das ChurchTools Dashboard wird als ZIP-Paket für die ChurchTools-Erweiterungsschnittstelle bereitgestellt. Diese Dokumentation beschreibt den kompletten Deployment-Prozess.
-
-## 📦 Build-Prozess
-
-### 1. Entwicklung abschließen
+### Automatisches Deployment
 
 ```bash
-# Alle Änderungen committen
-git add .
-git commit -m "feat: neue Funktionalität implementiert"
-
-# Optional: Version taggen
-git tag v1.2.0
-git push origin v1.2.0
+# Build und Package in einem Schritt
+npm run deploy
 ```
 
-### 2. Production Build erstellen
+Erstellt automatisch: `releases/ct-dashboard-v{version}-{git-hash}.zip`
+
+### Manuelle Schritte
 
 ```bash
-# Dependencies installieren
-npm install
-
-# Production Build
+# 1. Build erstellen
 npm run build
+
+# 2. Package erstellen
+node scripts/package.js
 ```
 
-**Build-Konfiguration (vite.config.ts):**
+## 📦 ChurchTools Installation
 
+### Upload in ChurchTools
+
+1. **Admin-Bereich** → **Einstellungen** → **Erweiterungen**
+2. **"Erweiterung hochladen"** klicken
+3. ZIP-Datei aus `releases/` Verzeichnis auswählen
+4. **"Installieren"** und **"Aktivieren"**
+
+### URL-Zugriff
+
+Nach der Installation verfügbar unter:
+```
+https://ihre-domain.church.tools/ccm/ctdashboard/
+```
+
+## 🔧 Konfiguration
+
+### Build-Einstellungen
+
+**vite.config.ts:**
 ```typescript
 export default defineConfig({
-  plugins: [vue()],
   base: "/ccm/ctdashboard/",
   build: {
     outDir: "dist",
     sourcemap: false,
-    minify: "terser",
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: ["vue"],
-          churchtools: ["@churchtools/churchtools-client"],
-        },
-      },
-    },
-  },
+    minify: "terser"
+  }
 })
 ```
 
-### 3. Package erstellen
-
-```bash
-# Automatisches Packaging
-npm run deploy
-```
-
-**Oder manuell:**
-
-```bash
-# Package-Script ausführen
-node scripts/package.js
-```
-
-## 📋 Package-Struktur
-
-### Generierte ZIP-Datei
+### Package-Struktur
 
 ```
-churchtools-dashboard-v1.2.0-a1b2c3d.zip
+ct-dashboard-v1.0.0-abc123.zip
 ├── index.html
-├── assets/
-│   ├── index-[hash].js
-│   ├── index-[hash].css
-│   └── vendor-[hash].js
-└── manifest.json (optional)
+└── assets/
+    ├── index-[hash].js
+    ├── index-[hash].css
+    └── vendor-[hash].js
 ```
 
-### Namenskonvention
+## 🔧 Troubleshooting
 
-- **Format:** `{projektname}-v{version}-{git-hash}.zip`
-- **Beispiel:** `ct-dashboard-v1.2.0-a1b2c3d.zip`
-- **Speicherort:** `releases/` Verzeichnis
+### Häufige Probleme
 
-### Package-Script Details
-
-```javascript
-// scripts/package.js
-const fs = require("fs")
-const path = require("path")
-const archiver = require("archiver")
-const { execSync } = require("child_process")
-
-function createPackage() {
-  // Git-Informationen abrufen
-  const gitHash = execSync("git rev-parse --short HEAD").toString().trim()
-  const version = require("../package.json").version
-  const projectName = require("../package.json").name
-
-  // Dateiname generieren
-  const filename = `${projectName}-v${version}-${gitHash}.zip`
-  const outputPath = path.join("releases", filename)
-
-  // Releases-Verzeichnis erstellen
-  if (!fs.existsSync("releases")) {
-    fs.mkdirSync("releases")
-  }
-
-  // ZIP erstellen
-  const output = fs.createWriteStream(outputPath)
-  const archive = archiver("zip", { zlib: { level: 9 } })
-
-  archive.pipe(output)
-  archive.directory("dist/", false)
-  archive.finalize()
-
-  console.log(`Package erstellt: ${outputPath}`)
-}
-```
-
-## 🔧 ChurchTools Installation
-
-### 1. Admin-Bereich öffnen
-
-1. ChurchTools-Installation öffnen
-2. Als Administrator anmelden
-3. Zu **Einstellungen** → **Erweiterungen** navigieren
-
-### 2. Erweiterung hochladen
-
-1. **"Erweiterung hochladen"** klicken
-2. ZIP-Datei aus `releases/` Verzeichnis auswählen
-3. Upload bestätigen
-
-### 3. Installation bestätigen
-
-1. Erweiterungsdetails prüfen
-2. **"Installieren"** klicken
-3. Installation abwarten
-
-### 4. Aktivierung
-
-1. Erweiterung in der Liste finden
-2. **"Aktivieren"** klicken
-3. Berechtigungen konfigurieren (falls erforderlich)
-
-## 🌐 URL-Struktur
-
-### Production URLs
-
-```
-https://ihre-domain.church.tools/ccm/ctdashboard/
-├── /                          # Dashboard-Hauptseite
-├── /expiring-appointments     # auslaufende Terminserien Admin
-└── /automatic-groups          # Automatische Gruppen Admin
-```
-
-### Development URLs
-
-```
-http://localhost:5173/
-├── /                          # Dashboard-Hauptseite
-├── /expiring-appointments     # auslaufende Terminserien Admin
-└── /automatic-groups          # Automatische Gruppen Admin
-```
-
-## ⚙️ Umgebungskonfiguration
-
-### Production Environment
-
-```env
-# Automatisch von ChurchTools gesetzt
-VITE_KEY=ctdashboard
-VITE_BASE_URL=https://ihre-domain.church.tools
-```
-
-### Development Environment
-
-```env
-# .env Datei
-VITE_KEY=ctdashboard
-VITE_BASE_URL=https://ihre-domain.church.tools
-VITE_USERNAME=ihr-username
-VITE_PASSWORD=ihr-passwort
-```
-
-### Environment-spezifische Builds
-
+**Build-Fehler:**
 ```bash
-# Development Build
-npm run build:dev
-
-# Staging Build
-npm run build:staging
-
-# Production Build
-npm run build
+# Dependencies neu installieren
+rm -rf node_modules package-lock.json
+npm install
 ```
 
-## 🔐 Sicherheit & Berechtigungen
+**Upload-Fehler:**
+- ZIP-Datei unter 10MB halten
+- Nur `dist/` Inhalt ohne Source Maps
 
-### ChurchTools-Berechtigungen
-
-Die Erweiterung benötigt folgende Berechtigungen:
-
-```json
-{
-  "permissions": {
-    "churchcal": {
-      "view": true,
-      "edit": false
-    },
-    "churchdb": {
-      "view groups": true,
-      "edit groups": false
-    }
-  }
-}
-```
-
-### API-Zugriff
-
-```typescript
-// Automatische Authentifizierung über ChurchTools-Session
-import { churchtoolsClient } from "@churchtools/churchtools-client"
-
-// Client ist bereits konfiguriert und authentifiziert
-const data = await churchtoolsClient.get("/calendars")
-```
+**Berechtigungen:**
+- ChurchTools-Admin-Rechte erforderlich
+- API-Zugriff automatisch über Session
 
 ### Content Security Policy
 

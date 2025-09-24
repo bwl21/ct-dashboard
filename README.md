@@ -1,66 +1,48 @@
 # ChurchTools Dashboard
 
-Eine moderne ChurchTools-Erweiterung für Terminverwaltung und Systemüberwachung.
+Eine moderne ChurchTools-Erweiterung für Systemüberwachung und Verwaltung.
 
-## 📋 Projektbeschreibung
+## 🎯 Überblick
 
-Das **ChurchTools Dashboard** ist eine Vue 3 + TypeScript basierte Erweiterung für ChurchTools, die eine zentrale Übersicht über wichtige Systemdaten bietet. Die Extension nutzt eine moderne BaseCard-Architektur für konsistente und wiederverwendbare UI-Komponenten.
+Das **ChurchTools Dashboard** ist eine Vue 3 + TypeScript basierte Erweiterung, die eine zentrale Übersicht über wichtige ChurchTools-Systemdaten bietet. Die Extension nutzt eine moderne BaseCard-Architektur für konsistente und wiederverwendbare UI-Komponenten.
 
-**Kürzel:** `ctdashboard`
+**Plugin-Kürzel:** `ctdashboard`
 
 ## ✨ Hauptfeatures
 
-### 📅 auslaufende Terminserien
-
-- **Übersicht:** Zentrale Anzeige aller auslaufenden Terminserien
-- **Admin-Panel:** Detaillierte Verwaltung mit erweiterten Filtermöglichkeiten
-- **Multi-Filter:** Suche nach ID, Titel, Kalender + Status- und Kalender-Filter
-- **Sortierung:** Alle Spalten sortierbar (ID, Titel, Kalender, Datum)
-- **Export:** Direkte Links zu ChurchTools-Kalenderansicht
-
-## 📚 Development
-
-Siehe [Development Notes](docs/DEVELOPMENT_NOTES.md) für wichtige Entwicklungsrichtlinien und API-Patterns.
+### 📅 Auslaufende Terminserien
+- Übersicht aller auslaufenden Terminserien
+- Admin-Panel mit erweiterten Filtermöglichkeiten
+- Direkte Links zu ChurchTools-Kalenderansicht
 
 ### ⚙️ Automatische Gruppen
+- Status-Übersicht aller automatischen Gruppen
+- Monitoring von Ausführungsstatus und Fehlern
+- Statistiken über Gruppenaktualisierungen
 
-- **Status-Übersicht:** Anzeige aller automatischen Gruppen mit Ausführungsstatus
-- **Statistiken:** Erfolgreiche, fehlerhafte und ausstehende Gruppenaktualisierungen
-- **Monitoring:** Letzte Aktualisierungszeiten und Ausführungsstatus
+### 🏷️ Tags-Verwaltung
+- Übersicht aller ChurchTools-Tags
+- Bulk-Operationen (Farbe ändern, löschen)
+- ColorPicker mit ChurchTools-Design
+- Toast-Benachrichtigungen
 
-### 🎯 BaseCard-Architektur
+### 📋 Logger System
+- Kategorisierte Log-Übersicht
+- Admin-Panel mit Filterung und Suche
+- Modal-Details für Log-Einträge
+- Kategorie-basierte Klassifizierung
 
-- **Konsistentes Design:** Einheitliche Karten-Layouts für alle Module
-- **Wiederverwendbar:** Standardisierte Komponenten für schnelle Entwicklung
-- **Flexibel:** Unterstützung für Props und Slots für maximale Anpassbarkeit
+### 🎯 BaseCard-System
+- Einheitliche Karten-Layouts
+- Große Icon-Header
+- Vorberechnete Kartenhöhen
+- Responsive Design
 
-## 🎨 Design System
-
-Die Extension nutzt das ChurchTools Design System mit folgenden CSS-Klassen:
-
-### Farben
-
-- **Primary:** `#007bff` (ChurchTools Blau)
-- **Secondary:** `#2c3e50` (Dunkelgrau)
-- **Success:** `#28a745` (Grün)
-- **Warning:** `#ffc107` (Gelb)
-- **Danger:** `#dc3545` (Rot)
-
-### CSS-Klassen
-
-- `.cts` - Haupt-Container-Klasse
-- `.ct-main` - Hauptinhalt-Container
-- `.ct-card` - Karten-Layout
-- `.ct-card-header` / `.ct-card-body` - Karten-Bereiche
-- `.ct-btn` / `.ct-btn-primary` - Button-Styling
-- `.ct-navbar` - Navigationsleiste (Development)
-
-## 🚀 Entwicklung
+## 🚀 Quick Start
 
 ### Voraussetzungen
-
-- Node.js (Version 18 oder höher)
-- npm oder yarn
+- Node.js 18+
+- ChurchTools-Installation
 - Git
 
 ### Installation
@@ -68,138 +50,99 @@ Die Extension nutzt das ChurchTools Design System mit folgenden CSS-Klassen:
 ```bash
 # Repository klonen
 git clone <repository-url>
-cd churchtools-dashboard
+cd ct-dashboard
 
 # Abhängigkeiten installieren
 npm install
 
-# Umgebungsvariablen konfigurieren
-cp .env-example .env
-# .env Datei mit ChurchTools-Zugangsdaten bearbeiten
-```
-
-### Entwicklungsserver starten
-
-```bash
+# Entwicklungsserver starten
 npm run dev
 ```
 
-Der Development Server läuft auf `http://localhost:5173`
-
-### Production Build erstellen
+### Deployment
 
 ```bash
-npm run build
-```
-
-## 📦 Deployment
-
-### Automatisches Packaging für ChurchTools
-
-```bash
-# 1. Entwicklung abschließen
-git add .
-git commit -m "feat: neue Funktionalität hinzugefügt"
-
-# 2. Version taggen (optional)
-git tag v1.0.0
-
-# 3. Build und Package erstellen
+# Build und Package erstellen
 npm run deploy
+
+# ZIP-Datei in ChurchTools hochladen
+# releases/churchtools-dashboard-v*.zip
 ```
 
-**Ergebnis:** `releases/churchtools-dashboard-v0.0.0-a1b2c3d.zip`
+## 🔧 Technologie-Stack
 
-### Manuelle Schritte
+| Komponente | Technologie | Version |
+|------------|-------------|---------|
+| Frontend | Vue 3 | ^3.4.0 |
+| Language | TypeScript | ^5.0.0 |
+| Build Tool | Vite | ^5.0.0 |
+| API Client | ChurchTools Client | ^1.0.0 |
+| Styling | CSS3 + ChurchTools Design | - |
 
-1. **Build erstellen:**
+## 📚 Dokumentation
 
-   ```bash
-   npm run build
-   ```
+### Für Entwickler
+- **[DEVELOPMENT.md](docs/DEVELOPMENT.md)** - Entwickler-Handbuch und Architektur
+- **[API.md](docs/API.md)** - API-Dokumentation und Interfaces
+- **[DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Build- und Deployment-Prozess
 
-2. **Package erstellen:**
+### Session-Dokumentation
+- **[Logger UI Improvements](docs/DEVELOPMENT_SESSION_2025-09-24_Logger_UI_Improvements.md)** - Aktuelle UI-Verbesserungen
+- **[Tags & ColorPicker](docs/FEATURES_TAGS_COLORPICKER_TOAST.md)** - Tags-Verwaltung Features
+- **[AdminTable Configuration](docs/AdminTable_Column_Width_Configuration.md)** - Tabellen-Konfiguration
 
-   ```bash
-   npm run deploy
-   ```
+### Vollständige Übersicht
+- **[docs/README.md](docs/README.md)** - Komplette Dokumentations-Übersicht
 
-3. **ZIP-Datei in ChurchTools hochladen:**
-   - ChurchTools Admin-Bereich öffnen
-   - Zu "Erweiterungen" → "Erweiterung hochladen" navigieren
-   - ZIP-Datei aus dem `releases/` Ordner auswählen
-   - Installation bestätigen
+## 🎨 Design-Prinzipien
 
-### ZIP-Datei Format
+- **Konsistenz:** Einheitliche BaseCard-Architektur
+- **ChurchTools-konform:** Natives Design-System
+- **Responsive:** Mobile-first Ansatz
+- **Performance:** Optimierte Bundle-Größe
+- **Accessibility:** WCAG-konforme Implementierung
 
-- **Namenskonvention:** `{projektname}-v{version}-{git-hash}.zip`
-- **Inhalt:** Nur `dist/` Verzeichnis (ohne Source Maps)
-- **Speicherort:** `releases/` Verzeichnis (automatisch erstellt)
+## 📊 Status
 
-## 🔧 ChurchTools Integration
+| Feature | Status | Dokumentation |
+|---------|--------|---------------|
+| Auslaufende Terminserien | ✅ Stabil | [API.md](docs/API.md) |
+| Automatische Gruppen | ✅ Stabil | [API.md](docs/API.md) |
+| Tags-Verwaltung | ✅ Stabil | [Features](docs/FEATURES_TAGS_COLORPICKER_TOAST.md) |
+| Logger System | ✅ Stabil | [Session](docs/DEVELOPMENT_SESSION_2025-09-24_Logger_UI_Improvements.md) |
+| BaseCard-System | ✅ Stabil | [Development](docs/DEVELOPMENT.md) |
 
-### Konfiguration
+## 🤝 Beitragen
 
-- **Plugin-Kürzel:** `ctdashboard`
-- **Base URL:** `/ccm/ctdashboard/`
-- **API-Client:** `@churchtools/churchtools-client`
+1. Fork des Repositories erstellen
+2. Feature-Branch erstellen (`git checkout -b feature/amazing-feature`)
+3. Änderungen committen (`git commit -m 'Add amazing feature'`)
+4. Branch pushen (`git push origin feature/amazing-feature`)
+5. Pull Request erstellen
 
-### Umgebungsvariablen (.env)
+## 🤖 Entwickelt mit KI-Unterstützung
 
-```env
-# Plugin-Kürzel für ChurchTools
-VITE_KEY=ctdashboard
+Dieses Projekt wurde mit Unterstützung von **Ona** entwickelt - einem KI-Assistenten für Softwareentwicklung. Ona half bei:
 
-# Entwicklungsserver-Konfiguration
-VITE_BASE_URL=https://ihre-domain.church.tools
-VITE_USERNAME=ihr-username
-VITE_PASSWORD=ihr-passwort
-```
+- **Architektur-Design** - BaseCard-System und Komponenten-Struktur
+- **Code-Implementierung** - Vue 3 + TypeScript Best Practices
+- **UI/UX-Verbesserungen** - Responsive Design und Benutzerfreundlichkeit
+- **Dokumentation** - Umfassende technische Dokumentation
+- **Code-Qualität** - Refactoring und Performance-Optimierungen
 
-## 🛠️ Technische Details
+Die Kombination aus menschlicher Kreativität und KI-Effizienz ermöglichte eine schnelle und qualitativ hochwertige Entwicklung.
 
-### Tech Stack
+## 📄 Lizenz
 
-- **Frontend:** Vue 3 + TypeScript
-- **Build Tool:** Vite
-- **Styling:** CSS3 + ChurchTools Design System
-- **API Client:** ChurchTools Client Library
+Dieses Projekt steht unter der MIT-Lizenz. Siehe [LICENSE](LICENSE) für Details.
 
-### Projektstruktur
+## 🔗 Links
 
-```
-ct-dashboard/
-├── src/
-│   ├── components/
-│   │   ├── Start.vue                      # Haupt-Dashboard
-│   │   ├── BaseCard.vue                   # Basis-Karten-Komponente
-│   │   ├── BeispielCard.vue               # Beispiel-Implementierung
-│   │   ├── ExpiringAppointmentsCard.vue   # auslaufende Terminserien (Übersicht)
-│   │   ├── ExpiringAppointmentsAdmin.vue  # auslaufende Terminserien (Admin)
-│   │   ├── AutomaticGroupsCard.vue        # Automatische Gruppen (Übersicht)
-│   │   └── AutomaticGroupsAdmin.vue       # Automatische Gruppen (Admin)
-│   ├── services/
-│   │   └── churchtools.ts                 # ChurchTools API Service
-│   ├── types/
-│   │   └── modules.ts                     # Modul-Definitionen
-│   ├── App.vue                            # Root-Komponente
-│   ├── main.ts                            # Entry Point
-│   ├── style.css                          # Globale Styles
-│   └── ct-types.d.ts                      # ChurchTools TypeScript-Definitionen
-├── scripts/
-│   └── package.js                         # Deployment-Script
-├── releases/                              # Generierte ZIP-Pakete
-├── dist/                                  # Build-Output
-├── package.json                           # Projekt-Konfiguration
-├── vite.config.ts                         # Vite-Konfiguration
-└── README.md                              # Diese Dokumentation
-```
-
-### Responsive Design
-
-- **Mobile:** 1-spaltige Grid-Ansicht
-- **Desktop:** 2x2 Grid-Layout für Features
-- **Breakpoint:** 768px
+- **ChurchTools:** [churchtools.de](https://churchtools.de)
+- **Vue 3:** [vuejs.org](https://vuejs.org)
+- **TypeScript:** [typescriptlang.org](https://typescriptlang.org)
+- **Vite:** [vitejs.dev](https://vitejs.dev)
+- **Ona:** [ona.com](https://ona.com) - KI-Assistent für Softwareentwicklung
 
 ## 🔄 GitHub Setup
 
@@ -314,7 +257,7 @@ Die BaseCard-Architektur bietet eine einheitliche Basis für alle Dashboard-Kart
 
 - **[📚 Vollständige Dokumentation](./docs/)** - Umfassende Anleitungen
 - **[ChurchTools Forum](https://forum.church.tools)** - Community-Support
-- **[GitHub Issues](https://github.com/ihr-username/ct-dashboard/issues)** - Bug-Reports
+- **[GitHub Issues](https://github.com/bwl21/ct-dashboard/issues)** - Bug-Reports
 
 ### Entwickler-Support
 
