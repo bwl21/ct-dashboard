@@ -477,23 +477,25 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, calc(var(--spacing-sm) / var(--spacing-md)));
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: calc(var(--spacing-xxl) * 33);
+  z-index: 9999;
 }
 
 .modal-content {
-  background: var(--color-background-card);
-  border-radius: var(--border-radius-lg);
-  box-shadow: var(--shadow-lg);
-  max-width: calc(var(--spacing-xxl) * 20);
+  background: var(--color-background-card, #ffffff);
+  border-radius: var(--border-radius-lg, 12px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  max-width: 800px;
   max-height: 80vh;
   width: 90%;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  position: relative;
+  z-index: 10000;
 }
 
 .modal-header {
