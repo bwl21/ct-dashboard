@@ -145,6 +145,14 @@
       <template #actions>
         <button 
           type="button" 
+          @click="clearSearch" 
+          class="ct-btn ct-btn-secondary"
+          title="Suchfeld zurücksetzen"
+        >
+          Suche zurücksetzen
+        </button>
+        <button 
+          type="button" 
           @click="refreshData" 
           class="ct-btn ct-btn-primary" 
           :disabled="isLoading"
@@ -394,6 +402,12 @@ const toggleSelectAll = () => {
 
 const clearSelection = () => {
   selectedTags.value = []
+}
+
+const clearSearch = () => {
+  if (adminTableRef.value?.clearSearch) {
+    adminTableRef.value.clearSearch()
+  }
 }
 
 const toggleTagSelection = (tagId: number) => {
