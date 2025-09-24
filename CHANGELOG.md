@@ -5,6 +5,40 @@ Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/),
 und dieses Projekt folgt [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [1.0.3] - 2025-09-24
+
+### ✨ Added
+- **Logger System** mit kategorie-basierter Klassifizierung
+- **Neue Kategorie** "Personen angesehen" für getPersonDetails Logs
+- **BaseCard System** mit großen Icon-Headern (60x60px)
+- **Vorberechnete Kartenhöhen** für konsistentes Layout ohne Layout-Sprünge
+- **AdminTable Scrolling** mit 60vh Container und sticky Headers
+- **Umfassende Dokumentation** für UI-Verbesserungen
+- **Ona KI-Assistent** Erwähnung in README.md
+
+### 🔄 Changed
+- **BaseCard Design** komplett überarbeitet mit großen Icons und vertikalem Layout
+- **AdminTable Scrolling** - nur Tabelle scrollt, Filter bleiben sichtbar
+- **Logger Action Buttons** standardisiert mit ct-btn Klassen
+- **README.md** strukturiert und gekürzt für bessere Übersichtlichkeit
+- **DEPLOYMENT.md** deutlich kompakter und fokussierter
+- **Konsistente Button-Styling** über alle Komponenten
+
+### 🐛 Fixed
+- **Sticky Table Headers** funktionieren jetzt für alle Spalten (nicht nur "Aktionen")
+- **Layout-Sprünge** beim Laden von Karten durch vorberechnete Höhen eliminiert
+- **Kategorie-basierte Icons** im Logger statt Level-basiert
+- **Table Layout** von 'fixed' zu 'auto' für bessere Sticky-Kompatibilität
+- **Console.log Cleanup** projekt-weit bereinigt
+- **Titel und Count Spacing** in BaseCard optimiert
+
+### 🔒 Security
+- **Vertrauliche Informationen** vollständig aus Repository entfernt
+- **.ona-context.md** bereinigt und sicher neu erstellt
+- **Remote Repository** von sensiblen Daten bereinigt
+
 ## [1.0.0] - 2025-09-20
 
 ### 🎉 Erste stabile Version

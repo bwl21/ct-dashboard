@@ -44,9 +44,16 @@ ChurchTools Dashboard
 │   ├── Admin-Panel (CRUD + Bulk-Operationen)
 │   ├── ColorPicker (ct-labelmanager Design)
 │   └── Toast-Benachrichtigungen
+├── 📋 Logger System
+│   ├── Übersichts-Karte (BaseCard)
+│   ├── Admin-Panel (Filter + Tabelle)
+│   ├── Kategorie-basierte Klassifizierung
+│   └── Modal-Details
 └── 🎯 BaseCard-System
     ├── Einheitliche UI-Komponenten
     ├── Props & Slots Support
+    ├── Große Icon-Header
+    ├── Vorberechnete Kartenhöhen
     └── Standardisierte States
 ```
 
@@ -67,6 +74,7 @@ ChurchTools Dashboard
 | **auslaufende Terminserien** | ✅ Stabil | [API.md](./API.md#auslaufende-termine-api)                |
 | **Automatische Gruppen**     | ✅ Stabil | [API.md](./API.md#automatische-gruppen-api)               |
 | **Tags-Verwaltung**          | ✅ Stabil | [API.md](./API.md#tags-api)                               |
+| **Logger System**            | ✅ Stabil | [DEVELOPMENT_SESSION_2025-09-24_Logger_UI_Improvements.md](./DEVELOPMENT_SESSION_2025-09-24_Logger_UI_Improvements.md) |
 | **ColorPicker-Komponente**   | ✅ Stabil | [DEVELOPMENT.md](./DEVELOPMENT.md#colorpicker-komponente) |
 | **Toast-Benachrichtigungen** | ✅ Stabil | [DEVELOPMENT.md](./DEVELOPMENT.md#toast-system)           |
 | **BaseCard-System**          | ✅ Stabil | [DEVELOPMENT.md](./DEVELOPMENT.md#basecard-architektur)   |

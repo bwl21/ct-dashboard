@@ -38,7 +38,7 @@ export function useAutomaticGroups() {
     error.value = null
 
     try {
-      console.log('Fetching automatic groups...')
+      // Fetching automatic groups
 
       let allGroups: any[] = []
       let page = 1
@@ -93,7 +93,7 @@ export function useAutomaticGroups() {
         }))
 
       groups.value = automaticGroups
-      console.log(`Found ${automaticGroups.length} automatic groups`)
+      // Automatic groups loaded
     } catch (err: any) {
       console.error('Error loading automatic groups:', err)
       error.value = 'Fehler beim Laden der automatischen Gruppen. Bitte versuchen Sie es erneut.'
