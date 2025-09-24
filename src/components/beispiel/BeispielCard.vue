@@ -11,7 +11,7 @@
     retry-text="Mock-Daten laden"
     refresh-text="Aktualisieren"
     refreshing-text="Lädt..."
-    details-text="Details anzeigen"
+    details-text="Details"
     last-update-text="Letzte Aktualisierung"
     @navigate="$emit('navigate')"
     @refresh="refreshData"
