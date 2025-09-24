@@ -70,7 +70,7 @@ const i18n = createI18n({
       actions: 'Aktionen',
       noEndDate: 'Kein Enddatum',
       extend: 'Verlängern',
-      viewDetails: 'Details anzeigen',
+      viewDetails: 'Details',
     },
   },
 })

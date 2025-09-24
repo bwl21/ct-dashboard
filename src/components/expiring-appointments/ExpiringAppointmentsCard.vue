@@ -11,7 +11,7 @@
     retry-text="Erneut versuchen"
     refresh-text="Aktualisieren"
     refreshing-text="Aktualisieren..."
-    details-text="Details anzeigen"
+    details-text="Details"
     last-update-text="Letzte Aktualisierung"
     @navigate="$emit('navigate')"
     @refresh="refreshData"

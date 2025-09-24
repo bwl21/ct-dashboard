@@ -10,7 +10,7 @@
     description="Überwachung und Verwaltung aller Log-Einträge"
     searchable
     search-placeholder="Log-Einträge durchsuchen..."
-    :search-fields="['message', 'level', 'source', 'email', 'userId']"
+    :search-fields="['message', 'source', 'userId', 'details']"
     default-sort-field="timestamp"
     default-sort-order="desc"
     loading-text="Lade Log-Einträge..."
@@ -31,7 +31,7 @@
         <select v-model="selectedCategory" @change="filterByCategory" class="ct-select">
           <option value="">Alle Kategorien</option>
           <option value="system_error">Systemfehler</option>
-          <option value="failed_login">Falsche Passwörter</option>
+          <option value="failed_login">Login-Fehler</option>
           <option value="email_sent">Versendete Mails</option>
           <option value="successful_login">Erfolgreiche Anmeldungen</option>
           <option value="person_viewed">Personen angesehen</option>
@@ -68,10 +68,9 @@
     <template #cell-message="{ item }">
       <div class="log-message">
         <div class="message-text">{{ item.message }}</div>
-        <div v-if="item.email || item.userId" class="message-details">
-          <small v-if="item.email">E-Mail: {{ item.email }}</small>
-          <small v-if="item.userId">User ID: {{ item.userId }}</small>
-          <small v-if="item.ipAddress">IP: {{ item.ipAddress }}</small>
+        <div v-if="item.userId || item.details" class="message-details">
+          <small v-if="item.userId">Benutzer-ID: {{ item.userId }}</small>
+          <small v-if="item.details">{{ item.details }}</small>
         </div>
       </div>
     </template>
@@ -89,7 +88,7 @@
         <button
           @click="viewDetails(item)"
           class="ct-btn ct-btn-sm ct-btn-outline"
-          title="Details anzeigen"
+          title="Details"
         >
           Details
         </button>
@@ -126,17 +125,21 @@
           <strong>Nachricht:</strong>
           <p>{{ selectedLog.message }}</p>
         </div>
-        <div v-if="selectedLog.email" class="log-detail-item">
-          <strong>E-Mail:</strong>
-          <span>{{ selectedLog.email }}</span>
-        </div>
         <div v-if="selectedLog.userId" class="log-detail-item">
           <strong>Benutzer-ID:</strong>
           <span>{{ selectedLog.userId }}</span>
         </div>
-        <div v-if="selectedLog.ipAddress" class="log-detail-item">
-          <strong>IP-Adresse:</strong>
-          <span>{{ selectedLog.ipAddress }}</span>
+        <div v-if="selectedLog.domainType" class="log-detail-item">
+          <strong>Domain-Typ:</strong>
+          <span>{{ selectedLog.domainType }}</span>
+        </div>
+        <div v-if="selectedLog.domainId" class="log-detail-item">
+          <strong>Domain-ID:</strong>
+          <span>{{ selectedLog.domainId }}</span>
+        </div>
+        <div class="log-detail-item">
+          <strong>Original-Level:</strong>
+          <span>{{ selectedLog.originalLevel }}</span>
         </div>
         <div v-if="selectedLog.details" class="log-detail-item">
           <strong>Details:</strong>
@@ -241,8 +244,14 @@ const tableColumns = [
 
 // Computed
 const filteredLogs = computed(() => {
-  if (!selectedCategory.value) return logEntries.value
-  return filterLogsByCategory(logEntries.value, selectedCategory.value)
+  let filtered = logEntries.value
+  
+  // Apply category filter first
+  if (selectedCategory.value) {
+    filtered = filterLogsByCategory(filtered, selectedCategory.value)
+  }
+  
+  return filtered
 })
 
 // Methods
@@ -301,15 +310,17 @@ const refreshLogs = async () => {
   })
 }
 
-const filterByCategory = () => {
-  // Filter is handled by computed property
+const filterByCategory = async () => {
+  // Reload logs with new category filter
+  await refreshLogs()
 }
 
-const changeDaysFilter = () => {
-  refreshLogs() // Reload logs with new time range
+const changeDaysFilter = async () => {
+  // Reload logs with new time range
+  await refreshLogs()
 }
 
-const resetFilters = () => {
+const resetFilters = async () => {
   // Reset all filters to default values
   selectedCategory.value = ''
   selectedDays.value = 3
@@ -320,7 +331,7 @@ const resetFilters = () => {
   }
   
   // Reload logs with default settings
-  refreshLogs()
+  await refreshLogs()
 }
 
 const viewDetails = (log: LogEntry) => {
@@ -559,6 +570,10 @@ onMounted(() => {
 
 .log-detail-item {
   margin-bottom: var(--spacing-md);
+  padding: var(--spacing-sm);
+  background-color: var(--color-background-muted, #f8f9fa);
+  border-radius: var(--border-radius-sm);
+  border-left: 3px solid var(--color-primary, #3498db);
 }
 
 .category-detail {
@@ -573,13 +588,21 @@ onMounted(() => {
 }
 
 .log-detail-item strong {
-  display: block;
+  display: inline-block;
+  min-width: 140px;
   margin-bottom: 0.25rem;
+  margin-right: 0.5rem;
   color: var(--color-text-primary);
+  font-weight: 600;
 }
 
 .log-detail-item p {
   margin: 0;
+  color: var(--color-text-secondary);
+  display: inline;
+}
+
+.log-detail-item span {
   color: var(--color-text-secondary);
 }
 
@@ -691,15 +714,39 @@ onMounted(() => {
   .admin-actions {
     flex-direction: column;
     align-items: stretch;
+    gap: var(--spacing-sm);
+  }
+
+  .ct-select {
+    width: 100%;
   }
 
   .modal-content {
     width: 95%;
     max-height: 90vh;
+    margin: var(--spacing-sm);
+  }
+
+  .modal-header {
+    padding: var(--spacing-md);
+  }
+
+  .modal-body {
+    padding: var(--spacing-md);
   }
 
   .log-message {
     max-width: none;
+  }
+
+  .log-detail-item strong {
+    display: block;
+    min-width: auto;
+    margin-bottom: var(--spacing-xs);
+  }
+
+  .log-detail-item {
+    padding: var(--spacing-sm);
   }
 }
 </style>
