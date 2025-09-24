@@ -61,7 +61,8 @@ export function useLoggerSummary() {
     systemErrors: 0,
     failedLogins: 0,
     emailsSent: 0,
-    successfulLogins: 0
+    successfulLogins: 0,
+    personViewed: 0
   })
   const lastUpdate = ref<string | null>(null)
   const loadingProgress = ref<{ current: number; total: number } | null>(null)
