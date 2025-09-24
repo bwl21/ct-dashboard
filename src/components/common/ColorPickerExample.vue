@@ -126,7 +126,7 @@ const getColorName = (colorValue: string) => {
 }
 
 const handleSubmit = () => {
-  console.log('Form submitted:', tagForm.value)
+  // Form submitted
   alert('Tag would be created with: ' + JSON.stringify(tagForm.value, null, 2))
 }
 

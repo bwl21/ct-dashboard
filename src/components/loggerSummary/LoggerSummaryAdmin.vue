@@ -294,13 +294,9 @@ const refreshLogs = async () => {
 
 const filterByCategory = () => {
   // Filter is handled by computed property
-  console.log('Filter nach Kategorie geändert:', selectedCategory.value)
-  // Force reactivity update
-  console.log('Aktuelle Logs:', logEntries.value.length)
 }
 
 const changeDaysFilter = () => {
-  console.log('Zeitraum geändert:', selectedDays.value, 'Tage')
   refreshLogs() // Reload logs with new time range
 }
 
@@ -316,8 +312,6 @@ const resetFilters = () => {
   
   // Reload logs with default settings
   refreshLogs()
-  
-  console.log('Filter zurückgesetzt - Kategorie:', selectedCategory.value, 'Tage:', selectedDays.value)
 }
 
 const viewDetails = (log: LogEntry) => {
