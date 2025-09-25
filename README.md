@@ -5,8 +5,9 @@ A modern Vue 3 + TypeScript dashboard extension for ChurchTools providing system
 ## 🎯 What is this?
 
 This ChurchTools plugin provides a centralized dashboard for monitoring and managing key system data:
+
 - **Expiring appointment series** - Overview and management
-- **Automatic groups** - Status monitoring and execution tracking  
+- **Automatic groups** - Status monitoring and execution tracking
 - **Tags management** - Bulk operations with color picker
 - **Logger system** - Categorized log analysis with filtering
 
@@ -15,11 +16,13 @@ This ChurchTools plugin provides a centralized dashboard for monitoring and mana
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - Node.js 20+
 - ChurchTools installation with admin access
 - Git
 
 ### Development Setup
+
 ```bash
 # Clone repository
 git clone https://github.com/bwl21/ct-dashboard.git
@@ -32,7 +35,20 @@ npm install
 npm run dev
 ```
 
+### Common Commands
+
+```bash
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run lint         # Type check and format validation
+npm run format       # Auto-format code with Prettier
+npm run type-check   # TypeScript type checking only
+npm run clean        # Clean build artifacts
+npm run deploy       # Build and package for ChurchTools
+```
+
 ### Basic Development Workflow
+
 1. **Create feature branch**: `git checkout -b feature/your-feature`
 2. **Follow patterns**: See `src/components/` for examples
 3. **Use BaseCard + AdminTable**: For consistent UI
@@ -40,6 +56,7 @@ npm run dev
 5. **Deploy**: `npm run deploy` creates ChurchTools plugin package
 
 ### Project Structure
+
 ```
 src/components/[module]/
 ├── [Module]Card.vue      # Dashboard card
@@ -57,18 +74,20 @@ src/components/[module]/
 ## 🔧 Tech Stack
 
 - **Vue 3** + **TypeScript** - Modern reactive framework
-- **Vite** - Fast build tool and dev server  
+- **Vite** - Fast build tool and dev server
 - **ChurchTools Client** - Official API integration
 - **ChurchTools Design System** - Native styling
 
 ## 📚 Documentation
 
 ### For Developers
+
 - **[AGENTS.md](AGENTS.md)** - Development patterns and API usage
 - **[docs/](docs/)** - Technical documentation and session notes
 - **Working Examples**: See `src/components/` for real implementations
 
 ### For Contributors
+
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - How to contribute (if exists)
 - **[CHANGELOG.md](CHANGELOG.md)** - Version history and changes
 
@@ -82,14 +101,14 @@ src/components/[module]/
 
 ## 📊 Status
 
-| Feature | Status | Dokumentation |
-|---------|--------|---------------|
-| Auslaufende Terminserien | ✅ Stabil | [API.md](docs/API.md) |
-| Automatische Gruppen | ✅ Stabil | [API.md](docs/API.md) |
-| Tags-Verwaltung | ✅ Stabil | [Features](docs/FEATURES_TAGS_COLORPICKER_TOAST.md) |
-| Logger System | ✅ Stabil | [Session](docs/DEVELOPMENT_SESSION_2025-09-24_Logger_UI_Improvements.md) |
-| Log-Kategorisierung | ✅ Stabil | Priority-basiertes System |
-| BaseCard-System | ✅ Stabil | [Development](docs/DEVELOPMENT.md) |
+| Feature                  | Status    | Dokumentation                                                            |
+| ------------------------ | --------- | ------------------------------------------------------------------------ |
+| Auslaufende Terminserien | ✅ Stabil | [API.md](docs/API.md)                                                    |
+| Automatische Gruppen     | ✅ Stabil | [API.md](docs/API.md)                                                    |
+| Tags-Verwaltung          | ✅ Stabil | [Features](docs/FEATURES_TAGS_COLORPICKER_TOAST.md)                      |
+| Logger System            | ✅ Stabil | [Session](docs/DEVELOPMENT_SESSION_2025-09-24_Logger_UI_Improvements.md) |
+| Log-Kategorisierung      | ✅ Stabil | Priority-basiertes System                                                |
+| BaseCard-System          | ✅ Stabil | [Development](docs/DEVELOPMENT.md)                                       |
 
 ## 🤝 Contributing
 
@@ -106,52 +125,62 @@ See [AGENTS.md](AGENTS.md) for development patterns and [docs/](docs/) for techn
 ### Useful Prompts
 
 **Start Development Session:**
+
 ```
 "Start a new development session for [feature description]"
 ```
 
 **Show Progress:**
+
 ```
 "Show me what we've accomplished so far"
 "What are the next steps?"
 ```
 
 **End Session:**
+
 ```
 "This session is complete, please finalize documentation"
 ```
 
 **Create Commit Message:**
+
 ```
 "Please create a commit message for these changes"
 ```
 
 **Commit Changes:**
+
 ```
 "Please commit these changes"
 ```
 
 **Push Changes:**
+
 ```
 "Please push the changes to remote"
 ```
 
 **Deploy:**
+
 ```
 "Build and prepare for deployment"
 ```
 
 **Review Code:**
+
 ```
 "Review the changes and run lint checks"
 ```
 
 **Create Pull Request:**
+
 ```
 "Please create a pull request for this feature"
 ```
 
 **Discussion Mode:**
+
 ```
 "Let's discuss this first - don't make any changes yet"
 ```
@@ -169,6 +198,7 @@ Dieses Projekt wurde mit Unterstützung von **Ona** entwickelt - einem KI-Assist
 Die Kombination aus menschlicher Kreativität und KI-Effizienz ermöglichte eine schnelle und qualitativ hochwertige Entwicklung.
 
 ### AI Agent Development
+
 Für AI Agents, die an diesem Projekt arbeiten, siehe **[AGENTS.md](AGENTS.md)** für kompakte Entwicklungsrichtlinien.
 
 ## 📄 Lizenz
@@ -186,20 +216,24 @@ Dieses Projekt steht unter der MIT-Lizenz. Siehe [LICENSE](LICENSE) für Details
 ## 🔄 Development
 
 ### Branching-Strategie
+
 - **main** - Produktionsreifer Code
 - **feature/** - Feature-Branches
 
 ## 🧩 Architektur
 
 ### BaseCard-System
-Einheitliche Basis für alle Dashboard-Karten. 
+
+Einheitliche Basis für alle Dashboard-Karten.
 **Beispiele:** `src/components/*/Card.vue`
 
 ### Admin-Panels
+
 Verwaltungsoberflächen mit Filtern und Tabellen.
 **Beispiele:** `src/components/*/Admin.vue`
 
 ### Composables
+
 Vue 3 Composables für Datenlogik.
 **Beispiele:** `src/components/*/use*.ts`
 

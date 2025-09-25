@@ -2,7 +2,7 @@
   <div class="admin-table">
     <!-- Header Card -->
     <div class="ct-card header-card">
-        <slot name="header-controls"></slot>
+      <slot name="header-controls"></slot>
     </div>
 
     <!-- Controls Card -->
@@ -18,10 +18,10 @@
               class="ct-input search-input"
             />
           </div>
-          
+
           <!-- Custom Filter Slots -->
           <slot name="filters"></slot>
-          
+
           <!-- Action Buttons -->
           <div class="button-group">
             <slot name="actions"></slot>
@@ -75,17 +75,17 @@
               | Ergebnisse: {{ filteredData.length }}
             </div>
           </div>
-          
+
           <table class="admin-data-table" ref="tableRef">
             <thead>
               <tr>
                 <th
                   v-for="(column, index) in columns"
                   :key="column.key"
-                  :class="{ 
-                    sortable: column.sortable, 
+                  :class="{
+                    sortable: column.sortable,
                     resizable: column.resizable,
-                    active: sortField === column.key
+                    active: sortField === column.key,
                   }"
                   :style="{ width: columnWidths[index] + 'px' }"
                   @click="column.sortable && sortBy(column.key)"
@@ -112,8 +112,7 @@
                     :item="item"
                     :value="item[column.key]"
                     :column="column"
-                  >
-                  </slot>
+                  ></slot>
                   <!-- Default Cell Rendering -->
                   <span v-else>{{ item[column.key] }}</span>
                 </td>
@@ -138,24 +137,24 @@ interface Props {
   data: any[]
   loading: boolean
   error: string | null
-  
-  // Table Configuration  
+
+  // Table Configuration
   columns: TableColumn[]
   rowKey: string
-  
+
   // Header
   title: string
   description?: string
-  
+
   // Search & Filtering
   searchable?: boolean
   searchPlaceholder?: string
   searchFields?: string[]
-  
+
   // Sorting
   defaultSortField?: string
   defaultSortDirection?: SortDirection
-  
+
   // Text customization
   loadingText?: string
   retryText?: string
@@ -171,7 +170,7 @@ const props = withDefaults(defineProps<Props>(), {
   loadingText: 'Lädt...',
   retryText: 'Erneut versuchen',
   reloadText: 'Erneut laden',
-  emptyText: 'Keine Daten gefunden.'
+  emptyText: 'Keine Daten gefunden.',
 })
 
 const emit = defineEmits<{
@@ -188,19 +187,19 @@ const tableRef = ref<HTMLTableElement>()
 // Use composables
 const dataRef = computed(() => props.data)
 const { sortField, sortDirection, sortBy, sortedData } = useTableSorting(
-  dataRef, 
-  props.defaultSortField, 
+  dataRef,
+  props.defaultSortField,
   props.defaultSortDirection
 )
 
-const initialWidths = computed(() => props.columns.map(col => col.width || 150))
+const initialWidths = computed(() => props.columns.map((col) => col.width || 150))
 const { columnWidths, startResize } = useTableResize(initialWidths.value)
 
-const searchFieldsComputed = computed(() => 
-  props.searchFields.length > 0 ? props.searchFields : props.columns.map(col => col.key)
+const searchFieldsComputed = computed(() =>
+  props.searchFields.length > 0 ? props.searchFields : props.columns.map((col) => col.key)
 )
 const { searchTerm, filteredData: searchFilteredData } = useTableSearch(
-  sortedData, 
+  sortedData,
   searchFieldsComputed.value
 )
 
@@ -221,7 +220,7 @@ const clearSearch = () => {
 defineExpose({
   searchTerm: readonly(searchTerm),
   filteredData: readonly(filteredData),
-  clearSearch
+  clearSearch,
 })
 </script>
 
@@ -230,10 +229,11 @@ defineExpose({
   padding: 0;
   width: 100%;
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   color: var(--ct-text-primary, #2c3e50);
   line-height: 1.5;
-  
+
   /* Ensure consistent light theme variables */
   --ct-bg-primary: #ffffff;
   --ct-bg-secondary: #f8f9fa;
@@ -606,12 +606,12 @@ defineExpose({
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .search-container {
     width: 100%;
     min-width: auto;
   }
-  
+
   .button-group {
     justify-content: center;
   }

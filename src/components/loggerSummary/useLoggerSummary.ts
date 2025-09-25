@@ -18,14 +18,14 @@ export interface ChurchToolsLogEntry {
 // Log Categories
 export const LogCategory = {
   SYSTEM_ERROR: 'system_error',
-  FAILED_LOGIN: 'failed_login', 
+  FAILED_LOGIN: 'failed_login',
   EMAIL_SENT: 'email_sent',
   SUCCESSFUL_LOGIN: 'successful_login',
   PERSON_VIEWED: 'person_viewed',
-  OTHER: 'other'
+  OTHER: 'other',
 } as const
 
-export type LogCategory = typeof LogCategory[keyof typeof LogCategory]
+export type LogCategory = (typeof LogCategory)[keyof typeof LogCategory]
 
 // Category Rule Interface
 export interface CategoryRule {
@@ -79,58 +79,56 @@ export interface LogFilter {
 }
 
 // Helper functions for categorization conditions
-const messageIncludes = (...keywords: string[]) => 
+const messageIncludes =
+  (...keywords: string[]) =>
   (log: ChurchToolsLogEntry) => {
     const message = log.message.toLowerCase()
-    return keywords.some(keyword => message.includes(keyword.toLowerCase()))
+    return keywords.some((keyword) => message.includes(keyword.toLowerCase()))
   }
 
-const domainTypeIs = (...types: string[]) => 
+const domainTypeIs =
+  (...types: string[]) =>
   (log: ChurchToolsLogEntry) => {
     const domainType = log.domainType?.toLowerCase() || ''
-    return types.some(type => domainType.includes(type.toLowerCase()))
+    return types.some((type) => domainType.includes(type.toLowerCase()))
   }
 
-const levelIs = (level: number) => 
-  (log: ChurchToolsLogEntry) => log.level === level
+const levelIs = (level: number) => (log: ChurchToolsLogEntry) => log.level === level
 
-const and = (...conditions: ((log: ChurchToolsLogEntry) => boolean)[]) => 
-  (log: ChurchToolsLogEntry) => conditions.every(condition => condition(log))
+const and =
+  (...conditions: ((log: ChurchToolsLogEntry) => boolean)[]) =>
+  (log: ChurchToolsLogEntry) =>
+    conditions.every((condition) => condition(log))
 
-const or = (...conditions: ((log: ChurchToolsLogEntry) => boolean)[]) => 
-  (log: ChurchToolsLogEntry) => conditions.some(condition => condition(log))
+const or =
+  (...conditions: ((log: ChurchToolsLogEntry) => boolean)[]) =>
+  (log: ChurchToolsLogEntry) =>
+    conditions.some((condition) => condition(log))
 
 // Categorization Rules (sorted by priority)
 const CATEGORIZATION_RULES: CategoryRule[] = [
   {
     category: LogCategory.FAILED_LOGIN,
     priority: 100,
-    condition: and(
-        messageIncludes('Username or password'),
-        domainTypeIs('login')
-    ),
+    condition: and(messageIncludes('Username or password'), domainTypeIs('login')),
     description: 'Fehlgeschlagene Login-Versuche',
     ui: {
       displayName: 'Login-Fehler',
       icon: '🔒',
-      cssClass: 'category-warning'
-    }
+      cssClass: 'category-warning',
+    },
   },
 
   {
     category: LogCategory.SUCCESSFUL_LOGIN,
     priority: 90,
-    condition: and(
-        messageIncludes('Erfolgreich angemeldet'),
-        domainTypeIs('login')
-
-    ),
+    condition: and(messageIncludes('Erfolgreich angemeldet'), domainTypeIs('login')),
     description: 'Erfolgreiche Anmeldungen',
     ui: {
       displayName: 'Anmeldungen',
       icon: '✅',
-      cssClass: 'category-success'
-    }
+      cssClass: 'category-success',
+    },
   },
 
   {
@@ -144,39 +142,35 @@ const CATEGORIZATION_RULES: CategoryRule[] = [
     ui: {
       displayName: 'Systemfehler',
       icon: '🚨',
-      cssClass: 'category-error'
-    }
+      cssClass: 'category-error',
+    },
   },
 
   {
     category: LogCategory.EMAIL_SENT,
     priority: 70,
     condition: and(
-      or(
-        domainTypeIs('mail', 'email'),
-        messageIncludes('mail', 'email')
-      ),
+      or(domainTypeIs('mail', 'email'), messageIncludes('mail', 'email')),
       messageIncludes('Speichere Mail an')
     ),
     description: 'Versendete E-Mails',
     ui: {
       displayName: 'E-Mails',
       icon: '📧',
-      cssClass: 'category-info'
-    }
+      cssClass: 'category-info',
+    },
   },
 
   {
     category: LogCategory.PERSON_VIEWED,
     priority: 60,
-    condition: and(levelIs(3),
-    messageIncludes('getpersondetails')),
+    condition: and(levelIs(3), messageIncludes('getpersondetails')),
     description: 'Angesehene Personen',
     ui: {
       displayName: 'Personen angesehen',
       icon: '👤',
-      cssClass: 'category-info'
-    }
+      cssClass: 'category-info',
+    },
   },
 
   {
@@ -187,25 +181,23 @@ const CATEGORIZATION_RULES: CategoryRule[] = [
     ui: {
       displayName: 'Sonstige',
       icon: 'ℹ️',
-      cssClass: 'category-neutral'
-    }
-  }
+      cssClass: 'category-neutral',
+    },
+  },
 ]
 
 // Helper functions for UI mappings
-export const getCategoryRule = (category: LogCategory) => 
-  CATEGORIZATION_RULES.find(rule => rule.category === category)
+export const getCategoryRule = (category: LogCategory) =>
+  CATEGORIZATION_RULES.find((rule) => rule.category === category)
 
-export const getAllCategories = () => 
-  CATEGORIZATION_RULES.map(rule => rule.category)
+export const getAllCategories = () => CATEGORIZATION_RULES.map((rule) => rule.category)
 
-export const getCategoryDisplayName = (category: LogCategory) => 
+export const getCategoryDisplayName = (category: LogCategory) =>
   getCategoryRule(category)?.ui.displayName || category
 
-export const getCategoryIcon = (category: LogCategory) => 
-  getCategoryRule(category)?.ui.icon || 'ℹ️'
+export const getCategoryIcon = (category: LogCategory) => getCategoryRule(category)?.ui.icon || 'ℹ️'
 
-export const getCategoryCssClass = (category: LogCategory) => 
+export const getCategoryCssClass = (category: LogCategory) =>
   getCategoryRule(category)?.ui.cssClass || 'category-neutral'
 
 // Helper function is no longer needed since API uses correct spelling
@@ -221,12 +213,12 @@ export function useLoggerSummary() {
     failedLogins: 0,
     emailsSent: 0,
     successfulLogins: 0,
-    personViewed: 0
+    personViewed: 0,
   })
   const lastUpdate = ref<string | null>(null)
   const loadingProgress = ref<{ current: number; total: number } | null>(null)
 
-// Test API call removed
+  // Test API call removed
 
   /**
    * Fetch logs from ChurchTools API with pagination
@@ -241,29 +233,29 @@ export function useLoggerSummary() {
     while (hasMorePages && allLogs.length < maxTotalLogs) {
       try {
         const params = new URLSearchParams()
-        
+
         // Add filter parameters
         if (filter.message) params.append('message', filter.message)
         if (filter.levels?.length) {
-          filter.levels.forEach(level => params.append('levels[]', level))
+          filter.levels.forEach((level) => params.append('levels[]', level))
         }
         if (filter.before) params.append('before', filter.before)
         if (filter.after) params.append('after', filter.after)
         if (filter.personId) params.append('person_id', filter.personId.toString())
-        
+
         // Pagination parameters
         params.append('page', currentPage.toString())
         params.append('limit', maxLogsPerRequest.toString())
 
         const url = `/logs?${params.toString()}`
         const response = await churchtoolsClient.get<ChurchToolsLogEntry[]>(url)
-        
+
         // ChurchTools client returns the logs array directly
         if (!Array.isArray(response)) {
           console.error('Expected array response, got:', typeof response, response)
           throw new Error('Expected array response from logs API')
         }
-        
+
         allLogs.push(...response)
 
         // Since we get direct array, we can't know total pages
@@ -279,9 +271,8 @@ export function useLoggerSummary() {
 
         // Small delay to avoid overwhelming the API
         if (hasMorePages) {
-          await new Promise(resolve => setTimeout(resolve, 100))
+          await new Promise((resolve) => setTimeout(resolve, 100))
         }
-
       } catch (err) {
         console.error(`Error fetching page ${currentPage}:`, err)
         if (currentPage === 1) {
@@ -301,10 +292,10 @@ export function useLoggerSummary() {
   async function getLogsLastDays(days: number = 3): Promise<ChurchToolsLogEntry[]> {
     const after = new Date()
     after.setDate(after.getDate() - days)
-    
+
     return fetchLogsFromAPI({
       after: after.toISOString(),
-      days
+      days,
     })
   }
 
@@ -312,9 +303,9 @@ export function useLoggerSummary() {
    * Process ChurchTools logs into dashboard format
    */
   function processLogs(rawLogs: ChurchToolsLogEntry[]): ProcessedLogEntry[] {
-    return rawLogs.map(log => {
+    return rawLogs.map((log) => {
       const category = categorizeLog(log)
-      
+
       const processed: ProcessedLogEntry = {
         id: `ct-log-${log.id}`,
         level: mapLogLevelByCategory(log.level, category),
@@ -326,7 +317,7 @@ export function useLoggerSummary() {
         domainType: log.domainType,
         domainId: log.domainId,
         personId: log.personId,
-        simulatePersonId: log.simulatePersonId // API correctly uses simulatePersonId
+        simulatePersonId: log.simulatePersonId, // API correctly uses simulatePersonId
       }
 
       // Add user information
@@ -346,10 +337,14 @@ export function useLoggerSummary() {
    */
   function mapLogLevel(level: number): ProcessedLogEntry['level'] {
     switch (level) {
-      case 1: return 'error'   // Warning -> Error (for system errors)
-      case 2: return 'info'    // Notice  
-      case 3: return 'info'    // Info
-      default: return 'info'
+      case 1:
+        return 'error' // Warning -> Error (for system errors)
+      case 2:
+        return 'info' // Notice
+      case 3:
+        return 'info' // Info
+      default:
+        return 'info'
     }
   }
 
@@ -357,7 +352,10 @@ export function useLoggerSummary() {
    * Map log level based on category for better visual representation
    * Note: Level is only used for categorization support, not for display
    */
-  function mapLogLevelByCategory(originalLevel: number, category: LogCategory): ProcessedLogEntry['level'] {
+  function mapLogLevelByCategory(
+    originalLevel: number,
+    category: LogCategory
+  ): ProcessedLogEntry['level'] {
     switch (category) {
       case LogCategory.SYSTEM_ERROR:
         return 'error'
@@ -380,14 +378,16 @@ export function useLoggerSummary() {
    */
   function categorizeLog(log: ChurchToolsLogEntry): LogCategory {
     // Find all matching rules and sort by priority
-    const matchingRules = CATEGORIZATION_RULES
-      .filter(rule => rule.condition(log))
-      .sort((a, b) => b.priority - a.priority)
+    const matchingRules = CATEGORIZATION_RULES.filter((rule) => rule.condition(log)).sort(
+      (a, b) => b.priority - a.priority
+    )
 
     // Optional: Logging for debugging
     if (process.env.NODE_ENV === 'development' && matchingRules.length > 1) {
-      console.log(`Log "${log.message}" matches multiple rules:`, 
-        matchingRules.map(r => `${r.category} (${r.priority})`))
+      console.log(
+        `Log "${log.message}" matches multiple rules:`,
+        matchingRules.map((r) => `${r.category} (${r.priority})`)
+      )
     }
 
     return matchingRules.length > 0 ? matchingRules[0].category : LogCategory.OTHER
@@ -424,10 +424,10 @@ export function useLoggerSummary() {
       failedLogins: 0,
       emailsSent: 0,
       successfulLogins: 0,
-      personViewed: 0
+      personViewed: 0,
     }
 
-    processedLogs.forEach(log => {
+    processedLogs.forEach((log) => {
       switch (log.category) {
         case LogCategory.SYSTEM_ERROR:
           stats.systemErrors++
@@ -460,13 +460,13 @@ export function useLoggerSummary() {
     try {
       const rawLogs = await getLogsLastDays(days)
       const processedLogs = processLogs(rawLogs)
-      
+
       statistics.value = calculateStatistics(processedLogs)
       lastUpdate.value = new Date().toISOString()
     } catch (err) {
       console.error('Error loading log statistics:', err)
       error.value = 'Fehler beim Laden der Log-Statistiken von ChurchTools'
-      
+
       // Reset statistics to empty state
       statistics.value = {
         total: 0,
@@ -486,7 +486,7 @@ export function useLoggerSummary() {
    */
   function filterLogsByCategory(logs: ProcessedLogEntry[], category: string): ProcessedLogEntry[] {
     if (!category || category === '') return logs
-    return logs.filter(log => log.category === category)
+    return logs.filter((log) => log.category === category)
   }
 
   /**
@@ -494,13 +494,14 @@ export function useLoggerSummary() {
    */
   function filterLogsBySearch(logs: ProcessedLogEntry[], searchTerm: string): ProcessedLogEntry[] {
     if (!searchTerm || searchTerm.trim() === '') return logs
-    
+
     const term = searchTerm.toLowerCase().trim()
-    return logs.filter(log => 
-      log.message.toLowerCase().includes(term) ||
-      log.source.toLowerCase().includes(term) ||
-      log.details?.toLowerCase().includes(term) ||
-      log.userId?.includes(term)
+    return logs.filter(
+      (log) =>
+        log.message.toLowerCase().includes(term) ||
+        log.source.toLowerCase().includes(term) ||
+        log.details?.toLowerCase().includes(term) ||
+        log.userId?.includes(term)
     )
   }
 
@@ -514,14 +515,14 @@ export function useLoggerSummary() {
     try {
       const rawLogs = await getLogsLastDays(days)
       const processedLogs = processLogs(rawLogs)
-      
+
       // Apply additional filters
       let filteredLogs = processedLogs
-      
+
       if (filter.category) {
         filteredLogs = filterLogsByCategory(filteredLogs, filter.category)
       }
-      
+
       if (filter.message) {
         filteredLogs = filterLogsBySearch(filteredLogs, filter.message)
       }
@@ -532,7 +533,7 @@ export function useLoggerSummary() {
     } catch (err) {
       console.error('Error loading detailed logs:', err)
       error.value = 'Fehler beim Laden der detaillierten Logs von ChurchTools'
-      
+
       // Reset to empty state
       logs.value = []
       statistics.value = {
@@ -568,16 +569,16 @@ export function useLoggerSummary() {
     statistics,
     lastUpdate,
     loadingProgress,
-    
+
     // Computed
     formattedLastUpdate,
-    
+
     // Methods
     loadLogStatistics,
     loadDetailedLogs,
     processLogs,
     calculateStatistics,
     filterLogsByCategory,
-    filterLogsBySearch
+    filterLogsBySearch,
   }
 }

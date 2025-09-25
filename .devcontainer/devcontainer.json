@@ -48,7 +48,7 @@
   },
 
   // Post-create commands to run after container creation
-  "postCreateCommand": "npm install",
+  "postCreateCommand": "npm install && npm run format",
 
   // Forward ports for development
   "forwardPorts": [5173],

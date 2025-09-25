@@ -82,7 +82,11 @@
             {{ isLoading ? refreshingText : refreshText }}
           </button>
           <slot name="actions">
-            <button type="button" @click="$emit('navigate')" class="ct-btn ct-btn-sm ct-btn-outline">
+            <button
+              type="button"
+              @click="$emit('navigate')"
+              class="ct-btn ct-btn-sm ct-btn-outline"
+            >
               {{ detailsText }}
             </button>
           </slot>
@@ -131,12 +135,13 @@ const cardStyle = computed(() => {
   const rowHeight = 40 // Each table row
   const footerHeight = 40 // Footer
   const padding = 16 // Card padding
-  
+
   const expectedRows = props.statusStats.length
-  const calculatedHeight = headerHeight + tableHeaderHeight + (expectedRows * rowHeight) + footerHeight + padding
-  
+  const calculatedHeight =
+    headerHeight + tableHeaderHeight + expectedRows * rowHeight + footerHeight + padding
+
   return {
-    minHeight: `${calculatedHeight}px`
+    minHeight: `${calculatedHeight}px`,
   }
 })
 

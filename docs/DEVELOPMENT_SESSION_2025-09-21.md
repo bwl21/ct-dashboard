@@ -9,6 +9,7 @@
 ### 🏷️ Tags-Verwaltung (TagsAdmin)
 
 **Vollständige CRUD-Operationen:**
+
 - ✅ Tags erstellen, bearbeiten, löschen
 - ✅ Bulk-Operationen (Farbe ändern, Massen-Löschung)
 - ✅ Domain-spezifische Tags (Person, Song, Group)
@@ -16,6 +17,7 @@
 - ✅ Sortierung nach allen Spalten mit Similarity-basierter Farbsortierung
 
 **Technische Details:**
+
 - Vue 3 Composition API
 - ChurchTools API Integration
 - Reactive State Management
@@ -25,6 +27,7 @@
 ### 🎨 ColorPicker-Komponente
 
 **Design exakt nach ct-labelmanager:**
+
 - ✅ Horizontales Layout (Kreis links, Text rechts)
 - ✅ 4-spaltige Grid-Anordnung
 - ✅ Runde Farbkreise (24px) mit weißen Rahmen
@@ -33,6 +36,7 @@
 - ✅ Name und Hex-Code Anzeige
 
 **Technische Features:**
+
 - Reusable Vue Component
 - Props-basierte Konfiguration
 - v-model Support
@@ -42,6 +46,7 @@
 ### 🔔 Toast-Benachrichtigungssystem
 
 **Modernes Feedback-System:**
+
 - ✅ 4 Toast-Typen (Success, Error, Warning, Info)
 - ✅ Farbige Hintergründe wie ct-labelmanager
 - ✅ Titel und Nachricht für detaillierte Informationen
@@ -50,6 +55,7 @@
 - ✅ Globale Verfügbarkeit für Console-Testing
 
 **Integration:**
+
 - useToast Composable
 - API-spezifische Helper-Funktionen
 - Vollständige Integration in TagsAdmin
@@ -77,10 +83,10 @@
 
 ```typescript
 // ChurchTools API Endpoints
-GET    /tags/{domain}     // Tags laden
-POST   /tags/{domain}     // Tag erstellen
-PUT    /tags/{id}         // Tag aktualisieren
-DELETE /tags/{id}         // Tag löschen
+GET / tags / { domain } // Tags laden
+POST / tags / { domain } // Tag erstellen
+PUT / tags / { id } // Tag aktualisieren
+DELETE / tags / { id } // Tag löschen
 ```
 
 ## 🎯 Benutzerfreundlichkeit
@@ -101,11 +107,11 @@ DELETE /tags/{id}         // Tag löschen
 
 ## 📊 Performance-Metriken
 
-| Komponente | Bundle Size | Render Time | Features |
-|------------|-------------|-------------|----------|
-| TagsAdmin | ~45KB | <200ms | CRUD, Bulk-Ops, Filter |
-| ColorPicker | ~8KB | <50ms | 33 Farben, Responsive |
-| Toast System | ~12KB | <30ms | 4 Typen, Animationen |
+| Komponente   | Bundle Size | Render Time | Features               |
+| ------------ | ----------- | ----------- | ---------------------- |
+| TagsAdmin    | ~45KB       | <200ms      | CRUD, Bulk-Ops, Filter |
+| ColorPicker  | ~8KB        | <50ms       | 33 Farben, Responsive  |
+| Toast System | ~12KB       | <30ms       | 4 Typen, Animationen   |
 
 ## 🧪 Testing & Qualitätssicherung
 

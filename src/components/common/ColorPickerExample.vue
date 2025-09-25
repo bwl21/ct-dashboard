@@ -1,22 +1,19 @@
 <template>
   <div class="color-picker-example">
     <h2>ColorPicker Example</h2>
-    
+
     <div class="example-section">
       <h3>Basic Usage</h3>
       <div class="form-group">
         <label>Tag Color:</label>
         <ColorPicker v-model="selectedColor" />
       </div>
-      
+
       <div class="result">
-        <strong>Selected Color:</strong> 
+        <strong>Selected Color:</strong>
         {{ selectedColor || 'None' }}
         <div v-if="selectedColor" class="color-preview">
-          <div 
-            class="color-swatch" 
-            :style="{ backgroundColor: getColorHex(selectedColor) }"
-          ></div>
+          <div class="color-swatch" :style="{ backgroundColor: getColorHex(selectedColor) }"></div>
           {{ getColorName(selectedColor) }} ({{ getColorHex(selectedColor) }})
         </div>
       </div>
@@ -27,37 +24,37 @@
       <form @submit.prevent="handleSubmit" class="tag-form">
         <div class="form-group">
           <label for="tagName">Tag Name:</label>
-          <input 
+          <input
             id="tagName"
-            v-model="tagForm.name" 
-            type="text" 
+            v-model="tagForm.name"
+            type="text"
             placeholder="Enter tag name"
             class="form-input"
           />
         </div>
-        
+
         <div class="form-group">
           <label for="tagDescription">Description:</label>
-          <textarea 
+          <textarea
             id="tagDescription"
-            v-model="tagForm.description" 
+            v-model="tagForm.description"
             placeholder="Enter description (optional)"
             class="form-input"
             rows="3"
           ></textarea>
         </div>
-        
+
         <div class="form-group">
           <label>Color:</label>
           <ColorPicker v-model="tagForm.color" />
         </div>
-        
+
         <div class="form-actions">
           <button type="submit" class="btn btn-primary">Create Tag</button>
           <button type="button" class="btn btn-secondary" @click="resetForm">Reset</button>
         </div>
       </form>
-      
+
       <div class="form-result">
         <h4>Form Data:</h4>
         <pre>{{ JSON.stringify(tagForm, null, 2) }}</pre>
@@ -76,7 +73,7 @@ const selectedColor = ref<string | null>('blue')
 const tagForm = ref({
   name: '',
   description: '',
-  color: null as string | null
+  color: null as string | null,
 })
 
 // ChurchTools Colors mapping (same as in ColorPicker)
@@ -111,17 +108,17 @@ const churchToolsColors = [
   { value: 'red', label: 'Red', hex: '#FF0000' },
   { value: 'violet', label: 'Violet', hex: '#8A2BE2' },
   { value: 'white', label: 'White', hex: '#FFFFFF' },
-  { value: 'yellow', label: 'Yellow', hex: '#FFFF00' }
+  { value: 'yellow', label: 'Yellow', hex: '#FFFF00' },
 ]
 
 // Methods
 const getColorHex = (colorValue: string) => {
-  const color = churchToolsColors.find(c => c.value === colorValue)
+  const color = churchToolsColors.find((c) => c.value === colorValue)
   return color?.hex || '#000000'
 }
 
 const getColorName = (colorValue: string) => {
-  const color = churchToolsColors.find(c => c.value === colorValue)
+  const color = churchToolsColors.find((c) => c.value === colorValue)
   return color?.label || colorValue
 }
 
@@ -134,7 +131,7 @@ const resetForm = () => {
   tagForm.value = {
     name: '',
     description: '',
-    color: null
+    color: null,
   }
 }
 </script>

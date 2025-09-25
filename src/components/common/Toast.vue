@@ -40,7 +40,7 @@ const getIcon = (type: string) => {
     success: '✓',
     warning: '⚠',
     error: '✕',
-    info: 'ℹ'
+    info: 'ℹ',
   }
   return icons[type as keyof typeof icons] || icons.info
 }
@@ -66,7 +66,9 @@ const getIcon = (type: string) => {
   padding: 20px 24px;
   background: white;
   border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 2px 8px rgba(0, 0, 0, 0.08);
   border-left: 5px solid;
   pointer-events: auto;
   min-width: 420px;
@@ -80,7 +82,9 @@ const getIcon = (type: string) => {
 
 .toast-dismissible:hover {
   transform: translateY(-3px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.15),
+    0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .toast-success {
@@ -201,23 +205,23 @@ const getIcon = (type: string) => {
     left: 16px;
     max-width: none;
   }
-  
+
   .toast {
     min-width: auto;
     max-width: none;
     padding: 18px 20px;
   }
-  
+
   .toast-icon {
     font-size: 22px;
     width: 26px;
     height: 26px;
   }
-  
+
   .toast-title {
     font-size: 15px;
   }
-  
+
   .toast-message {
     font-size: 14px;
   }

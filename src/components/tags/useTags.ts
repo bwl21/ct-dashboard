@@ -16,16 +16,14 @@ export function useTags() {
   const selectedDomain = ref('')
 
   // Computed properties
-  const personTagsCount = computed(() => 
-    tags.value.filter(tag => tag.domainType === 'person').length
+  const personTagsCount = computed(
+    () => tags.value.filter((tag) => tag.domainType === 'person').length
   )
 
-  const songTagsCount = computed(() => 
-    tags.value.filter(tag => tag.domainType === 'song').length
-  )
+  const songTagsCount = computed(() => tags.value.filter((tag) => tag.domainType === 'song').length)
 
-  const groupTagsCount = computed(() => 
-    tags.value.filter(tag => tag.domainType === 'group').length
+  const groupTagsCount = computed(
+    () => tags.value.filter((tag) => tag.domainType === 'group').length
   )
 
   // Note: Domain filtering is now handled at API level in fetchTags
@@ -38,7 +36,7 @@ export function useTags() {
 
     try {
       const domains = selectedDomain.value ? [selectedDomain.value] : ['person', 'song', 'group']
-      
+
       const tagPromises = domains.map(async (domain) => {
         try {
           const response = await churchtoolsClient.get(`/tags/${domain}`)
@@ -65,7 +63,7 @@ export function useTags() {
       const payload = {
         name: tagData.name?.trim(),
         description: tagData.description?.trim() || '',
-        color: tagData.color || 'basic'
+        color: tagData.color || 'basic',
       }
       const response = await churchtoolsClient.post(`/tags/${tagData.domainType}`, payload)
       await fetchTags() // Refresh the list
@@ -81,7 +79,7 @@ export function useTags() {
       const payload = {
         name: tagData.name?.trim(),
         description: tagData.description?.trim() || '',
-        color: tagData.color || 'basic'
+        color: tagData.color || 'basic',
       }
       const response = await churchtoolsClient.put(`/tags/${tagId}`, payload)
       await fetchTags() // Refresh the list
@@ -109,18 +107,18 @@ export function useTags() {
 
     for (const tagId of tagIds) {
       try {
-        const tag = tags.value.find(t => t.id === tagId)
+        const tag = tags.value.find((t) => t.id === tagId)
         if (!tag) continue
 
         const tagData = {
           name: tag.name,
           description: tag.description || '',
-          color: updates.color || tag.color || 'basic'
+          color: updates.color || tag.color || 'basic',
         }
-        
+
         await churchtoolsClient.put(`/tags/${tagId}`, tagData)
         successCount++
-        
+
         // Update local tag data
         if (updates.color) {
           tag.color = updates.color
@@ -172,6 +170,6 @@ export function useTags() {
     updateTag,
     deleteTag,
     bulkUpdateTags,
-    bulkDeleteTags
+    bulkDeleteTags,
   }
 }

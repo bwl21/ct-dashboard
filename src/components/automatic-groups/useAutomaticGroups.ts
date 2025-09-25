@@ -107,6 +107,6 @@ export function useAutomaticGroups() {
     loading,
     error,
     fetchAutomaticGroups,
-    determineExecutionStatus
+    determineExecutionStatus,
   }
 }

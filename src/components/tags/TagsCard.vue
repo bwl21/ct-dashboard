@@ -71,8 +71,6 @@ const groupTagsCount = computed(() => {
   return tags.value.filter((tag) => tag.domainType === 'group').length
 })
 
-
-
 const mainStat = computed(() => ({
   value: tags.value.length,
   label: 'Tags gesamt',
@@ -100,7 +98,6 @@ const statusStats = computed(() => [
     icon: '👥',
     type: 'warning' as const,
   },
-
 ])
 
 const formattedLastUpdate = computed(() => {
