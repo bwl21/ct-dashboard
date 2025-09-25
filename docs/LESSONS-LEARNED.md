@@ -18,6 +18,28 @@
 **Erkenntnis:** Große Änderungen in kleinen Schritten durchführen
 **Anwendung:** Jede Komponente einzeln konvertieren und testen
 
+# 🎓 Lessons Learned 2025-09-25
+
+### 1. Documentation Redundancy is Costly
+**Problem**: Multiple documentation files contained duplicate information
+**Solution**: Single source of truth with references to real code examples
+**Application**: Always reference working code instead of maintaining duplicate examples
+
+### 2. Follow AI Platform Standards
+**Problem**: Created custom .ona-context.md thinking it was an Ona standard
+**Solution**: Use AGENTS.md as the official Ona standard for AI instructions
+**Application**: Research platform standards before creating custom solutions
+
+### 3. Real Code Beats Documentation Examples
+**Problem**: Code examples in docs become outdated and incomplete
+**Solution**: Reference actual working implementations in src/components/
+**Application**: Point to real files instead of maintaining example snippets
+
+### 4. Simple Solutions Often Work Best
+**Problem**: Complex git hooks and scripts for temporary directory management
+**Solution**: Simple .gitkeep approach without automation
+**Application**: Prefer git-native solutions over custom automation when possible
+
 ### 3. Debug-First-Ansatz
 
 **Erkenntnis:** Debug-Informationen von Anfang an einbauen
