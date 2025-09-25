@@ -66,7 +66,7 @@ und dieses Projekt folgt [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ### 🔒 Security
 - **Vertrauliche Informationen** vollständig aus Repository entfernt
-- **.ona-context.md** bereinigt und sicher neu erstellt
+- **Dokumentation** bereinigt und sicher neu erstellt
 - **Remote Repository** von sensiblen Daten bereinigt
 
 ## [1.0.0] - 2025-09-20

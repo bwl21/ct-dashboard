@@ -1,100 +1,76 @@
 # ChurchTools Dashboard
 
-Eine moderne ChurchTools-Erweiterung für Systemüberwachung und Verwaltung.
+A modern Vue 3 + TypeScript dashboard extension for ChurchTools providing system monitoring and administration capabilities.
 
-## 🎯 Überblick
+## 🎯 What is this?
 
-Das **ChurchTools Dashboard** ist eine Vue 3 + TypeScript basierte Erweiterung, die eine zentrale Übersicht über wichtige ChurchTools-Systemdaten bietet. Die Extension nutzt eine moderne BaseCard-Architektur für konsistente und wiederverwendbare UI-Komponenten.
+This ChurchTools plugin provides a centralized dashboard for monitoring and managing key system data:
+- **Expiring appointment series** - Overview and management
+- **Automatic groups** - Status monitoring and execution tracking  
+- **Tags management** - Bulk operations with color picker
+- **Logger system** - Categorized log analysis with filtering
 
-**Plugin-Kürzel:** `ctdashboard`
+**Plugin Key:** `ctdashboard`
 
-## ✨ Hauptfeatures
+## 🚀 Getting Started
 
-### 📅 Auslaufende Terminserien
-- Übersicht aller auslaufenden Terminserien
-- Admin-Panel mit erweiterten Filtermöglichkeiten
-- Direkte Links zu ChurchTools-Kalenderansicht
-
-### ⚙️ Automatische Gruppen
-- Status-Übersicht aller automatischen Gruppen
-- Monitoring von Ausführungsstatus und Fehlern
-- Statistiken über Gruppenaktualisierungen
-
-### 🏷️ Tags-Verwaltung
-- Übersicht aller ChurchTools-Tags
-- Bulk-Operationen (Farbe ändern, löschen)
-- ColorPicker mit ChurchTools-Design
-- Toast-Benachrichtigungen
-
-### 📋 Logger System
-- **Priority-basierte Kategorisierung** mit intelligenter Konfliktauflösung
-- **Funktionale Filter-Bedingungen** für flexible Log-Klassifizierung
-- **Zentrale UI-Konfiguration** (Icons, Labels, CSS-Klassen)
-- **Akteur-Informationen** mit System/Benutzer-Unterscheidung
-- **Modal-Details** mit vollständigen Log-Informationen
-- **Admin-Panel** mit erweiterten Filter- und Suchfunktionen
-
-### 🎯 BaseCard-System
-- Einheitliche Karten-Layouts
-- Große Icon-Header
-- Vorberechnete Kartenhöhen
-- Responsive Design
-
-## 🚀 Quick Start
-
-### Voraussetzungen
-- Node.js 18+
-- ChurchTools-Installation
+### Prerequisites
+- Node.js 20+
+- ChurchTools installation with admin access
 - Git
 
-### Installation
-
+### Development Setup
 ```bash
-# Repository klonen
-git clone <repository-url>
+# Clone repository
+git clone https://github.com/bwl21/ct-dashboard.git
 cd ct-dashboard
 
-# Abhängigkeiten installieren
+# Install dependencies
 npm install
 
-# Entwicklungsserver starten
+# Start development server
 npm run dev
 ```
 
-### Deployment
+### Basic Development Workflow
+1. **Create feature branch**: `git checkout -b feature/your-feature`
+2. **Follow patterns**: See `src/components/` for examples
+3. **Use BaseCard + AdminTable**: For consistent UI
+4. **Test changes**: `npm run lint` before committing
+5. **Deploy**: `npm run deploy` creates ChurchTools plugin package
 
-```bash
-# Build und Package erstellen
-npm run deploy
-
-# ZIP-Datei in ChurchTools hochladen
-# releases/churchtools-dashboard-v*.zip
+### Project Structure
+```
+src/components/[module]/
+├── [Module]Card.vue      # Dashboard card
+├── [Module]Admin.vue     # Admin interface
+└── use[Module].ts        # Data logic
 ```
 
-## 🔧 Technologie-Stack
+## 📦 Installation in ChurchTools
 
-| Komponente | Technologie | Version |
-|------------|-------------|---------|
-| Frontend | Vue 3 | ^3.4.0 |
-| Language | TypeScript | ^5.0.0 |
-| Build Tool | Vite | ^5.0.0 |
-| API Client | ChurchTools Client | ^1.0.0 |
-| Styling | CSS3 + ChurchTools Design | - |
+1. **Build plugin**: `npm run deploy`
+2. **Upload**: Install `releases/churchtools-dashboard-v*.zip` in ChurchTools
+3. **Activate**: Enable plugin in ChurchTools admin panel
+4. **Access**: Navigate to `/ccm/ct-dashboard/` in your ChurchTools instance
 
-## 📚 Dokumentation
+## 🔧 Tech Stack
 
-### Für Entwickler
-- **[DEVELOPMENT.md](docs/DEVELOPMENT.md)** - Entwickler-Handbuch und Architektur
-- **[API.md](docs/API.md)** - API-Dokumentation und Interfaces
-- **[DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Build- und Deployment-Prozess
+- **Vue 3** + **TypeScript** - Modern reactive framework
+- **Vite** - Fast build tool and dev server  
+- **ChurchTools Client** - Official API integration
+- **ChurchTools Design System** - Native styling
 
-### Session-Dokumentation
-- **[Logger UI Improvements](docs/DEVELOPMENT_SESSION_2025-09-24_Logger_UI_Improvements.md)** - Aktuelle UI-Verbesserungen
-- **[Tags & ColorPicker](docs/FEATURES_TAGS_COLORPICKER_TOAST.md)** - Tags-Verwaltung Features
-- **[AdminTable Configuration](docs/AdminTable_Column_Width_Configuration.md)** - Tabellen-Konfiguration
+## 📚 Documentation
 
-### Vollständige Übersicht
-- **[docs/README.md](docs/README.md)** - Komplette Dokumentations-Übersicht
+### For Developers
+- **[AGENTS.md](AGENTS.md)** - Development patterns and API usage
+- **[docs/](docs/)** - Technical documentation and session notes
+- **Working Examples**: See `src/components/` for real implementations
+
+### For Contributors
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - How to contribute (if exists)
+- **[CHANGELOG.md](CHANGELOG.md)** - Version history and changes
 
 ## 🎨 Design-Prinzipien
 
@@ -115,13 +91,65 @@ npm run deploy
 | Log-Kategorisierung | ✅ Stabil | Priority-basiertes System |
 | BaseCard-System | ✅ Stabil | [Development](docs/DEVELOPMENT.md) |
 
-## 🤝 Beitragen
+## 🤝 Contributing
 
-1. Fork des Repositories erstellen
-2. Feature-Branch erstellen (`git checkout -b feature/amazing-feature`)
-3. Änderungen committen (`git commit -m 'Add amazing feature'`)
-4. Branch pushen (`git push origin feature/amazing-feature`)
-5. Pull Request erstellen
+1. **Fork** this repository
+2. **Create feature branch**: `git checkout -b feature/amazing-feature`
+3. **Follow patterns**: Use existing components as examples
+4. **Test thoroughly**: `npm run lint` and manual testing
+5. **Create Pull Request**: With clear description of changes
+
+See [AGENTS.md](AGENTS.md) for development patterns and [docs/](docs/) for technical details.
+
+## 🤖 Working with Ona (AI Assistant)
+
+### Useful Prompts
+
+**Start Development Session:**
+```
+"Start a new development session for [feature description]"
+```
+
+**Show Progress:**
+```
+"Show me what we've accomplished so far"
+"What are the next steps?"
+```
+
+**End Session:**
+```
+"This session is complete, please finalize documentation"
+```
+
+**Create Commit Message:**
+```
+"Please create a commit message for these changes"
+```
+
+**Commit Changes:**
+```
+"Please commit these changes"
+```
+
+**Deploy:**
+```
+"Build and prepare for deployment"
+```
+
+**Review Code:**
+```
+"Review the changes and run lint checks"
+```
+
+**Create Pull Request:**
+```
+"Please create a pull request for this feature"
+```
+
+**Discussion Mode:**
+```
+"Let's discuss this first - don't make any changes yet"
+```
 
 ## 🤖 Entwickelt mit KI-Unterstützung
 
@@ -135,6 +163,9 @@ Dieses Projekt wurde mit Unterstützung von **Ona** entwickelt - einem KI-Assist
 
 Die Kombination aus menschlicher Kreativität und KI-Effizienz ermöglichte eine schnelle und qualitativ hochwertige Entwicklung.
 
+### AI Agent Development
+Für AI Agents, die an diesem Projekt arbeiten, siehe **[AGENTS.md](AGENTS.md)** für kompakte Entwicklungsrichtlinien.
+
 ## 📄 Lizenz
 
 Dieses Projekt steht unter der MIT-Lizenz. Siehe [LICENSE](LICENSE) für Details.
@@ -147,96 +178,25 @@ Dieses Projekt steht unter der MIT-Lizenz. Siehe [LICENSE](LICENSE) für Details
 - **Vite:** [vitejs.dev](https://vitejs.dev)
 - **Ona:** [ona.com](https://ona.com) - KI-Assistent für Softwareentwicklung
 
-## 🔄 GitHub Setup
-
-### Repository initialisieren
-
-```bash
-# Git Repository initialisieren (falls noch nicht vorhanden)
-git init
-
-# Remote Repository hinzufügen
-git remote add origin https://github.com/ihr-username/churchtools-dashboard.git
-
-# Erste Commits
-git add .
-git commit -m "Initial commit: ChurchTools Extension 'Churchtools Dashboard'"
-git push -u origin main
-```
+## 🔄 Development
 
 ### Branching-Strategie
-
 - **main** - Produktionsreifer Code
-- **develop** - Entwicklungsbranch
 - **feature/** - Feature-Branches
 
-## 🧩 Komponenten-Architektur
+## 🧩 Architektur
 
 ### BaseCard-System
-
-Die BaseCard-Architektur bietet eine einheitliche Basis für alle Dashboard-Karten:
-
-```vue
-<BaseCard
-  :title="'Mein Modul'"
-  :icon="'🎯'"
-  :is-loading="loading"
-  :error="error"
-  :main-stat="{ value: 42, label: 'Hauptstatistik' }"
-  :status-stats="statusStats"
-  :last-update="lastUpdate"
-  @refresh="refreshData"
-  @navigate="navigateToAdmin"
-/>
-```
-
-**Props:**
-
-- `title` - Titel der Karte
-- `icon` - Emoji-Icon für die Karte
-- `is-loading` - Loading-Status
-- `error` - Fehlermeldung (optional)
-- `main-stat` - Hauptstatistik (Wert + Label)
-- `status-stats` - Array von Status-Statistiken
-- `last-update` - Zeitstempel der letzten Aktualisierung
-
-**Events:**
-
-- `@refresh` - Daten neu laden
-- `@navigate` - Navigation zur Detail-Ansicht
-- `@retry` - Erneuter Versuch bei Fehlern
+Einheitliche Basis für alle Dashboard-Karten. 
+**Beispiele:** `src/components/*/Card.vue`
 
 ### Admin-Panels
+Verwaltungsoberflächen mit Filtern und Tabellen.
+**Beispiele:** `src/components/*/Admin.vue`
 
-#### ExpiringAppointmentsAdmin
-
-**Features:**
-
-- **Multi-Filter-System:** Suche, Kalender-Filter, Status-Filter, Tage-Filter
-- **Sortierbare Tabelle:** Alle Spalten (ID, Titel, Kalender, Datum) sortierbar
-- **Responsive Design:** Spaltenbreiten per Drag&Drop anpassbar
-- **Export-Funktionen:** Direkte Links zu ChurchTools-Kalender
-
-**Filter-Optionen:**
-
-- **Suchfeld:** ID, Titel, Kalender-Name
-- **Kalender-Dropdown:** Automatisch aus Daten generiert
-- **Status-Filter:** Aktiv, Läuft ab, Abgelaufen
-- **Tage-Filter:** 1, 7, 14, 30, 60, 90, 180, 365 Tage oder "alle"
-
-#### AutomaticGroupsAdmin
-
-**Features:**
-
-- **Gruppen-Übersicht:** Alle automatischen Gruppen mit Status
-- **Ausführungs-Monitoring:** Erfolg, Fehler, Ausstehend
-- **Zeitstempel-Tracking:** Letzte Ausführungszeiten
-
-### Dashboard-Layout
-
-- **Header Card:** Projekt-Titel mit Versionsnummer
-- **Module Grid:** Responsive 2x2 Grid für Desktop, 1-spaltig für Mobile
-- **Navigation:** Klickbare Karten führen zu Detail-Ansichten
+### Composables
+Vue 3 Composables für Datenlogik.
+**Beispiele:** `src/components/*/use*.ts`
 
 ## 📚 Dokumentation
 
@@ -250,9 +210,9 @@ Die BaseCard-Architektur bietet eine einheitliche Basis für alle Dashboard-Kart
 
 ### Quick Links
 
-- **BaseCard-Architektur**: [DEVELOPMENT.md#basecard-architektur](./docs/DEVELOPMENT.md#basecard-architektur)
-- **Filter-System**: [API.md#filter--sortierung-api](./docs/API.md#filter--sortierung-api)
-- **ChurchTools-Integration**: [DEPLOYMENT.md#churchtools-installation](./docs/DEPLOYMENT.md#churchtools-installation)
+- **Component Examples**: `src/components/` directory
+- **API Integration**: See working composables in `src/components/*/use*.ts`
+- **ChurchTools Integration**: [DEPLOYMENT.md](./docs/DEPLOYMENT.md)
 
 ## 📞 Support
 
@@ -264,9 +224,9 @@ Die BaseCard-Architektur bietet eine einheitliche Basis für alle Dashboard-Kart
 
 ### Entwickler-Support
 
-- **[API-Referenz](./docs/API.md)** - Technische Details
-- **[Entwickler-Guide](./docs/DEVELOPMENT.md)** - Architektur-Dokumentation
-- **[Deployment-Anleitung](./docs/DEPLOYMENT.md)** - Installation und Updates
+- **[AGENTS.md](./AGENTS.md)** - Development patterns and examples
+- **[docs/](./docs/)** - Technical documentation
+- **Working Code**: `src/components/` for real implementations
 
 ## 📄 Lizenz
 
