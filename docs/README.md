@@ -1,269 +1,36 @@
-# 📚 Dokumentations-Übersicht
-
-Willkommen zur umfassenden Dokumentation des ChurchTools Dashboard!
-
-## 📋 Dokumentations-Index
-
-### 🚀 Für Benutzer
-
-- **[README.md](../README.md)** - Projekt-Übersicht und Quick-Start
-- **[CHANGELOG.md](../CHANGELOG.md)** - Versionshistorie und neue Features
-
-### 👨‍💻 Für Entwickler
-
-- **[DEVELOPMENT.md](./DEVELOPMENT.md)** - Entwickler-Handbuch und Architektur
-- **[API.md](./API.md)** - API-Dokumentation und Interfaces
-- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Build- und Deployment-Prozess
-
-## 🎯 Schnellstart
-
-### Für Endbenutzer
-
-1. Lesen Sie die [README.md](../README.md) für eine Projekt-Übersicht
-2. Folgen Sie der Installationsanleitung
-3. Erkunden Sie die verfügbaren Features
-
-### Für Entwickler
-
-1. Beginnen Sie mit [DEVELOPMENT.md](./DEVELOPMENT.md) für die Architektur
-2. Konsultieren Sie [API.md](./API.md) für API-Details
-3. Nutzen Sie [DEPLOYMENT.md](./DEPLOYMENT.md) für den Deployment-Prozess
-
-## 🏗️ Architektur-Übersicht
-
-```
-ChurchTools Dashboard
-├── 📅 auslaufende Terminserien
-│   ├── Übersichts-Karte (BaseCard)
-│   └── Admin-Panel (Filter + Tabelle)
-├── ⚙️ Automatische Gruppen
-│   ├── Status-Karte (BaseCard)
-│   └── Admin-Panel (Monitoring)
-├── 🏷️ Tags-Verwaltung
-│   ├── Übersichts-Karte (BaseCard)
-│   ├── Admin-Panel (CRUD + Bulk-Operationen)
-│   ├── ColorPicker (ct-labelmanager Design)
-│   └── Toast-Benachrichtigungen
-├── 📋 Logger System
-│   ├── Übersichts-Karte (BaseCard)
-│   ├── Admin-Panel (Filter + Tabelle)
-│   ├── Kategorie-basierte Klassifizierung
-│   └── Modal-Details
-└── 🎯 BaseCard-System
-    ├── Einheitliche UI-Komponenten
-    ├── Props & Slots Support
-    ├── Große Icon-Header
-    ├── Vorberechnete Kartenhöhen
-    └── Standardisierte States
-```
-
-## 🔧 Technologie-Stack
-
-| Komponente     | Technologie               | Version |
-| -------------- | ------------------------- | ------- |
-| **Frontend**   | Vue 3                     | ^3.4.0  |
-| **Language**   | TypeScript                | ^5.0.0  |
-| **Build Tool** | Vite                      | ^5.0.0  |
-| **API Client** | ChurchTools Client        | ^1.0.0  |
-| **Styling**    | CSS3 + ChurchTools Design | -       |
-
-## 📊 Feature-Matrix
-
-| Feature                      | Status    | Dokumentation                                             |
-| ---------------------------- | --------- | --------------------------------------------------------- |
-| **auslaufende Terminserien** | ✅ Stabil | [API.md](./API.md#auslaufende-termine-api)                |
-| **Automatische Gruppen**     | ✅ Stabil | [API.md](./API.md#automatische-gruppen-api)               |
-| **Tags-Verwaltung**          | ✅ Stabil | [API.md](./API.md#tags-api)                               |
-| **Logger System**            | ✅ Stabil | [DEVELOPMENT_SESSION_2025-09-24_Logger_UI_Improvements.md](./DEVELOPMENT_SESSION_2025-09-24_Logger_UI_Improvements.md) |
-| **ColorPicker-Komponente**   | ✅ Stabil | [DEVELOPMENT.md](./DEVELOPMENT.md#colorpicker-komponente) |
-| **Toast-Benachrichtigungen** | ✅ Stabil | [DEVELOPMENT.md](./DEVELOPMENT.md#toast-system)           |
-| **BaseCard-System**          | ✅ Stabil | [DEVELOPMENT.md](./DEVELOPMENT.md#basecard-architektur)   |
-| **Multi-Filter**             | ✅ Stabil | [API.md](./API.md#filter--sortierung-api)                 |
-| **Responsive Design**        | ✅ Stabil | [DEVELOPMENT.md](./DEVELOPMENT.md#styling-guidelines)     |
-| **ChurchTools Integration**  | ✅ Stabil | [DEPLOYMENT.md](./DEPLOYMENT.md#churchtools-installation) |
-
-## 🎨 Design-Prinzipien
-
-### Konsistenz
-
-- Einheitliche BaseCard-Architektur
-- ChurchTools-konformes Design
-- Standardisierte Interaktionsmuster
-
-### Benutzerfreundlichkeit
-
-- Intuitive Navigation
-- Responsive Layout
-- Accessibility-Features
-
-### Performance
-
-- Client-seitige Filterung
-- Optimierte Bundle-Größe
-- Lazy Loading
-
-### Wartbarkeit
-
-- Modulare Architektur
-- TypeScript Type-Safety
-- Umfassende Dokumentation
-
-## 🔍 Code-Beispiele
-
-### BaseCard-Implementierung
-
-```vue
-<template>
-  <BaseCard
-    :title="'Mein Modul'"
-    :icon="'🎯'"
-    :is-loading="loading"
-    :main-stat="{ value: 42, label: 'Gesamt' }"
-    :status-stats="statusStats"
-    @refresh="loadData"
-  />
-</template>
-```
-
-### Filter-System
-
-```typescript
-const filteredData = computed(() => {
-  return data.value.filter((item) => {
-    return (
-      searchTerm.value === "" || item.title.toLowerCase().includes(searchTerm.value.toLowerCase())
-    )
-  })
-})
-```
-
-### API-Integration
-
-```typescript
-import { churchtoolsClient } from "@churchtools/churchtools-client"
-
-const data = await churchtoolsClient.get("/calendars/appointments")
-```
-
-## 📈 Performance-Metriken
-
-| Metrik              | Zielwert | Aktuell |
-| ------------------- | -------- | ------- |
-| **Bundle Size**     | < 500KB  | ~350KB  |
-| **First Load**      | < 2s     | ~1.2s   |
-| **Filter Response** | < 100ms  | ~50ms   |
-| **API Response**    | < 1s     | ~400ms  |
-
-## 🧪 Testing-Strategie
-
-### Unit Tests
-
-- Komponenten-Tests mit Vue Test Utils
-- API-Service-Tests
-- Utility-Funktionen-Tests
-
-### Integration Tests
-
-- End-to-End-Tests mit Cypress
-- API-Integration-Tests
-- Cross-Browser-Tests
-
-### Performance Tests
-
-- Bundle-Größe-Monitoring
-- Render-Performance-Tests
-- Memory-Leak-Detection
-
-## 🔐 Sicherheits-Richtlinien
-
-### Authentifizierung
-
-- ChurchTools-Session-basiert
-- Keine lokale Passwort-Speicherung
-- Automatische Token-Erneuerung
-
-### Daten-Schutz
-
-- Keine sensiblen Daten im Client-Code
-- HTTPS-only in Production
-- Content Security Policy
-
-### API-Sicherheit
-
-- Rate Limiting beachten
-- Error-Handling ohne Daten-Leaks
-- Sichere HTTP-Headers
-
-## 📞 Support & Community
-
-### Dokumentation
-
-- **Vollständige Docs**: Dieses Verzeichnis
-- **API-Referenz**: [API.md](./API.md)
-- **Entwickler-Guide**: [DEVELOPMENT.md](./DEVELOPMENT.md)
-
-### Community
-
-- **GitHub Issues**: Bug-Reports und Feature-Requests
-- **ChurchTools Forum**: Community-Support
-- **Discussions**: Allgemeine Diskussionen
-
-### Beitragen
-
-1. Fork das Repository
-2. Erstelle einen Feature-Branch
-3. Implementiere Änderungen mit Tests
-4. Erstelle einen Pull Request
-5. Folge den Code-Review-Richtlinien
-
-## 🗺️ Roadmap
-
-### Kurzfristig (1-3 Monate)
-
-- ✅ Tags-Verwaltung mit CRUD-Operationen
-- ✅ ColorPicker-Komponente (ct-labelmanager Design)
-- ✅ Toast-Benachrichtigungssystem
-- Export-Funktionen
-- Erweiterte Filter-Optionen
-
-### Mittelfristig (3-6 Monate)
-
-- Weitere Module (Events, Personen, etc.)
-- Mobile App (PWA)
-- Real-time Updates
-- Erweiterte Analytics
-
-### Langfristig (6+ Monate)
-
-- Plugin-System
-- Multi-Tenant-Support
-- Advanced Reporting
-
-## 📝 Beitrag zur Dokumentation
-
-### Dokumentations-Standards
-
-- Markdown-Format
-- Deutsche Sprache für Benutzer-Docs
-- Englische Code-Kommentare
-- Konsistente Formatierung
-
-### Aktualisierung
-
-- Bei Feature-Änderungen
-- Bei API-Änderungen
-- Bei Architektur-Änderungen
-- Regelmäßige Reviews
-
-### Qualitätssicherung
-
-- Rechtschreibprüfung
-- Link-Validierung
-- Code-Beispiel-Tests
-- Peer-Review
-
----
-
-**Letzte Aktualisierung:** 21. September 2025  
-**Version:** 1.1.0  
-**Maintainer:** ChurchTools Dashboard Team
+# Documentation Index
+
+This directory contains internal development documentation, session notes, and technical specifications for the ChurchTools Dashboard project.
+
+## Core Documentation
+- **[DEVELOPMENT.md](./DEVELOPMENT.md)** - Developer handbook and architecture
+- **[API.md](./API.md)** - API documentation and interfaces  
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Build and deployment process
+
+## Development Sessions
+- **[DEVELOPMENT_SESSION_2025-09-24_Logger_UI_Improvements.md](./DEVELOPMENT_SESSION_2025-09-24_Logger_UI_Improvements.md)** - Logger UI improvements
+- **[DEVELOPMENT_SESSION_2025-09-24_Log_Categorization_Refactor.md](./DEVELOPMENT_SESSION_2025-09-24_Log_Categorization_Refactor.md)** - Log categorization refactor
+- **[DEVELOPMENT_SESSION_2025-09-23_Logger_Module.md](./DEVELOPMENT_SESSION_2025-09-23_Logger_Module.md)** - Logger module development
+- **[DEVELOPMENT_SESSION_2025-09-22.md](./DEVELOPMENT_SESSION_2025-09-22.md)** - Development session
+- **[DEVELOPMENT_SESSION_2025-09-21.md](./DEVELOPMENT_SESSION_2025-09-21.md)** - Development session
+- **[DEVELOPMENT_SESSION_2025-09-20.md](./DEVELOPMENT_SESSION_2025-09-20.md)** - Development session
+
+## Feature Documentation
+- **[FEATURES_TAGS_COLORPICKER_TOAST.md](./FEATURES_TAGS_COLORPICKER_TOAST.md)** - Tags management features
+- **[AdminTable_Column_Width_Configuration.md](./AdminTable_Column_Width_Configuration.md)** - Table configuration
+
+## Technical Notes
+- **[DEVELOPMENT_NOTES.md](./DEVELOPMENT_NOTES.md)** - Development notes
+- **[LESSONS-LEARNED.md](./LESSONS-LEARNED.md)** - Lessons learned
+- **[VSCODE_EXTENSIONS_SETUP.md](./VSCODE_EXTENSIONS_SETUP.md)** - VS Code setup
+- **[architecture.md](./architecture.md)** - Architecture documentation
+
+## Issue Documentation
+- **[2025-09-07-issue-1-automatic-groups-admin-panel.md](./2025-09-07-issue-1-automatic-groups-admin-panel.md)** - Automatic groups admin panel
+- **[2025-09-07-issue-1-dashboard-card-implementation.md](./2025-09-07-issue-1-dashboard-card-implementation.md)** - Dashboard card implementation
+- **[2025-09-07-group-type-column-addition.md](./2025-09-07-group-type-column-addition.md)** - Group type column addition
+
+## Session History
+- **[SESSION_CHRONOLOGY_2025-09-21.md](./SESSION_CHRONOLOGY_2025-09-21.md)** - Session chronology
+- **[2025-09-23_chatverlauf.md](./2025-09-23_chatverlauf.md)** - Chat history
+- **[chat-verlauf1.md](./chat-verlauf1.md)** - Chat history
