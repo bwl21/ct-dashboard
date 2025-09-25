@@ -131,6 +131,11 @@ See [AGENTS.md](AGENTS.md) for development patterns and [docs/](docs/) for techn
 "Please commit these changes"
 ```
 
+**Push Changes:**
+```
+"Please push the changes to remote"
+```
+
 **Deploy:**
 ```
 "Build and prepare for deployment"
