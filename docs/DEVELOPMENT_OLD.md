@@ -1,6 +1,7 @@
 # Entwickler-Dokumentation
 
 ## Quick Reference
+
 - **[AGENTS.md](../AGENTS.md)** - Development patterns, API usage, component structure
 - **[LESSONS-LEARNED.md](./LESSONS-LEARNED.md)** - Accumulated knowledge and best practices
 - **[API.md](./API.md)** - API interfaces and data structures
@@ -16,11 +17,13 @@
 ## 🏗️ BaseCard-Architektur
 
 ### Übersicht
+
 Die BaseCard-Architektur standardisiert das Design und Verhalten aller Dashboard-Karten.
 
 **For usage patterns and examples, see [AGENTS.md](../AGENTS.md#basecard-usage)**
 
 ### Unique Implementation Details
+
 This section contains implementation details not covered in AGENTS.md:
 
 ### Neue Karte erstellen
@@ -626,9 +629,9 @@ Die ColorPicker-Komponente wurde exakt nach dem ct-labelmanager Design implement
 
 ```typescript
 interface ColorOption {
-  value: string    // Eindeutige ID der Farbe
-  name: string     // Anzeigename
-  hex: string      // Hex-Farbcode
+  value: string // Eindeutige ID der Farbe
+  name: string // Anzeigename
+  hex: string // Hex-Farbcode
   tailwind?: string // Optional: Tailwind-Klasse
 }
 
@@ -643,7 +646,7 @@ interface ColorPickerProps {
 
 ```vue
 <template>
-  <ColorPicker 
+  <ColorPicker
     v-model="selectedColor"
     :colors="customColors"
     placeholder="Farbe auswählen"
@@ -652,17 +655,17 @@ interface ColorPickerProps {
 </template>
 
 <script setup lang="ts">
-import ColorPicker from '@/components/common/ColorPicker.vue'
+import ColorPicker from "@/components/common/ColorPicker.vue"
 
 const selectedColor = ref<string | null>(null)
 
 const customColors: ColorOption[] = [
-  { value: 'red', name: 'Rot', hex: '#dc2626' },
-  { value: 'blue', name: 'Blau', hex: '#3b82f6' }
+  { value: "red", name: "Rot", hex: "#dc2626" },
+  { value: "blue", name: "Blau", hex: "#3b82f6" },
 ]
 
 const handleColorChange = (color: string | null) => {
-  console.log('Neue Farbe:', color)
+  console.log("Neue Farbe:", color)
 }
 </script>
 ```
@@ -681,14 +684,14 @@ const handleColorChange = (color: string | null) => {
 ```typescript
 const churchToolsColors: ColorOption[] = [
   // System Colors
-  { value: 'parent', name: 'Parent', hex: '#6b7280', tailwind: 'gray-500' },
-  { value: 'default', name: 'Default', hex: '#6b7280', tailwind: 'gray-500' },
-  { value: 'accent', name: 'Accent', hex: '#007cba', tailwind: 'custom' },
-  
+  { value: "parent", name: "Parent", hex: "#6b7280", tailwind: "gray-500" },
+  { value: "default", name: "Default", hex: "#6b7280", tailwind: "gray-500" },
+  { value: "accent", name: "Accent", hex: "#007cba", tailwind: "custom" },
+
   // Standard Colors
-  { value: 'red', name: 'Red', hex: '#dc2626', tailwind: 'red-600' },
-  { value: 'blue', name: 'Blue', hex: '#3b82f6', tailwind: 'blue-500' },
-  { value: 'green', name: 'Green', hex: '#16a34a', tailwind: 'green-600' },
+  { value: "red", name: "Red", hex: "#dc2626", tailwind: "red-600" },
+  { value: "blue", name: "Blue", hex: "#3b82f6", tailwind: "blue-500" },
+  { value: "green", name: "Green", hex: "#16a34a", tailwind: "green-600" },
   // ... weitere 30+ Farben
 ]
 ```
@@ -698,7 +701,10 @@ const churchToolsColors: ColorOption[] = [
 ```scss
 .color-picker-modal {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: rgba(0, 0, 0, 0.5);
   z-index: 1000;
 }
@@ -745,7 +751,7 @@ Das Toast-Benachrichtigungssystem bietet benutzerfreundliches Feedback für alle
 ```typescript
 interface Toast {
   id: string
-  type: 'success' | 'error' | 'warning' | 'info'
+  type: "success" | "error" | "warning" | "info"
   title?: string
   message: string
   duration?: number
@@ -764,58 +770,61 @@ interface ToastOptions {
 ### useToast Composable
 
 ```typescript
-import { useToast } from '@/composables/useToast'
+import { useToast } from "@/composables/useToast"
 
 const {
   // State
   toasts,
-  
+
   // Core methods
   addToast,
   removeToast,
   clearAllToasts,
-  
+
   // Convenience methods
   showSuccess,
   showError,
   showWarning,
   showInfo,
-  
+
   // API helpers
   showApiSuccess,
   showApiError,
   showValidationError,
-  showNetworkError
+  showNetworkError,
 } = useToast()
 ```
 
 ### Toast-Typen
 
 #### Success Toast
+
 ```typescript
-showSuccess('Operation erfolgreich', { 
-  title: 'Erfolgreich',
-  duration: 5000 
+showSuccess("Operation erfolgreich", {
+  title: "Erfolgreich",
+  duration: 5000,
 })
 
 // API-spezifisch
-showApiSuccess('create', 'Neuer Tag')
+showApiSuccess("create", "Neuer Tag")
 ```
 
 #### Error Toast
+
 ```typescript
-showError('Ein Fehler ist aufgetreten', { 
-  title: 'Fehler',
-  duration: 8000 
+showError("Ein Fehler ist aufgetreten", {
+  title: "Fehler",
+  duration: 8000,
 })
 
 // API-spezifisch
-showApiError('delete', 'Verbindung fehlgeschlagen')
+showApiError("delete", "Verbindung fehlgeschlagen")
 ```
 
 #### Validation Toast
+
 ```typescript
-showValidationError('Bitte füllen Sie alle Pflichtfelder aus')
+showValidationError("Bitte füllen Sie alle Pflichtfelder aus")
 ```
 
 ### Toast-Komponente
@@ -837,11 +846,9 @@ showValidationError('Bitte füllen Sie alle Pflichtfelder aus')
             <div class="toast-title" v-if="toast.title">{{ toast.title }}</div>
             <div class="toast-message">{{ toast.message }}</div>
           </div>
-          <button
-            v-if="toast.dismissible"
-            class="toast-close"
-            @click.stop="removeToast(toast.id)"
-          >×</button>
+          <button v-if="toast.dismissible" class="toast-close" @click.stop="removeToast(toast.id)">
+            ×
+          </button>
         </div>
       </TransitionGroup>
     </div>
@@ -914,15 +921,15 @@ Für Debugging und Tests sind Toast-Funktionen global verfügbar:
 
 ```javascript
 // Browser-Konsole
-window.toast.success('Test erfolgreich!')
-window.toast.error('Test-Fehler')
-window.toast.warning('Test-Warnung')
-window.toast.info('Test-Info')
+window.toast.success("Test erfolgreich!")
+window.toast.error("Test-Fehler")
+window.toast.warning("Test-Warnung")
+window.toast.info("Test-Info")
 
 // API-Toasts
-window.toast.apiSuccess('create', 'Test-Element')
-window.toast.apiError('delete', 'Verbindungsfehler')
-window.toast.validationError('Pflichtfeld fehlt')
+window.toast.apiSuccess("create", "Test-Element")
+window.toast.apiError("delete", "Verbindungsfehler")
+window.toast.validationError("Pflichtfeld fehlt")
 ```
 
 ## 🏷️ Tags-Verwaltung
@@ -939,7 +946,7 @@ interface Tag {
   name: string
   description?: string
   color?: string
-  domainType: 'person' | 'song' | 'group'
+  domainType: "person" | "song" | "group"
 }
 
 interface TagForm {
@@ -969,26 +976,26 @@ interface TagForm {
 <script setup lang="ts">
 const domainStats = computed(() => [
   {
-    key: 'person',
+    key: "person",
     value: personTagsCount.value,
-    label: 'Personen-Tags',
-    icon: '👤',
-    type: 'info'
+    label: "Personen-Tags",
+    icon: "👤",
+    type: "info",
   },
   {
-    key: 'song',
+    key: "song",
     value: songTagsCount.value,
-    label: 'Song-Tags',
-    icon: '🎵',
-    type: 'success'
+    label: "Song-Tags",
+    icon: "🎵",
+    type: "success",
   },
   {
-    key: 'group',
+    key: "group",
     value: groupTagsCount.value,
-    label: 'Gruppen-Tags',
-    icon: '👥',
-    type: 'warning'
-  }
+    label: "Gruppen-Tags",
+    icon: "👥",
+    type: "warning",
+  },
 ])
 </script>
 ```
@@ -1004,12 +1011,12 @@ const createTag = async (tagData: TagForm) => {
     await churchtoolsClient.post(`/tags/${tagData.domainType}`, {
       name: tagData.name,
       description: tagData.description,
-      color: tagData.color
+      color: tagData.color,
     })
-    showApiSuccess('create', tagData.name)
+    showApiSuccess("create", tagData.name)
     await refreshData()
   } catch (err) {
-    showApiError('create', err.message)
+    showApiError("create", err.message)
   }
 }
 
@@ -1017,10 +1024,10 @@ const createTag = async (tagData: TagForm) => {
 const updateTag = async (tagId: number, tagData: TagForm) => {
   try {
     await churchtoolsClient.put(`/tags/${tagId}`, tagData)
-    showApiSuccess('update', tagData.name)
+    showApiSuccess("update", tagData.name)
     await refreshData()
   } catch (err) {
-    showApiError('update', err.message)
+    showApiError("update", err.message)
   }
 }
 
@@ -1028,10 +1035,10 @@ const updateTag = async (tagId: number, tagData: TagForm) => {
 const deleteTag = async (tagId: number) => {
   try {
     await churchtoolsClient.delete(`/tags/${tagId}`)
-    showApiSuccess('delete')
+    showApiSuccess("delete")
     await refreshData()
   } catch (err) {
-    showApiError('delete', err.message)
+    showApiError("delete", err.message)
   }
 }
 ```
@@ -1042,37 +1049,37 @@ const deleteTag = async (tagId: number) => {
 // Bulk-Farb-Update
 const applyBulkColor = async () => {
   if (!bulkColor.value) {
-    showValidationError('Bitte wählen Sie zuerst eine Farbe aus')
+    showValidationError("Bitte wählen Sie zuerst eine Farbe aus")
     return
   }
-  
+
   if (selectedTags.value.length === 0) {
-    showValidationError('Bitte wählen Sie zuerst Tags aus')
+    showValidationError("Bitte wählen Sie zuerst Tags aus")
     return
   }
-  
+
   let successCount = 0
   let errorCount = 0
-  
+
   for (const tagId of selectedTags.value) {
     try {
-      const tag = tags.value.find(t => t.id === tagId)
+      const tag = tags.value.find((t) => t.id === tagId)
       await churchtoolsClient.put(`/tags/${tagId}`, {
         name: tag.name,
-        description: tag.description || '',
-        color: bulkColor.value
+        description: tag.description || "",
+        color: bulkColor.value,
       })
       successCount++
     } catch (err) {
       errorCount++
     }
   }
-  
+
   if (successCount > 0) {
-    showApiSuccess('bulkUpdate', `${successCount} Tags`)
+    showApiSuccess("bulkUpdate", `${successCount} Tags`)
   }
   if (errorCount > 0) {
-    showApiError('bulkUpdate', `${errorCount} Tags konnten nicht aktualisiert werden`)
+    showApiError("bulkUpdate", `${errorCount} Tags konnten nicht aktualisiert werden`)
   }
 }
 
@@ -1080,7 +1087,7 @@ const applyBulkColor = async () => {
 const confirmBulkDelete = async () => {
   let successCount = 0
   let errorCount = 0
-  
+
   for (const tagId of selectedTags.value) {
     try {
       await churchtoolsClient.delete(`/tags/${tagId}`)
@@ -1089,12 +1096,12 @@ const confirmBulkDelete = async () => {
       errorCount++
     }
   }
-  
+
   if (successCount > 0) {
-    showApiSuccess('bulkDelete', `${successCount} Tags`)
+    showApiSuccess("bulkDelete", `${successCount} Tags`)
   }
   if (errorCount > 0) {
-    showApiError('bulkDelete', `${errorCount} Tags konnten nicht gelöscht werden`)
+    showApiError("bulkDelete", `${errorCount} Tags konnten nicht gelöscht werden`)
   }
 }
 ```
@@ -1103,27 +1110,26 @@ const confirmBulkDelete = async () => {
 
 ```typescript
 // Regex-Filter
-const regexFilter = ref('')
+const regexFilter = ref("")
 const regexError = ref<string | null>(null)
 
 const filteredTags = computed(() => {
   let result = tags.value
-  
+
   // Regex-Filter anwenden
   if (regexFilter.value.trim()) {
     try {
-      const regex = new RegExp(regexFilter.value, 'i')
+      const regex = new RegExp(regexFilter.value, "i")
       regexError.value = null
-      result = result.filter(tag => 
-        regex.test(tag.name) || 
-        regex.test(tag.description || '') ||
-        regex.test(tag.domainType)
+      result = result.filter(
+        (tag) =>
+          regex.test(tag.name) || regex.test(tag.description || "") || regex.test(tag.domainType)
       )
     } catch (err) {
       regexError.value = err.message
     }
   }
-  
+
   return result
 })
 ```
@@ -1133,24 +1139,24 @@ const filteredTags = computed(() => {
 ```typescript
 // Farb-Sortierung wie in ct-labelmanager
 const sortBy = (field: string) => {
-  if (field === 'color') {
+  if (field === "color") {
     // Spezielle Farbsortierung
     return filteredTags.value.sort((a, b) => {
       const categoryA = getColorCategory(a.color)
       const categoryB = getColorCategory(b.color)
-      
+
       if (categoryA !== categoryB) {
         return categoryA - categoryB
       }
-      
+
       // Innerhalb der Kategorie nach Farbton sortieren
       const hslA = hexToHsl(getColorHex(a.color))
       const hslB = hexToHsl(getColorHex(b.color))
-      
+
       return hslA.h - hslB.h
     })
   }
-  
+
   // Standard-Sortierung für andere Felder
   return filteredTags.value.sort((a, b) => {
     const aValue = String(a[field]).toLowerCase()
@@ -1167,12 +1173,12 @@ const sortBy = (field: string) => {
   <div class="tags-admin">
     <!-- Bulk-Operationen -->
     <div class="bulk-controls">
-      <ColorPicker 
-        v-model="bulkColor" 
+      <ColorPicker
+        v-model="bulkColor"
         placeholder="Farbe für ausgewählte Tags"
         class="bulk-color-picker"
       />
-      <button 
+      <button
         @click="applyBulkColor"
         :disabled="selectedTags.length === 0 || !bulkColor"
         class="ct-btn ct-btn-primary"
@@ -1180,12 +1186,12 @@ const sortBy = (field: string) => {
         Farbe anwenden ({{ selectedTags.length }})
       </button>
     </div>
-    
+
     <!-- Tag-Formular -->
     <div class="tag-form">
       <ColorPicker v-model="tagForm.color" />
       <button @click="saveTag" class="ct-btn ct-btn-success">
-        {{ editingTag ? 'Aktualisieren' : 'Erstellen' }}
+        {{ editingTag ? "Aktualisieren" : "Erstellen" }}
       </button>
     </div>
   </div>
@@ -1196,7 +1202,7 @@ const sortBy = (field: string) => {
 
 ```typescript
 // Debounced Search
-import { debounce } from 'lodash-es'
+import { debounce } from "lodash-es"
 
 const debouncedSearch = debounce((searchTerm: string) => {
   // Filterung durchführen

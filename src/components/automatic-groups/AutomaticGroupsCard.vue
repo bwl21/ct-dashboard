@@ -107,8 +107,6 @@ const refreshData = () => {
   fetchAutomaticGroups()
 }
 
-
-
 const loadMockData = () => {
   groups.value = [
     {

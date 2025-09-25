@@ -18,13 +18,8 @@ export default ({ mode }) => {
       port: 5173,
       allowedHosts: true,
       watch: {
-        ignored: [
-          '**/.env',
-          '**/.env.*', 
-          '**/node_modules/**',
-          '/usr/local/gitpod/secrets/**'
-        ]
-      }
+        ignored: ['**/.env', '**/.env.*', '**/node_modules/**', '/usr/local/gitpod/secrets/**'],
+      },
     },
   })
 }

@@ -19,18 +19,10 @@
   >
     <!-- Custom Actions -->
     <template #actions>
-      <button
-        @click="clearSearch"
-        class="ct-btn ct-btn-secondary"
-        title="Suchfeld zurücksetzen"
-      >
+      <button @click="clearSearch" class="ct-btn ct-btn-secondary" title="Suchfeld zurücksetzen">
         Suche zurücksetzen
       </button>
-      <button
-        @click="refreshGroups"
-        class="ct-btn ct-btn-primary refresh-btn"
-        :disabled="loading"
-      >
+      <button @click="refreshGroups" class="ct-btn ct-btn-primary refresh-btn" :disabled="loading">
         {{ loading ? 'Lädt...' : 'Aktualisieren' }}
       </button>
     </template>
@@ -92,11 +84,39 @@ const adminTableRef = ref()
 const tableColumns: TableColumn[] = [
   { key: 'id', label: 'Gruppen-ID', sortable: true, resizable: true, width: 100 },
   { key: 'groupTypeId', label: 'Gruppentyp', sortable: true, resizable: true, width: 120 },
-  { key: 'name', label: 'Name', sortable: true, resizable: true, width: 200, cellSlot: 'cell-name' },
-  { key: 'dynamicGroupStatus', label: 'Konfiguration', sortable: true, resizable: true, width: 150, cellSlot: 'cell-config' },
-  { key: 'lastExecution', label: 'Letzte Ausführung', sortable: true, resizable: true, width: 180, cellSlot: 'cell-lastExecution' },
-  { key: 'executionStatus', label: 'Status', sortable: true, resizable: true, width: 120, cellSlot: 'cell-status' },
-  { key: 'actions', label: 'Aktionen', resizable: false, width: 100, cellSlot: 'cell-actions' }
+  {
+    key: 'name',
+    label: 'Name',
+    sortable: true,
+    resizable: true,
+    width: 200,
+    cellSlot: 'cell-name',
+  },
+  {
+    key: 'dynamicGroupStatus',
+    label: 'Konfiguration',
+    sortable: true,
+    resizable: true,
+    width: 150,
+    cellSlot: 'cell-config',
+  },
+  {
+    key: 'lastExecution',
+    label: 'Letzte Ausführung',
+    sortable: true,
+    resizable: true,
+    width: 180,
+    cellSlot: 'cell-lastExecution',
+  },
+  {
+    key: 'executionStatus',
+    label: 'Status',
+    sortable: true,
+    resizable: true,
+    width: 120,
+    cellSlot: 'cell-status',
+  },
+  { key: 'actions', label: 'Aktionen', resizable: false, width: 100, cellSlot: 'cell-actions' },
 ]
 
 // Helper functions
@@ -155,7 +175,7 @@ const getExecutionStatusText = (status: string) => {
 
 const formatDate = (dateString: string | null) => {
   if (!dateString) return 'Nie'
-  
+
   try {
     const date = new Date(dateString)
     return date.toLocaleString('de-DE', {
@@ -182,8 +202,6 @@ const clearSearch = () => {
     adminTableRef.value.clearSearch()
   }
 }
-
-
 
 // Initialize
 onMounted(() => {

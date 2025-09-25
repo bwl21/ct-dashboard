@@ -618,31 +618,34 @@ Die Tags API ermöglicht vollständige CRUD-Operationen für ChurchTools-Tags mi
 Lädt alle Tags für eine spezifische Domain.
 
 **Parameter:**
+
 - `domain`: `'person' | 'song' | 'group'`
 
 **Rückgabe:**
+
 ```typescript
 interface Tag {
   id: number
   name: string
   description?: string
   color?: string
-  domainType: 'person' | 'song' | 'group'
+  domainType: "person" | "song" | "group"
 }
 
 type TagsResponse = Tag[]
 ```
 
 **Beispiel:**
+
 ```typescript
 // Alle Personen-Tags laden
-const personTags = await churchtoolsClient.get<Tag[]>('/tags/person')
+const personTags = await churchtoolsClient.get<Tag[]>("/tags/person")
 
 // Alle Song-Tags laden
-const songTags = await churchtoolsClient.get<Tag[]>('/tags/song')
+const songTags = await churchtoolsClient.get<Tag[]>("/tags/song")
 
 // Alle Gruppen-Tags laden
-const groupTags = await churchtoolsClient.get<Tag[]>('/tags/group')
+const groupTags = await churchtoolsClient.get<Tag[]>("/tags/group")
 ```
 
 #### `POST /tags/{domain}`
@@ -650,9 +653,11 @@ const groupTags = await churchtoolsClient.get<Tag[]>('/tags/group')
 Erstellt einen neuen Tag in der angegebenen Domain.
 
 **Parameter:**
+
 - `domain`: `'person' | 'song' | 'group'`
 
 **Request Body:**
+
 ```typescript
 interface CreateTagRequest {
   name: string
@@ -662,11 +667,12 @@ interface CreateTagRequest {
 ```
 
 **Beispiel:**
+
 ```typescript
-const newTag = await churchtoolsClient.post('/tags/person', {
-  name: 'Neuer Tag',
-  description: 'Beschreibung des Tags',
-  color: 'blue'
+const newTag = await churchtoolsClient.post("/tags/person", {
+  name: "Neuer Tag",
+  description: "Beschreibung des Tags",
+  color: "blue",
 })
 ```
 
@@ -675,9 +681,11 @@ const newTag = await churchtoolsClient.post('/tags/person', {
 Aktualisiert einen existierenden Tag.
 
 **Parameter:**
+
 - `id`: Tag-ID (number)
 
 **Request Body:**
+
 ```typescript
 interface UpdateTagRequest {
   name: string
@@ -687,11 +695,12 @@ interface UpdateTagRequest {
 ```
 
 **Beispiel:**
+
 ```typescript
-await churchtoolsClient.put('/tags/123', {
-  name: 'Aktualisierter Name',
-  description: 'Neue Beschreibung',
-  color: 'red'
+await churchtoolsClient.put("/tags/123", {
+  name: "Aktualisierter Name",
+  description: "Neue Beschreibung",
+  color: "red",
 })
 ```
 
@@ -700,55 +709,60 @@ await churchtoolsClient.put('/tags/123', {
 Löscht einen Tag.
 
 **Parameter:**
+
 - `id`: Tag-ID (number)
 
 **Beispiel:**
+
 ```typescript
-await churchtoolsClient.delete('/tags/123')
+await churchtoolsClient.delete("/tags/123")
 ```
 
 ### Service-Implementierung
 
 ```typescript
 // services/tagsService.ts
-import { churchtoolsClient } from '@churchtools/churchtools-client'
+import { churchtoolsClient } from "@churchtools/churchtools-client"
 
 export class TagsService {
   // Alle Tags laden
   static async fetchAllTags(): Promise<Tag[]> {
-    const domains = ['person', 'song', 'group'] as const
-    
+    const domains = ["person", "song", "group"] as const
+
     const tagPromises = domains.map(async (domain) => {
       try {
         const response = await churchtoolsClient.get<Tag[]>(`/tags/${domain}`)
-        return response.map(tag => ({ ...tag, domainType: domain }))
+        return response.map((tag) => ({ ...tag, domainType: domain }))
       } catch (err) {
         console.warn(`Failed to fetch ${domain} tags:`, err)
         return []
       }
     })
-    
+
     const results = await Promise.all(tagPromises)
     return results.flat()
   }
-  
+
   // Tag erstellen
   static async createTag(domain: TagDomain, tagData: CreateTagRequest): Promise<Tag> {
     return await churchtoolsClient.post(`/tags/${domain}`, tagData)
   }
-  
+
   // Tag aktualisieren
   static async updateTag(tagId: number, tagData: UpdateTagRequest): Promise<Tag> {
     return await churchtoolsClient.put(`/tags/${tagId}`, tagData)
   }
-  
+
   // Tag löschen
   static async deleteTag(tagId: number): Promise<void> {
     await churchtoolsClient.delete(`/tags/${tagId}`)
   }
-  
+
   // Bulk-Update
-  static async bulkUpdateTags(tagIds: number[], updates: Partial<UpdateTagRequest>): Promise<{
+  static async bulkUpdateTags(
+    tagIds: number[],
+    updates: Partial<UpdateTagRequest>
+  ): Promise<{
     successCount: number
     errorCount: number
     errors: Array<{ tagId: number; error: string }>
@@ -756,7 +770,7 @@ export class TagsService {
     let successCount = 0
     let errorCount = 0
     const errors: Array<{ tagId: number; error: string }> = []
-    
+
     for (const tagId of tagIds) {
       try {
         await this.updateTag(tagId, updates as UpdateTagRequest)
@@ -766,10 +780,10 @@ export class TagsService {
         errors.push({ tagId, error: err.message })
       }
     }
-    
+
     return { successCount, errorCount, errors }
   }
-  
+
   // Bulk-Delete
   static async bulkDeleteTags(tagIds: number[]): Promise<{
     successCount: number
@@ -779,7 +793,7 @@ export class TagsService {
     let successCount = 0
     let errorCount = 0
     const errors: Array<{ tagId: number; error: string }> = []
-    
+
     for (const tagId of tagIds) {
       try {
         await this.deleteTag(tagId)
@@ -789,7 +803,7 @@ export class TagsService {
         errors.push({ tagId, error: err.message })
       }
     }
-    
+
     return { successCount, errorCount, errors }
   }
 }
@@ -809,43 +823,43 @@ interface ColorOption {
 
 const churchToolsColors: ColorOption[] = [
   // System Colors
-  { value: 'parent', name: 'Parent', hex: '#6b7280', tailwind: 'gray-500' },
-  { value: 'default', name: 'Default', hex: '#6b7280', tailwind: 'gray-500' },
-  { value: 'accent', name: 'Accent', hex: '#007cba', tailwind: 'custom' },
-  { value: 'basic', name: 'Basic', hex: '#6b7280', tailwind: 'gray-500' },
-  
+  { value: "parent", name: "Parent", hex: "#6b7280", tailwind: "gray-500" },
+  { value: "default", name: "Default", hex: "#6b7280", tailwind: "gray-500" },
+  { value: "accent", name: "Accent", hex: "#007cba", tailwind: "custom" },
+  { value: "basic", name: "Basic", hex: "#6b7280", tailwind: "gray-500" },
+
   // Standard Colors
-  { value: 'red', name: 'Red', hex: '#dc2626', tailwind: 'red-600' },
-  { value: 'blue', name: 'Blue', hex: '#3b82f6', tailwind: 'blue-500' },
-  { value: 'green', name: 'Green', hex: '#16a34a', tailwind: 'green-600' },
-  { value: 'yellow', name: 'Yellow', hex: '#eab308', tailwind: 'yellow-500' },
-  { value: 'purple', name: 'Purple', hex: '#a855f7', tailwind: 'purple-500' },
-  { value: 'pink', name: 'Pink', hex: '#ec4899', tailwind: 'pink-500' },
-  { value: 'orange', name: 'Orange', hex: '#f97316', tailwind: 'orange-500' },
-  { value: 'cyan', name: 'Cyan', hex: '#06b6d4', tailwind: 'cyan-500' },
-  { value: 'emerald', name: 'Emerald', hex: '#10b981', tailwind: 'emerald-500' },
-  { value: 'lime', name: 'Lime', hex: '#84cc16', tailwind: 'lime-500' },
-  { value: 'amber', name: 'Amber', hex: '#f59e0b', tailwind: 'amber-500' },
-  { value: 'teal', name: 'Teal', hex: '#14b8a6', tailwind: 'teal-500' },
-  { value: 'indigo', name: 'Indigo', hex: '#6366f1', tailwind: 'indigo-500' },
-  { value: 'violet', name: 'Violet', hex: '#8b5cf6', tailwind: 'violet-500' },
-  { value: 'fuchsia', name: 'Fuchsia', hex: '#d946ef', tailwind: 'fuchsia-500' },
-  { value: 'rose', name: 'Rose', hex: '#f43f5e', tailwind: 'rose-500' },
-  { value: 'sky', name: 'Sky', hex: '#0ea5e9', tailwind: 'sky-500' },
-  { value: 'gray', name: 'Gray', hex: '#6b7280', tailwind: 'gray-500' },
-  { value: 'black', name: 'Black', hex: '#000000', tailwind: 'black' },
-  { value: 'white', name: 'White', hex: '#ffffff', tailwind: 'white' },
-  
+  { value: "red", name: "Red", hex: "#dc2626", tailwind: "red-600" },
+  { value: "blue", name: "Blue", hex: "#3b82f6", tailwind: "blue-500" },
+  { value: "green", name: "Green", hex: "#16a34a", tailwind: "green-600" },
+  { value: "yellow", name: "Yellow", hex: "#eab308", tailwind: "yellow-500" },
+  { value: "purple", name: "Purple", hex: "#a855f7", tailwind: "purple-500" },
+  { value: "pink", name: "Pink", hex: "#ec4899", tailwind: "pink-500" },
+  { value: "orange", name: "Orange", hex: "#f97316", tailwind: "orange-500" },
+  { value: "cyan", name: "Cyan", hex: "#06b6d4", tailwind: "cyan-500" },
+  { value: "emerald", name: "Emerald", hex: "#10b981", tailwind: "emerald-500" },
+  { value: "lime", name: "Lime", hex: "#84cc16", tailwind: "lime-500" },
+  { value: "amber", name: "Amber", hex: "#f59e0b", tailwind: "amber-500" },
+  { value: "teal", name: "Teal", hex: "#14b8a6", tailwind: "teal-500" },
+  { value: "indigo", name: "Indigo", hex: "#6366f1", tailwind: "indigo-500" },
+  { value: "violet", name: "Violet", hex: "#8b5cf6", tailwind: "violet-500" },
+  { value: "fuchsia", name: "Fuchsia", hex: "#d946ef", tailwind: "fuchsia-500" },
+  { value: "rose", name: "Rose", hex: "#f43f5e", tailwind: "rose-500" },
+  { value: "sky", name: "Sky", hex: "#0ea5e9", tailwind: "sky-500" },
+  { value: "gray", name: "Gray", hex: "#6b7280", tailwind: "gray-500" },
+  { value: "black", name: "Black", hex: "#000000", tailwind: "black" },
+  { value: "white", name: "White", hex: "#ffffff", tailwind: "white" },
+
   // Semantic Colors
-  { value: 'success', name: 'Success', hex: '#16a34a', tailwind: 'green-600' },
-  { value: 'warning', name: 'Warning', hex: '#f59e0b', tailwind: 'amber-500' },
-  { value: 'error', name: 'Error', hex: '#dc2626', tailwind: 'red-600' },
-  { value: 'info', name: 'Info', hex: '#3b82f6', tailwind: 'blue-500' },
-  { value: 'critical', name: 'Critical', hex: '#dc2626', tailwind: 'red-600' },
-  { value: 'constructive', name: 'Constructive', hex: '#16a34a', tailwind: 'green-600' },
-  { value: 'destructive', name: 'Destructive', hex: '#dc2626', tailwind: 'red-600' },
-  { value: 'danger', name: 'Danger', hex: '#dc2626', tailwind: 'red-600' },
-  { value: 'magic', name: 'Magic', hex: '#8b5cf6', tailwind: 'violet-500' }
+  { value: "success", name: "Success", hex: "#16a34a", tailwind: "green-600" },
+  { value: "warning", name: "Warning", hex: "#f59e0b", tailwind: "amber-500" },
+  { value: "error", name: "Error", hex: "#dc2626", tailwind: "red-600" },
+  { value: "info", name: "Info", hex: "#3b82f6", tailwind: "blue-500" },
+  { value: "critical", name: "Critical", hex: "#dc2626", tailwind: "red-600" },
+  { value: "constructive", name: "Constructive", hex: "#16a34a", tailwind: "green-600" },
+  { value: "destructive", name: "Destructive", hex: "#dc2626", tailwind: "red-600" },
+  { value: "danger", name: "Danger", hex: "#dc2626", tailwind: "red-600" },
+  { value: "magic", name: "Magic", hex: "#8b5cf6", tailwind: "violet-500" },
 ]
 ```
 
@@ -855,11 +869,11 @@ const churchToolsColors: ColorOption[] = [
 // Similarity-basierte Sortierung wie in ct-labelmanager
 const getColorCategory = (colorValue: string): number => {
   // System colors (highest priority)
-  if (['parent', 'default', 'basic'].includes(colorValue)) return 0
+  if (["parent", "default", "basic"].includes(colorValue)) return 0
   // Grayscale colors
-  if (['black', 'gray', 'white'].includes(colorValue)) return 1
+  if (["black", "gray", "white"].includes(colorValue)) return 1
   // Accent color
-  if (colorValue === 'accent') return 2
+  if (colorValue === "accent") return 2
   // Regular colors
   return 3
 }
@@ -869,39 +883,47 @@ const hexToHsl = (hex: string) => {
   const r = parseInt(hex.slice(1, 3), 16) / 255
   const g = parseInt(hex.slice(3, 5), 16) / 255
   const b = parseInt(hex.slice(5, 7), 16) / 255
-  
+
   const max = Math.max(r, g, b)
   const min = Math.min(r, g, b)
-  let h = 0, s = 0, l = (max + min) / 2
-  
+  let h = 0,
+    s = 0,
+    l = (max + min) / 2
+
   if (max !== min) {
     const d = max - min
     s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
     switch (max) {
-      case r: h = (g - b) / d + (g < b ? 6 : 0); break
-      case g: h = (b - r) / d + 2; break
-      case b: h = (r - g) / d + 4; break
+      case r:
+        h = (g - b) / d + (g < b ? 6 : 0)
+        break
+      case g:
+        h = (b - r) / d + 2
+        break
+      case b:
+        h = (r - g) / d + 4
+        break
     }
     h /= 6
   }
-  
+
   return { h: h * 360, s: s * 100, l: l * 100 }
 }
 
 const sortTagsByColor = (tags: Tag[]): Tag[] => {
   return tags.sort((a, b) => {
-    const categoryA = getColorCategory(a.color || '')
-    const categoryB = getColorCategory(b.color || '')
-    
+    const categoryA = getColorCategory(a.color || "")
+    const categoryB = getColorCategory(b.color || "")
+
     // First sort by category
     if (categoryA !== categoryB) {
       return categoryA - categoryB
     }
-    
+
     // Within same category, sort by hue
-    const hslA = hexToHsl(getColorHex(a.color || ''))
-    const hslB = hexToHsl(getColorHex(b.color || ''))
-    
+    const hslA = hexToHsl(getColorHex(a.color || ""))
+    const hslB = hexToHsl(getColorHex(b.color || ""))
+
     return hslA.h - hslB.h
   })
 }
@@ -914,16 +936,15 @@ const sortTagsByColor = (tags: Tag[]): Tag[] => {
 ```typescript
 const applyRegexFilter = (tags: Tag[], regexPattern: string): Tag[] => {
   if (!regexPattern.trim()) return tags
-  
+
   try {
-    const regex = new RegExp(regexPattern, 'i')
-    return tags.filter(tag => 
-      regex.test(tag.name) || 
-      regex.test(tag.description || '') ||
-      regex.test(tag.domainType)
+    const regex = new RegExp(regexPattern, "i")
+    return tags.filter(
+      (tag) =>
+        regex.test(tag.name) || regex.test(tag.description || "") || regex.test(tag.domainType)
     )
   } catch (err) {
-    console.error('Invalid regex pattern:', err)
+    console.error("Invalid regex pattern:", err)
     return tags
   }
 }
@@ -932,33 +953,29 @@ const applyRegexFilter = (tags: Tag[], regexPattern: string): Tag[] => {
 #### Multi-Field Sortierung
 
 ```typescript
-type SortField = 'id' | 'name' | 'domainType' | 'color' | 'description'
-type SortDirection = 'asc' | 'desc'
+type SortField = "id" | "name" | "domainType" | "color" | "description"
+type SortDirection = "asc" | "desc"
 
-const sortTags = (
-  tags: Tag[], 
-  field: SortField, 
-  direction: SortDirection = 'asc'
-): Tag[] => {
+const sortTags = (tags: Tag[], field: SortField, direction: SortDirection = "asc"): Tag[] => {
   return [...tags].sort((a, b) => {
     let aValue: any = a[field]
     let bValue: any = b[field]
-    
+
     // Handle null/undefined values
-    if (aValue == null) aValue = ''
-    if (bValue == null) bValue = ''
-    
+    if (aValue == null) aValue = ""
+    if (bValue == null) bValue = ""
+
     // Special handling for color sorting
-    if (field === 'color') {
+    if (field === "color") {
       return sortTagsByColor([a, b])[0] === a ? -1 : 1
     }
-    
+
     // String comparison for other fields
     aValue = String(aValue).toLowerCase()
     bValue = String(bValue).toLowerCase()
-    
+
     const comparison = aValue.localeCompare(bValue)
-    return direction === 'asc' ? comparison : -comparison
+    return direction === "asc" ? comparison : -comparison
   })
 }
 ```
@@ -977,28 +994,28 @@ interface TagsApiError {
 const handleTagsApiError = (error: any): TagsApiError => {
   if (error.response?.status === 404) {
     return {
-      code: 'TAG_NOT_FOUND',
-      message: 'Tag wurde nicht gefunden'
+      code: "TAG_NOT_FOUND",
+      message: "Tag wurde nicht gefunden",
     }
   }
-  
+
   if (error.response?.status === 400) {
     return {
-      code: 'VALIDATION_ERROR',
-      message: 'Ungültige Tag-Daten'
+      code: "VALIDATION_ERROR",
+      message: "Ungültige Tag-Daten",
     }
   }
-  
+
   if (error.response?.status === 403) {
     return {
-      code: 'PERMISSION_DENIED',
-      message: 'Keine Berechtigung für diese Aktion'
+      code: "PERMISSION_DENIED",
+      message: "Keine Berechtigung für diese Aktion",
     }
   }
-  
+
   return {
-    code: 'UNKNOWN_ERROR',
-    message: 'Ein unbekannter Fehler ist aufgetreten'
+    code: "UNKNOWN_ERROR",
+    message: "Ein unbekannter Fehler ist aufgetreten",
   }
 }
 ```
@@ -1007,14 +1024,14 @@ const handleTagsApiError = (error: any): TagsApiError => {
 
 ```typescript
 // Memoization für teure Operationen
-import { useMemoize } from '@vueuse/core'
+import { useMemoize } from "@vueuse/core"
 
 const memoizedColorSort = useMemoize((tags: Tag[]) => {
   return sortTagsByColor(tags)
 })
 
 // Debounced Search
-import { debounce } from 'lodash-es'
+import { debounce } from "lodash-es"
 
 const debouncedFilter = debounce((searchTerm: string) => {
   filteredTags.value = applyRegexFilter(tags.value, searchTerm)

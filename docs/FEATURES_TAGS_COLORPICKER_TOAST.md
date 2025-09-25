@@ -22,6 +22,7 @@ Diese Dokumentation beschreibt die neu implementierten Features für die Tags-Ve
 ### Komponenten
 
 #### TagsCard.vue
+
 ```vue
 <!-- Übersichts-Karte für das Dashboard -->
 <BaseCard
@@ -33,6 +34,7 @@ Diese Dokumentation beschreibt die neu implementierten Features für die Tags-Ve
 ```
 
 #### TagsAdmin.vue
+
 ```vue
 <!-- Vollständiges Admin-Panel -->
 <template>
@@ -43,14 +45,14 @@ Diese Dokumentation beschreibt die neu implementierten Features für die Tags-Ve
       <div class="stat-item">{{ personTagsCount }} Personen-Tags</div>
       <div class="stat-item">{{ songTagsCount }} Song-Tags</div>
     </div>
-    
+
     <!-- Filter und Bulk-Operationen -->
     <div class="controls-section">
       <input v-model="regexFilter" placeholder="Regex-Filter..." />
       <ColorPicker v-model="bulkColor" />
       <button @click="applyBulkColor">Farbe anwenden</button>
     </div>
-    
+
     <!-- Sortierbare Tabelle -->
     <table class="ct-table">
       <thead>
@@ -70,10 +72,10 @@ Diese Dokumentation beschreibt die neu implementierten Features für die Tags-Ve
 ```typescript
 // Tags laden
 const fetchTags = async () => {
-  const domains = ['person', 'song', 'group']
+  const domains = ["person", "song", "group"]
   const tagPromises = domains.map(async (domain) => {
     const response = await churchtoolsClient.get<Tag[]>(`/tags/${domain}`)
-    return response.map(tag => ({ ...tag, domainType: domain }))
+    return response.map((tag) => ({ ...tag, domainType: domain }))
   })
   const results = await Promise.all(tagPromises)
   tags.value = results.flat()
@@ -84,7 +86,7 @@ const createTag = async (tagData: TagData) => {
   await churchtoolsClient.post(`/tags/${tagData.domainType}`, {
     name: tagData.name,
     description: tagData.description,
-    color: tagData.color
+    color: tagData.color,
   })
 }
 
@@ -115,22 +117,18 @@ Die ColorPicker-Komponente wurde exakt nach dem ct-labelmanager Design implement
 
 ```vue
 <template>
-  <ColorPicker 
-    v-model="selectedColor"
-    :colors="customColors"
-    placeholder="Farbe auswählen"
-  />
+  <ColorPicker v-model="selectedColor" :colors="customColors" placeholder="Farbe auswählen" />
 </template>
 
 <script setup>
-import ColorPicker from '@/components/common/ColorPicker.vue'
+import ColorPicker from "@/components/common/ColorPicker.vue"
 
 const selectedColor = ref(null)
 
 // Optional: Eigene Farben definieren
 const customColors = [
-  { value: 'red', name: 'Rot', hex: '#dc2626' },
-  { value: 'blue', name: 'Blau', hex: '#3b82f6' }
+  { value: "red", name: "Rot", hex: "#dc2626" },
+  { value: "blue", name: "Blau", hex: "#3b82f6" },
 ]
 </script>
 ```
@@ -140,30 +138,30 @@ const customColors = [
 ```typescript
 const churchToolsColors = [
   // System Colors
-  { value: 'parent', name: 'Parent', hex: '#6b7280' },
-  { value: 'default', name: 'Default', hex: '#6b7280' },
-  { value: 'accent', name: 'Accent', hex: '#007cba' },
-  
+  { value: "parent", name: "Parent", hex: "#6b7280" },
+  { value: "default", name: "Default", hex: "#6b7280" },
+  { value: "accent", name: "Accent", hex: "#007cba" },
+
   // Standard Colors
-  { value: 'red', name: 'Red', hex: '#dc2626' },
-  { value: 'blue', name: 'Blue', hex: '#3b82f6' },
-  { value: 'green', name: 'Green', hex: '#16a34a' },
+  { value: "red", name: "Red", hex: "#dc2626" },
+  { value: "blue", name: "Blue", hex: "#3b82f6" },
+  { value: "green", name: "Green", hex: "#16a34a" },
   // ... weitere Farben
 ]
 ```
 
 ### Props
 
-| Prop | Typ | Default | Beschreibung |
-|------|-----|---------|--------------|
-| `modelValue` | `string \| null` | `null` | Aktuell ausgewählte Farbe |
-| `placeholder` | `string` | `'Select a color'` | Placeholder-Text |
-| `colors` | `Array<ColorOption>` | `[]` | Eigene Farbpalette (optional) |
+| Prop          | Typ                  | Default            | Beschreibung                  |
+| ------------- | -------------------- | ------------------ | ----------------------------- |
+| `modelValue`  | `string \| null`     | `null`             | Aktuell ausgewählte Farbe     |
+| `placeholder` | `string`             | `'Select a color'` | Placeholder-Text              |
+| `colors`      | `Array<ColorOption>` | `[]`               | Eigene Farbpalette (optional) |
 
 ### Events
 
-| Event | Payload | Beschreibung |
-|-------|---------|--------------|
+| Event               | Payload          | Beschreibung                   |
+| ------------------- | ---------------- | ------------------------------ |
 | `update:modelValue` | `string \| null` | Wird ausgelöst bei Farbauswahl |
 
 ## 🔔 Toast-Benachrichtigungssystem
@@ -180,41 +178,49 @@ const churchToolsColors = [
 ### Toast-Typen
 
 #### Success (Erfolg)
+
 ```typescript
-toast.success('Tag wurde erfolgreich erstellt', { 
-  title: 'Erfolgreich erstellt' 
+toast.success("Tag wurde erfolgreich erstellt", {
+  title: "Erfolgreich erstellt",
 })
 ```
+
 - **Farbe**: Grün (#f0fdf4)
 - **Icon**: ✓
 - **Verwendung**: Erfolgreiche Operationen
 
 #### Error (Fehler)
+
 ```typescript
-toast.error('Tag konnte nicht gelöscht werden', { 
-  title: 'Fehler beim Löschen' 
+toast.error("Tag konnte nicht gelöscht werden", {
+  title: "Fehler beim Löschen",
 })
 ```
+
 - **Farbe**: Rot (#fef2f2)
 - **Icon**: ✕
 - **Verwendung**: API-Fehler, Validierungsfehler
 
 #### Warning (Warnung)
+
 ```typescript
-toast.warning('Bitte beachten Sie diese Warnung', { 
-  title: 'Achtung' 
+toast.warning("Bitte beachten Sie diese Warnung", {
+  title: "Achtung",
 })
 ```
+
 - **Farbe**: Gelb (#fffbeb)
 - **Icon**: ⚠
 - **Verwendung**: Warnungen, wichtige Hinweise
 
 #### Info (Information)
+
 ```typescript
-toast.info('Hier ist eine wichtige Information', { 
-  title: 'Information' 
+toast.info("Hier ist eine wichtige Information", {
+  title: "Information",
 })
 ```
+
 - **Farbe**: Blau (#eff6ff)
 - **Icon**: ℹ
 - **Verwendung**: Allgemeine Informationen
@@ -222,26 +228,26 @@ toast.info('Hier ist eine wichtige Information', {
 ### useToast Composable
 
 ```typescript
-import { useToast } from '@/composables/useToast'
+import { useToast } from "@/composables/useToast"
 
-const { 
-  showSuccess, 
-  showError, 
-  showWarning, 
+const {
+  showSuccess,
+  showError,
+  showWarning,
   showInfo,
   showApiSuccess,
   showApiError,
-  showValidationError 
+  showValidationError,
 } = useToast()
 
 // Basis-Toasts
-showSuccess('Erfolgreich!', { title: 'Super' })
-showError('Fehler!', { title: 'Ups' })
+showSuccess("Erfolgreich!", { title: "Super" })
+showError("Fehler!", { title: "Ups" })
 
 // API-spezifische Toasts
-showApiSuccess('create', 'Neuer Tag')
-showApiError('update', 'Netzwerkfehler')
-showValidationError('Name ist erforderlich')
+showApiSuccess("create", "Neuer Tag")
+showApiError("update", "Netzwerkfehler")
+showValidationError("Name ist erforderlich")
 ```
 
 ### Globale Toast-Funktionen
@@ -250,15 +256,15 @@ Für Debugging und Tests sind Toast-Funktionen global verfügbar:
 
 ```javascript
 // In der Browser-Konsole
-toast.success('Test erfolgreich!')
-toast.error('Test-Fehler')
-toast.warning('Test-Warnung')
-toast.info('Test-Info')
+toast.success("Test erfolgreich!")
+toast.error("Test-Fehler")
+toast.warning("Test-Warnung")
+toast.info("Test-Info")
 
 // API-Toasts
-toast.apiSuccess('create', 'Test-Element')
-toast.apiError('delete', 'Verbindungsfehler')
-toast.validationError('Pflichtfeld fehlt')
+toast.apiSuccess("create", "Test-Element")
+toast.apiError("delete", "Verbindungsfehler")
+toast.validationError("Pflichtfeld fehlt")
 ```
 
 ### Toast-Konfiguration
@@ -266,17 +272,17 @@ toast.validationError('Pflichtfeld fehlt')
 ```typescript
 interface ToastOptions {
   title?: string
-  duration?: number        // Auto-dismiss Zeit (ms)
-  dismissible?: boolean    // Manuell schließbar
-  persistent?: boolean     // Nicht automatisch ausblenden
+  duration?: number // Auto-dismiss Zeit (ms)
+  dismissible?: boolean // Manuell schließbar
+  persistent?: boolean // Nicht automatisch ausblenden
 }
 
 // Beispiel
-showSuccess('Nachricht', {
-  title: 'Erfolg',
+showSuccess("Nachricht", {
+  title: "Erfolg",
   duration: 5000,
   dismissible: true,
-  persistent: false
+  persistent: false,
 })
 ```
 
@@ -290,15 +296,15 @@ const saveTag = async () => {
   try {
     if (editingTag.value) {
       await churchtoolsClient.put(`/tags/${editingTag.value.id}`, tagData)
-      showApiSuccess('update', tagData.name)
+      showApiSuccess("update", tagData.name)
     } else {
       await churchtoolsClient.post(`/tags/${tagForm.value.domainType}`, tagData)
-      showApiSuccess('create', tagData.name)
+      showApiSuccess("create", tagData.name)
     }
     closeTagModal()
     await refreshData()
   } catch (err) {
-    const operation = editingTag.value ? 'update' : 'create'
+    const operation = editingTag.value ? "update" : "create"
     showApiError(operation, err.message)
   }
 }
@@ -306,17 +312,17 @@ const saveTag = async () => {
 // Bulk-Operationen
 const applyBulkColor = async () => {
   if (!bulkColor.value) {
-    showValidationError('Bitte wählen Sie zuerst eine Farbe aus')
+    showValidationError("Bitte wählen Sie zuerst eine Farbe aus")
     return
   }
-  
+
   // ... Bulk-Update-Logik
-  
+
   if (successCount > 0) {
-    showApiSuccess('bulkUpdate', `${successCount} Tags`)
+    showApiSuccess("bulkUpdate", `${successCount} Tags`)
   }
   if (errorCount > 0) {
-    showApiError('bulkUpdate', `${errorCount} Tags konnten nicht aktualisiert werden`)
+    showApiError("bulkUpdate", `${errorCount} Tags konnten nicht aktualisiert werden`)
   }
 }
 ```
@@ -326,15 +332,15 @@ const applyBulkColor = async () => {
 ```typescript
 const validateTagForm = () => {
   if (!tagForm.value.name.trim()) {
-    showValidationError('Tag Name ist erforderlich')
+    showValidationError("Tag Name ist erforderlich")
     return false
   }
-  
+
   if (!tagForm.value.domainType) {
-    showValidationError('Domain ist erforderlich')
+    showValidationError("Domain ist erforderlich")
     return false
   }
-  
+
   return true
 }
 ```
@@ -368,19 +374,19 @@ const validateTagForm = () => {
 
 ```typescript
 // ColorPicker Tests
-describe('ColorPicker', () => {
-  it('should emit color selection', async () => {
+describe("ColorPicker", () => {
+  it("should emit color selection", async () => {
     const wrapper = mount(ColorPicker)
-    await wrapper.find('.color-item').trigger('click')
-    expect(wrapper.emitted('update:modelValue')).toBeTruthy()
+    await wrapper.find(".color-item").trigger("click")
+    expect(wrapper.emitted("update:modelValue")).toBeTruthy()
   })
 })
 
 // Toast Tests
-describe('useToast', () => {
-  it('should add toast to queue', () => {
+describe("useToast", () => {
+  it("should add toast to queue", () => {
     const { showSuccess, toasts } = useToast()
-    showSuccess('Test message')
+    showSuccess("Test message")
     expect(toasts.value).toHaveLength(1)
   })
 })
@@ -390,38 +396,41 @@ describe('useToast', () => {
 
 ```typescript
 // TagsAdmin E2E Tests
-describe('TagsAdmin', () => {
-  it('should create new tag with toast notification', () => {
-    cy.visit('/tags')
-    cy.get('[data-cy=create-tag]').click()
-    cy.get('[data-cy=tag-name]').type('Test Tag')
-    cy.get('[data-cy=save-tag]').click()
-    cy.get('.toast-success').should('contain', 'erfolgreich erstellt')
+describe("TagsAdmin", () => {
+  it("should create new tag with toast notification", () => {
+    cy.visit("/tags")
+    cy.get("[data-cy=create-tag]").click()
+    cy.get("[data-cy=tag-name]").type("Test Tag")
+    cy.get("[data-cy=save-tag]").click()
+    cy.get(".toast-success").should("contain", "erfolgreich erstellt")
   })
 })
 ```
 
 ## 📊 Performance-Metriken
 
-| Komponente | Bundle Size | Render Time | Memory Usage |
-|------------|-------------|-------------|--------------|
-| ColorPicker | ~8KB | <50ms | ~2MB |
-| Toast System | ~12KB | <30ms | ~1MB |
-| TagsAdmin | ~45KB | <200ms | ~8MB |
+| Komponente   | Bundle Size | Render Time | Memory Usage |
+| ------------ | ----------- | ----------- | ------------ |
+| ColorPicker  | ~8KB        | <50ms       | ~2MB         |
+| Toast System | ~12KB       | <30ms       | ~1MB         |
+| TagsAdmin    | ~45KB       | <200ms      | ~8MB         |
 
 ## 🔮 Zukünftige Erweiterungen
 
 ### ColorPicker
+
 - **Farbpaletten-Editor** für benutzerdefinierte Paletten
 - **Farbverlauf-Support** für erweiterte Designs
 - **Accessibility-Verbesserungen** für Farbenblinde
 
 ### Toast-System
+
 - **Toast-Gruppen** für verwandte Nachrichten
 - **Undo-Funktionalität** für rückgängig machbare Aktionen
 - **Rich-Content-Support** für HTML-Inhalte
 
 ### Tags-Verwaltung
+
 - **Import/Export-Funktionen** für Tag-Daten
 - **Tag-Hierarchien** für verschachtelte Strukturen
 - **Erweiterte Bulk-Operationen** mit Vorschau
@@ -429,14 +438,17 @@ describe('TagsAdmin', () => {
 ## 🐛 Bekannte Probleme
 
 ### ColorPicker
+
 - **Mobile Touch-Events**: Gelegentliche Doppel-Klicks auf mobilen Geräten
 - **Workaround**: Debounced Click-Handler implementiert
 
 ### Toast-System
+
 - **Z-Index-Konflikte**: Seltene Überlagerungen mit Modals
 - **Workaround**: Z-Index auf 9999 gesetzt
 
 ### TagsAdmin
+
 - **Große Datensätze**: Performance-Einbußen bei >1000 Tags
 - **Workaround**: Virtualisierung geplant für v1.2
 
