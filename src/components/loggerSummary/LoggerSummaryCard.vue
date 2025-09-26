@@ -20,14 +20,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed } from 'vue'
 import BaseCard from '../common/BaseCard.vue'
 import {
   useLoggerSummary,
   LogCategory,
   getCategoryDisplayName,
   getCategoryIcon,
-} from './useLoggerSummary'
+} from '@/composables/useLoggerSummaryQuery'
 
 // Props
 defineProps<{
@@ -43,64 +43,116 @@ const emit = defineEmits<{
   navigate: []
 }>()
 
-// Use composable
+// Use TanStack Query for data fetching with caching
 const {
-  loading: isLoading,
+  data: statistics,
+  isLoading,
   error,
-  statistics,
-  formattedLastUpdate,
-  loadLogStatistics,
-} = useLoggerSummary()
+  refetch,
+  isFetching,
+  dataUpdatedAt,
+} = useLoggerSummary(3) // Load last 3 days
 
 // Computed properties
 const mainStat = computed(() => ({
-  value: statistics.value.total,
+  value: statistics.value?.total || 0,
   label: 'Einträge',
 }))
 
-const statusStats = computed(() => [
-  {
-    key: 'systemErrors',
-    value: statistics.value.systemErrors,
-    label: getCategoryDisplayName(LogCategory.SYSTEM_ERROR),
-    icon: getCategoryIcon(LogCategory.SYSTEM_ERROR),
-    type: 'error' as const,
-  },
-  {
-    key: 'failedLogins',
-    value: statistics.value.failedLogins,
-    label: getCategoryDisplayName(LogCategory.FAILED_LOGIN),
-    icon: getCategoryIcon(LogCategory.FAILED_LOGIN),
-    type: 'warning' as const,
-  },
-  {
-    key: 'emailsSent',
-    value: statistics.value.emailsSent,
-    label: getCategoryDisplayName(LogCategory.EMAIL_SENT),
-    icon: getCategoryIcon(LogCategory.EMAIL_SENT),
-    type: 'info' as const,
-  },
-  {
-    key: 'successfulLogins',
-    value: statistics.value.successfulLogins,
-    label: getCategoryDisplayName(LogCategory.SUCCESSFUL_LOGIN),
-    icon: getCategoryIcon(LogCategory.SUCCESSFUL_LOGIN),
-    type: 'success' as const,
-  },
-  {
-    key: 'personViewed',
-    value: statistics.value.personViewed,
-    label: getCategoryDisplayName(LogCategory.PERSON_VIEWED),
-    icon: getCategoryIcon(LogCategory.PERSON_VIEWED),
-    type: 'info' as const,
-  },
-])
+const statusStats = computed(() => {
+  if (!statistics.value) {
+    return [
+      {
+        key: 'systemErrors',
+        value: 0,
+        label: getCategoryDisplayName(LogCategory.SYSTEM_ERROR),
+        icon: getCategoryIcon(LogCategory.SYSTEM_ERROR),
+        type: 'error' as const,
+      },
+      {
+        key: 'failedLogins',
+        value: 0,
+        label: getCategoryDisplayName(LogCategory.FAILED_LOGIN),
+        icon: getCategoryIcon(LogCategory.FAILED_LOGIN),
+        type: 'warning' as const,
+      },
+      {
+        key: 'emailsSent',
+        value: 0,
+        label: getCategoryDisplayName(LogCategory.EMAIL_SENT),
+        icon: getCategoryIcon(LogCategory.EMAIL_SENT),
+        type: 'info' as const,
+      },
+      {
+        key: 'successfulLogins',
+        value: 0,
+        label: getCategoryDisplayName(LogCategory.SUCCESSFUL_LOGIN),
+        icon: getCategoryIcon(LogCategory.SUCCESSFUL_LOGIN),
+        type: 'success' as const,
+      },
+      {
+        key: 'personViewed',
+        value: 0,
+        label: getCategoryDisplayName(LogCategory.PERSON_VIEWED),
+        icon: getCategoryIcon(LogCategory.PERSON_VIEWED),
+        type: 'info' as const,
+      },
+    ]
+  }
 
-// formattedLastUpdate is provided by the composable
+  return [
+    {
+      key: 'systemErrors',
+      value: statistics.value.systemErrors,
+      label: getCategoryDisplayName(LogCategory.SYSTEM_ERROR),
+      icon: getCategoryIcon(LogCategory.SYSTEM_ERROR),
+      type: 'error' as const,
+    },
+    {
+      key: 'failedLogins',
+      value: statistics.value.failedLogins,
+      label: getCategoryDisplayName(LogCategory.FAILED_LOGIN),
+      icon: getCategoryIcon(LogCategory.FAILED_LOGIN),
+      type: 'warning' as const,
+    },
+    {
+      key: 'emailsSent',
+      value: statistics.value.emailsSent,
+      label: getCategoryDisplayName(LogCategory.EMAIL_SENT),
+      icon: getCategoryIcon(LogCategory.EMAIL_SENT),
+      type: 'info' as const,
+    },
+    {
+      key: 'successfulLogins',
+      value: statistics.value.successfulLogins,
+      label: getCategoryDisplayName(LogCategory.SUCCESSFUL_LOGIN),
+      icon: getCategoryIcon(LogCategory.SUCCESSFUL_LOGIN),
+      type: 'success' as const,
+    },
+    {
+      key: 'personViewed',
+      value: statistics.value.personViewed,
+      label: getCategoryDisplayName(LogCategory.PERSON_VIEWED),
+      icon: getCategoryIcon(LogCategory.PERSON_VIEWED),
+      type: 'info' as const,
+    },
+  ]
+})
+
+const formattedLastUpdate = computed(() => {
+  if (!dataUpdatedAt.value) return ''
+  return new Date(dataUpdatedAt.value).toLocaleString('de-DE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+})
 
 // Methods
 const refreshData = () => {
-  loadLogStatistics(3) // Load last 3 days
+  refetch()
 }
 
 const handleNavigate = () => {
@@ -108,11 +160,6 @@ const handleNavigate = () => {
 }
 
 const handleRetry = () => {
-  loadLogStatistics(3)
+  refetch()
 }
-
-// Initialize component
-onMounted(() => {
-  loadLogStatistics(3) // Load statistics for last 3 days
-})
 </script>

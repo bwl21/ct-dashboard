@@ -20,7 +20,7 @@ export interface Calendar {
 
 import type { AppointmentBase, AppointmentCalculated } from '../ct-types'
 
-type Appointment = AppointmentBase | AppointmentCalculated
+export type Appointment = AppointmentBase | AppointmentCalculated
 
 /**
  * Fetches all calendars from ChurchTools

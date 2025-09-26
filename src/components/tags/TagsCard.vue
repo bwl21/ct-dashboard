@@ -20,21 +20,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { churchtoolsClient } from '@churchtools/churchtools-client'
+import { computed } from 'vue'
+import { useTags, useTagsStats } from '@/composables/useTags'
 import BaseCard from '../common/BaseCard.vue'
-
-// Tag interface based on ChurchTools API
-interface Tag {
-  id: number
-  name: string
-  description?: string
-  color?: string
-  domainType: 'person' | 'song' | 'group'
-}
-
-// API Response is directly an array of tags
-type TagsApiResponse = Tag[]
 
 // Props
 defineProps<{
@@ -50,50 +38,38 @@ defineEmits<{
   navigate: []
 }>()
 
-// State
-const isLoading = ref(true)
-const error = ref<string | null>(null)
-const lastUpdate = ref<Date | null>(null)
+// Use TanStack Query for data fetching with caching
+const { data: tags, isLoading, error, refetch, isFetching, dataUpdatedAt } = useTags()
 
-// Data
-const tags = ref<Tag[]>([])
-
-// Computed properties
-const personTagsCount = computed(() => {
-  return tags.value.filter((tag) => tag.domainType === 'person').length
-})
-
-const songTagsCount = computed(() => {
-  return tags.value.filter((tag) => tag.domainType === 'song').length
-})
-
-const groupTagsCount = computed(() => {
-  return tags.value.filter((tag) => tag.domainType === 'group').length
+// Compute stats using the helper function
+const stats = computed(() => {
+  if (!tags.value) return { total: 0, person: 0, song: 0, group: 0 }
+  return useTagsStats(tags.value)
 })
 
 const mainStat = computed(() => ({
-  value: tags.value.length,
+  value: stats.value.total,
   label: 'Tags gesamt',
 }))
 
 const statusStats = computed(() => [
   {
     key: 'person',
-    value: personTagsCount.value,
+    value: stats.value.person,
     label: 'Personen',
     icon: '👤',
     type: 'info' as const,
   },
   {
     key: 'song',
-    value: songTagsCount.value,
+    value: stats.value.song,
     label: 'Lieder',
     icon: '🎵',
     type: 'success' as const,
   },
   {
     key: 'group',
-    value: groupTagsCount.value,
+    value: stats.value.group,
     label: 'Gruppen',
     icon: '👥',
     type: 'warning' as const,
@@ -101,8 +77,8 @@ const statusStats = computed(() => [
 ])
 
 const formattedLastUpdate = computed(() => {
-  if (!lastUpdate.value) return ''
-  return lastUpdate.value.toLocaleString('de-DE', {
+  if (!dataUpdatedAt.value) return ''
+  return new Date(dataUpdatedAt.value).toLocaleString('de-DE', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -111,56 +87,8 @@ const formattedLastUpdate = computed(() => {
   })
 })
 
-// Fetch data from ChurchTools API
-const fetchData = async () => {
-  isLoading.value = true
-  error.value = null
-
-  try {
-    // Fetch tags from different domains using modern API endpoints
-    const [personTags, songTags, groupTags] = await Promise.allSettled([
-      churchtoolsClient.get<TagsApiResponse>('/tags/person').catch(() => []),
-      churchtoolsClient.get<TagsApiResponse>('/tags/song').catch(() => []),
-      churchtoolsClient.get<TagsApiResponse>('/tags/group').catch(() => []),
-    ])
-
-    const allTags: Tag[] = []
-
-    // Process person tags
-    if (personTags.status === 'fulfilled' && personTags.value) {
-      const personTagsData = Array.isArray(personTags.value) ? personTags.value : []
-      allTags.push(...personTagsData.map((tag: any) => ({ ...tag, domainType: 'person' as const })))
-    }
-
-    // Process song tags
-    if (songTags.status === 'fulfilled' && songTags.value) {
-      const songTagsData = Array.isArray(songTags.value) ? songTags.value : []
-      allTags.push(...songTagsData.map((tag: any) => ({ ...tag, domainType: 'song' as const })))
-    }
-
-    // Process group tags
-    if (groupTags.status === 'fulfilled' && groupTags.value) {
-      const groupTagsData = Array.isArray(groupTags.value) ? groupTags.value : []
-      allTags.push(...groupTagsData.map((tag: any) => ({ ...tag, domainType: 'group' as const })))
-    }
-
-    tags.value = allTags
-    lastUpdate.value = new Date()
-  } catch (err) {
-    console.error('Error fetching tags:', err)
-    error.value = 'Fehler beim Laden der Tags. Bitte versuchen Sie es erneut.'
-  } finally {
-    isLoading.value = false
-  }
-}
-
-// Refresh data
+// Refresh data - now uses TanStack Query's refetch
 const refreshData = () => {
-  fetchData()
+  refetch()
 }
-
-// Initialize component
-onMounted(() => {
-  fetchData()
-})
 </script>

@@ -1,5 +1,8 @@
 import { createApp } from 'vue'
 import { createI18n } from 'vue-i18n'
+import { VueQueryPlugin, QueryClient } from '@tanstack/vue-query'
+import { persistQueryClient } from '@tanstack/query-persist-client-core'
+import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister'
 import App from './App.vue'
 import './style.css'
 import { churchtoolsClient } from '@churchtools/churchtools-client'
@@ -89,14 +92,48 @@ const username = import.meta.env.VITE_USERNAME
 const password = import.meta.env.VITE_PASSWORD
 if (import.meta.env.MODE === 'development' && username && password) {
   try {
+    console.log('🔐 Attempting ChurchTools login...')
     await churchtoolsClient.post('/login', { username, password })
+    console.log('✅ ChurchTools login successful')
+
+    // Test a simple API call
+    const whoami = await churchtoolsClient.get('/whoami')
+    console.log('👤 Current user:', whoami)
   } catch (error) {
-    console.warn('ChurchTools login failed in development mode:', error)
+    console.error('❌ ChurchTools login failed in development mode:', error)
   }
 }
 
 const KEY = import.meta.env.VITE_KEY
 export { KEY }
+
+// Create QueryClient with optimized defaults for ChurchTools data
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 20 * 1000, // 20 seconds - for page reload cache
+      gcTime: 10 * 60 * 1000, // 10 minutes - cache time (formerly cacheTime)
+      retry: 3,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: true,
+    },
+  },
+})
+
+// Create sessionStorage persister for cache persistence across page reloads
+const persister = createSyncStoragePersister({
+  storage: window.sessionStorage,
+  key: 'CT_DASHBOARD_CACHE',
+  serialize: JSON.stringify,
+  deserialize: JSON.parse,
+})
+
+// Setup cache persistence
+persistQueryClient({
+  queryClient,
+  persister,
+  maxAge: 20 * 1000, // 20 seconds - cache expires after this time
+})
 
 const app = createApp(App)
 
@@ -104,4 +141,5 @@ const app = createApp(App)
 app.component('font-awesome-icon', FontAwesomeIcon)
 
 app.use(i18n)
+app.use(VueQueryPlugin, { queryClient })
 app.mount('#app')
