@@ -12,24 +12,24 @@ export interface AdminTableProps {
   data: any[]
   loading: boolean
   error: string | null
-  
-  // Table Configuration  
+
+  // Table Configuration
   columns: TableColumn[]
   rowKey: string
-  
+
   // Header
   title: string
   description?: string
-  
+
   // Search & Filtering
   searchable?: boolean
   searchPlaceholder?: string
   searchFields?: string[]
-  
+
   // Sorting
   defaultSortField?: string
   defaultSortDirection?: 'asc' | 'desc'
-  
+
   // Text customization
   loadingText?: string
   retryText?: string

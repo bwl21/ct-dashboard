@@ -55,6 +55,6 @@ export function useTableResize(initialWidths: number[]) {
     startResize,
     handleResize,
     stopResize,
-    isResizing
+    isResizing,
   }
 }

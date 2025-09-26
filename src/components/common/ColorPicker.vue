@@ -35,10 +35,8 @@
           <h3>Choose a Color</h3>
           <button type="button" class="close-button" @click="closeModal">×</button>
         </div>
-        <p class="color-picker-subtitle">
-          Click a color to select it, or press Escape to cancel
-        </p>
-        
+        <p class="color-picker-subtitle">Click a color to select it, or press Escape to cancel</p>
+
         <!-- No Color Option -->
         <div class="no-color-section">
           <div
@@ -64,10 +62,7 @@
             :class="{ selected: selectedColor === color.value }"
             @click="selectColor(color.value)"
           >
-            <div
-              class="color-circle"
-              :style="{ backgroundColor: color.hex }"
-            ></div>
+            <div class="color-circle" :style="{ backgroundColor: color.hex }"></div>
             <div class="color-info">
               <div class="color-name">{{ color.name }}</div>
               <div class="color-hex">{{ color.hex }}</div>
@@ -92,7 +87,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   modelValue: null,
   placeholder: 'Select a color',
-  colors: () => []
+  colors: () => [],
 })
 
 // Emits
@@ -111,7 +106,7 @@ const churchToolsColors = [
   { value: 'default', name: 'Default', hex: '#6b7280', tailwind: 'gray-500' },
   { value: 'accent', name: 'Accent', hex: '#007cba', tailwind: 'custom' },
   { value: 'basic', name: 'Basic', hex: '#6b7280', tailwind: 'gray-500' },
-  
+
   // Standard Colors
   { value: 'amber', name: 'Amber', hex: '#f59e0b', tailwind: 'amber-500' },
   { value: 'black', name: 'Black', hex: '#000000', tailwind: 'black' },
@@ -133,7 +128,7 @@ const churchToolsColors = [
   { value: 'violet', name: 'Violet', hex: '#8b5cf6', tailwind: 'violet-500' },
   { value: 'white', name: 'White', hex: '#ffffff', tailwind: 'white' },
   { value: 'yellow', name: 'Yellow', hex: '#eab308', tailwind: 'yellow-500' },
-  
+
   // Semantic Colors
   { value: 'critical', name: 'Critical', hex: '#dc2626', tailwind: 'red-600' },
   { value: 'constructive', name: 'Constructive', hex: '#16a34a', tailwind: 'green-600' },
@@ -143,54 +138,61 @@ const churchToolsColors = [
   { value: 'info', name: 'Info', hex: '#3b82f6', tailwind: 'blue-500' },
   { value: 'success', name: 'Success', hex: '#16a34a', tailwind: 'green-600' },
   { value: 'warning', name: 'Warning', hex: '#f59e0b', tailwind: 'amber-500' },
-  { value: 'magic', name: 'Magic', hex: '#8b5cf6', tailwind: 'violet-500' }
+  { value: 'magic', name: 'Magic', hex: '#8b5cf6', tailwind: 'violet-500' },
 ]
 
 // Color similarity sorting functions (from ct-labelmanager)
 const hexToHsl = (hex: string) => {
   if (!hex || hex === '') return { h: 0, s: 0, l: 0 }
-  
+
   // Remove # if present
   hex = hex.replace('#', '')
-  
+
   // Convert to RGB
   const r = parseInt(hex.substr(0, 2), 16) / 255
   const g = parseInt(hex.substr(2, 2), 16) / 255
   const b = parseInt(hex.substr(4, 2), 16) / 255
-  
+
   const max = Math.max(r, g, b)
   const min = Math.min(r, g, b)
-  let h: number, s: number, l = (max + min) / 2
-  
+  let h: number,
+    s: number,
+    l = (max + min) / 2
+
   if (max === min) {
     h = s = 0 // achromatic
   } else {
     const d = max - min
     s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
     switch (max) {
-      case r: h = (g - b) / d + (g < b ? 6 : 0); break
-      case g: h = (b - r) / d + 2; break
-      case b: h = (r - g) / d + 4; break
-      default: h = 0
+      case r:
+        h = (g - b) / d + (g < b ? 6 : 0)
+        break
+      case g:
+        h = (b - r) / d + 2
+        break
+      case b:
+        h = (r - g) / d + 4
+        break
+      default:
+        h = 0
     }
     h /= 6
   }
-  
+
   return { h: h * 360, s: s * 100, l: l * 100 }
 }
 
-
-
 // Use provided colors or default churchtools colors
-const colors = computed(() => props.colors.length > 0 ? props.colors : churchToolsColors)
+const colors = computed(() => (props.colors.length > 0 ? props.colors : churchToolsColors))
 
 // Methods
 const getColorInfo = (colorValue: string | null) => {
   if (!colorValue) {
     return { name: 'No Color', hex: '', tailwind: '' }
   }
-  
-  const color = colors.value.find(c => c.value === colorValue)
+
+  const color = colors.value.find((c) => c.value === colorValue)
   return color || { name: colorValue, hex: '#000000', tailwind: 'gray-500' }
 }
 
@@ -221,9 +223,12 @@ onUnmounted(() => {
 
 // Watch for prop changes
 import { watch } from 'vue'
-watch(() => props.modelValue, (newValue) => {
-  selectedColor.value = newValue
-})
+watch(
+  () => props.modelValue,
+  (newValue) => {
+    selectedColor.value = newValue
+  }
+)
 </script>
 
 <style scoped>
@@ -422,7 +427,9 @@ watch(() => props.modelValue, (newValue) => {
   height: 40px;
   border-radius: 50%;
   border: 3px solid #ffffff;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.1),
+    0 2px 4px rgba(0, 0, 0, 0.1);
   background: #ffffff;
   display: flex;
   align-items: center;
@@ -459,7 +466,8 @@ watch(() => props.modelValue, (newValue) => {
 .color-hex {
   font-size: 10px;
   color: #6b7280;
-  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-family:
+    'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
   line-height: 1.2;
   text-transform: uppercase;
   display: block;
@@ -479,16 +487,16 @@ watch(() => props.modelValue, (newValue) => {
     grid-template-columns: repeat(2, 1fr);
     max-width: 320px;
   }
-  
+
   .color-picker-content {
     max-width: 95vw;
     padding: 16px;
   }
-  
+
   .color-name {
     font-size: 11px;
   }
-  
+
   .color-hex,
   .color-description {
     font-size: 9px;
@@ -500,21 +508,21 @@ watch(() => props.modelValue, (newValue) => {
     grid-template-columns: 1fr;
     max-width: 280px;
   }
-  
+
   .color-option {
     padding: 12px;
   }
-  
+
   .color-swatch,
   .no-color-swatch {
     width: 28px;
     height: 28px;
   }
-  
+
   .color-name {
     font-size: 12px;
   }
-  
+
   .color-hex,
   .color-description {
     font-size: 10px;

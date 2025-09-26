@@ -49,3 +49,18 @@ ehthumbs.db
 *.tmp
 *.temp
 
+# Temporary files directory
+.tmp/*
+!.tmp/.gitkeep
+
+# Ona specific
+.ona-temp/
+*.ona-backup
+.ona-cache/
+
+# Development
+.vscode/settings.json.bak
+*.local.env
+
+
+

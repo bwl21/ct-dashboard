@@ -102,7 +102,7 @@ defineEmits<{
   height: 100%;
   display: flex;
   flex-direction: column;
-  transition: 
+  transition:
     transform var(--transition-base),
     box-shadow var(--transition-base);
 }
@@ -224,7 +224,7 @@ defineEmits<{
     grid-template-columns: repeat(4, 1fr);
     gap: var(--spacing-xxl);
   }
-  
+
   .dashboard-container {
     padding: var(--spacing-xxl);
   }
@@ -235,7 +235,7 @@ defineEmits<{
     grid-template-columns: repeat(2, 1fr);
     gap: var(--spacing-xl);
   }
-  
+
   .dashboard-container {
     padding: calc(var(--spacing-xl) + var(--spacing-sm));
   }
@@ -246,7 +246,7 @@ defineEmits<{
     grid-template-columns: repeat(2, 1fr);
     gap: var(--spacing-lg);
   }
-  
+
   .dashboard-container {
     padding: var(--spacing-lg);
   }

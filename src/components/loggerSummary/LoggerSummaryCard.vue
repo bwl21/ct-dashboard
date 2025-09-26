@@ -22,7 +22,12 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import BaseCard from '../common/BaseCard.vue'
-import { useLoggerSummary, LogCategory, getCategoryDisplayName, getCategoryIcon } from './useLoggerSummary'
+import {
+  useLoggerSummary,
+  LogCategory,
+  getCategoryDisplayName,
+  getCategoryIcon,
+} from './useLoggerSummary'
 
 // Props
 defineProps<{
@@ -39,12 +44,12 @@ const emit = defineEmits<{
 }>()
 
 // Use composable
-const { 
-  loading: isLoading, 
-  error, 
-  statistics, 
+const {
+  loading: isLoading,
+  error,
+  statistics,
   formattedLastUpdate,
-  loadLogStatistics 
+  loadLogStatistics,
 } = useLoggerSummary()
 
 // Computed properties

@@ -28,7 +28,7 @@
         />
       </div>
     </div>
-    
+
     <!-- Toast Notifications -->
     <Toast />
   </div>
@@ -94,18 +94,26 @@ const currentView = ref<'dashboard' | string>('dashboard')
 const currentModuleId = ref<string>('')
 
 // Toast testing
-const { showSuccess, showError, showWarning, showInfo, showApiSuccess, showApiError, showValidationError } = useToast()
+const {
+  showSuccess,
+  showError,
+  showWarning,
+  showInfo,
+  showApiSuccess,
+  showApiError,
+  showValidationError,
+} = useToast()
 
 // Make toast functions globally available for console testing
 if (typeof window !== 'undefined') {
-  (window as any).toast = {
+  ;(window as any).toast = {
     success: showSuccess,
     error: showError,
     warning: showWarning,
     info: showInfo,
     apiSuccess: showApiSuccess,
     apiError: showApiError,
-    validationError: showValidationError
+    validationError: showValidationError,
   }
 }
 
@@ -126,8 +134,6 @@ onMounted(async () => {
     console.error('Fehler beim Laden der Benutzerdaten:', error)
     userDisplayName.value = 'Benutzer'
   }
-  
-
 })
 </script>
 

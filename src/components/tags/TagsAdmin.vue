@@ -34,60 +34,52 @@
               </span>
             </div>
           </div>
-          
+
           <div class="bulk-controls-row">
-            <button 
-              type="button" 
-              @click="toggleSelectAll" 
-              class="bulk-btn bulk-btn-outline"
-            >
+            <button type="button" @click="toggleSelectAll" class="bulk-btn bulk-btn-outline">
               Select All
             </button>
-            
-            <button 
-              type="button" 
-              @click="clearSelection" 
-              class="bulk-btn bulk-btn-outline"
-            >
+
+            <button type="button" @click="clearSelection" class="bulk-btn bulk-btn-outline">
               Clear Selection
             </button>
-            
-            <input 
+
+            <input
               v-model="prefixFilter"
-              type="text" 
+              type="text"
               placeholder="e.g., L:*"
               class="prefix-input"
             />
-            
-            <button 
-              type="button" 
-              @click="selectByPrefix" 
+
+            <button
+              type="button"
+              @click="selectByPrefix"
               class="bulk-btn bulk-btn-outline"
               :disabled="!prefixFilter.trim()"
             >
               Select by Prefix
             </button>
-            
+
             <div class="color-picker-dropdown">
-              <ColorPicker 
-                v-model="bulkColor" 
+              <ColorPicker
+                v-model="bulkColor"
                 :placeholder="bulkColor ? getColorDisplayName(bulkColor) : 'Select Color'"
                 class="bulk-color-picker"
               />
             </div>
-            
-            <button 
-              type="button" 
-              @click="applyBulkColor" 
+
+            <button
+              type="button"
+              @click="applyBulkColor"
               class="bulk-btn bulk-btn-success"
               :disabled="!bulkColor || isBulkProcessing || selectedTags.length === 0"
             >
               {{ isBulkProcessing ? 'Applying...' : 'Apply Color' }}
             </button>
-            
-            <button 
-              type="button" 
-              @click="showBulkDeleteConfirm" 
+
+            <button
+              type="button"
+              @click="showBulkDeleteConfirm"
               class="bulk-btn bulk-btn-danger"
               :disabled="isBulkProcessing || selectedTags.length === 0"
             >
@@ -101,10 +93,10 @@
       <template #filters>
         <div class="filter-container">
           <label for="domainFilter" class="filter-label">Domain:</label>
-          <select 
+          <select
             id="domainFilter"
-            v-model="selectedDomain" 
-            @change="refreshData" 
+            v-model="selectedDomain"
+            @change="refreshData"
             class="ct-select filter-select"
           >
             <option value="">Alle Domains</option>
@@ -117,35 +109,31 @@
 
       <!-- Custom Actions -->
       <template #actions>
-        <button 
-          type="button" 
-          @click="clearSearch" 
+        <button
+          type="button"
+          @click="clearSearch"
           class="ct-btn ct-btn-secondary"
           title="Suchfeld zurücksetzen"
         >
           Suche zurücksetzen
         </button>
-        <button 
-          type="button" 
-          @click="refreshData" 
-          class="ct-btn ct-btn-primary" 
+        <button
+          type="button"
+          @click="refreshData"
+          class="ct-btn ct-btn-primary"
           :disabled="isLoading"
         >
           {{ isLoading ? 'Laden...' : 'Aktualisieren' }}
         </button>
-        <button 
-          type="button" 
-          @click="showCreateModal" 
-          class="ct-btn ct-btn-success"
-        >
+        <button type="button" @click="showCreateModal" class="ct-btn ct-btn-success">
           Tag erstellen
         </button>
       </template>
 
       <!-- Custom Cell Rendering -->
       <template #cell-checkbox="{ item }">
-        <input 
-          type="checkbox" 
+        <input
+          type="checkbox"
           :checked="selectedTags.includes(item.id)"
           @change.stop="toggleTagSelection(item.id)"
           class="ct-checkbox"
@@ -154,8 +142,8 @@
 
       <template #cell-color="{ item }">
         <div class="color-display" v-if="item.color">
-          <div 
-            class="color-swatch" 
+          <div
+            class="color-swatch"
             :style="{ backgroundColor: getColorInfo(item.color).hex }"
             :title="getColorInfo(item.color).hex"
           ></div>
@@ -174,16 +162,16 @@
 
       <template #cell-actions="{ item }">
         <div class="action-buttons">
-          <button 
-            @click.stop="editTag(item)" 
+          <button
+            @click.stop="editTag(item)"
             class="ct-btn ct-btn-sm ct-btn-outline"
             title="Tag bearbeiten"
             type="button"
           >
             Bearbeiten
           </button>
-          <button 
-            @click.stop="deleteTagHandler(item)" 
+          <button
+            @click.stop="deleteTagHandler(item)"
             class="ct-btn ct-btn-sm ct-btn-danger"
             title="Tag löschen"
             type="button"
@@ -201,31 +189,31 @@
           <h3>{{ editingTag ? 'Tag bearbeiten' : 'Neuen Tag erstellen' }}</h3>
           <button type="button" class="close-button" @click="closeTagModal">×</button>
         </div>
-        
+
         <form @submit.prevent="saveTag" class="tag-form">
           <div class="form-group">
             <label for="tagName">Tag Name *</label>
-            <input 
+            <input
               id="tagName"
-              v-model="tagForm.name" 
-              type="text" 
+              v-model="tagForm.name"
+              type="text"
               placeholder="Tag Name eingeben"
               class="form-input"
               required
             />
           </div>
-          
+
           <div class="form-group">
             <label for="tagDescription">Beschreibung</label>
-            <textarea 
+            <textarea
               id="tagDescription"
-              v-model="tagForm.description" 
+              v-model="tagForm.description"
               placeholder="Beschreibung eingeben (optional)"
               class="form-input"
               rows="3"
             ></textarea>
           </div>
-          
+
           <div class="form-group">
             <label>Farbe</label>
             <ColorPicker v-model="tagForm.color" />
@@ -233,10 +221,10 @@
 
           <div class="form-group">
             <label for="tagDomain">Domain *</label>
-            <select 
+            <select
               v-if="!editingTag"
               id="tagDomain"
-              v-model="tagForm.domainType" 
+              v-model="tagForm.domainType"
               class="form-input"
               required
             >
@@ -245,7 +233,7 @@
               <option value="song">Lieder</option>
               <option value="group">Gruppen</option>
             </select>
-            <input 
+            <input
               v-else
               type="text"
               :value="getDomainDisplayName(tagForm.domainType)"
@@ -264,7 +252,7 @@
               Abbrechen
             </button>
             <button type="submit" class="ct-btn ct-btn-success" :disabled="isSubmitting">
-              {{ isSubmitting ? 'Speichern...' : (editingTag ? 'Aktualisieren' : 'Erstellen') }}
+              {{ isSubmitting ? 'Speichern...' : editingTag ? 'Aktualisieren' : 'Erstellen' }}
             </button>
           </div>
         </form>
@@ -303,7 +291,7 @@ const {
   updateTag,
   deleteTag,
   bulkUpdateTags,
-  bulkDeleteTags
+  bulkDeleteTags,
 } = useTags()
 
 // Local state for UI
@@ -325,18 +313,39 @@ const tagForm = ref({
   name: '',
   description: '',
   color: null as string | null,
-  domainType: ''
+  domainType: '',
 })
 
 // Table configuration
 const tableColumns: TableColumn[] = [
-  { key: 'checkbox', label: '', sortable: false, resizable: false, width: 50, cellSlot: 'cell-checkbox' },
+  {
+    key: 'checkbox',
+    label: '',
+    sortable: false,
+    resizable: false,
+    width: 50,
+    cellSlot: 'cell-checkbox',
+  },
   { key: 'id', label: 'ID', sortable: true, resizable: true, width: 80 },
   { key: 'name', label: 'Name', sortable: true, resizable: true, width: 200 },
   { key: 'domainType', label: 'Domain', sortable: true, resizable: true, width: 120 },
-  { key: 'color', label: 'Farbe', sortable: true, resizable: true, width: 150, cellSlot: 'cell-color' },
+  {
+    key: 'color',
+    label: 'Farbe',
+    sortable: true,
+    resizable: true,
+    width: 150,
+    cellSlot: 'cell-color',
+  },
   { key: 'description', label: 'Beschreibung', sortable: true, resizable: true, width: 250 },
-  { key: 'actions', label: 'Aktionen', sortable: false, resizable: false, width: 150, cellSlot: 'cell-actions' }
+  {
+    key: 'actions',
+    label: 'Aktionen',
+    sortable: false,
+    resizable: false,
+    width: 150,
+    cellSlot: 'cell-actions',
+  },
 ]
 
 // Computed properties (now from composable)
@@ -346,12 +355,13 @@ const filteredTagsForBulk = computed(() => {
   if (!searchTerm.value.trim()) {
     return tags.value
   }
-  
+
   const searchLower = searchTerm.value.toLowerCase()
-  return tags.value.filter(tag => 
-    tag.name.toLowerCase().includes(searchLower) ||
-    tag.domainType.toLowerCase().includes(searchLower) ||
-    (tag.description && tag.description.toLowerCase().includes(searchLower))
+  return tags.value.filter(
+    (tag) =>
+      tag.name.toLowerCase().includes(searchLower) ||
+      tag.domainType.toLowerCase().includes(searchLower) ||
+      (tag.description && tag.description.toLowerCase().includes(searchLower))
   )
 })
 
@@ -359,17 +369,17 @@ const filteredTagsForBulk = computed(() => {
 const toggleSelectAll = () => {
   // Work on filtered data (respects domain + search filters)
   const availableTags = filteredTagsForBulk.value
-  const availableIds = availableTags.map(tag => tag.id)
-  
+  const availableIds = availableTags.map((tag) => tag.id)
+
   // Check if all available tags are selected
-  const allSelected = availableIds.every(id => selectedTags.value.includes(id))
-  
+  const allSelected = availableIds.every((id) => selectedTags.value.includes(id))
+
   if (allSelected) {
     // Deselect all available tags
-    selectedTags.value = selectedTags.value.filter(id => !availableIds.includes(id))
+    selectedTags.value = selectedTags.value.filter((id) => !availableIds.includes(id))
   } else {
     // Select all available tags (add missing ones)
-    const newSelections = availableIds.filter(id => !selectedTags.value.includes(id))
+    const newSelections = availableIds.filter((id) => !selectedTags.value.includes(id))
     selectedTags.value = [...selectedTags.value, ...newSelections]
   }
 }
@@ -398,14 +408,14 @@ const toggleTagSelection = (tagId: number) => {
 const selectByPrefix = () => {
   const prefix = prefixFilter.value.trim()
   if (!prefix) return
-  
+
   const pattern = prefix.replace('*', '.*')
   const regex = new RegExp(pattern, 'i')
-  
+
   // Work on filtered data (respects domain + search filters)
   selectedTags.value = filteredTagsForBulk.value
-    .filter(tag => regex.test(tag.name))
-    .map(tag => tag.id)
+    .filter((tag) => regex.test(tag.name))
+    .map((tag) => tag.id)
 }
 
 // Data loading
@@ -419,7 +429,7 @@ const showCreateModal = () => {
     name: '',
     description: '',
     color: null,
-    domainType: selectedDomain.value || ''
+    domainType: selectedDomain.value || '',
   }
   tagFormError.value = null
   showTagModal.value = true
@@ -431,7 +441,7 @@ const editTag = (tag: any) => {
     name: tag.name,
     description: tag.description || '',
     color: tag.color || null,
-    domainType: tag.domainType
+    domainType: tag.domainType,
   }
   tagFormError.value = null
   showTagModal.value = true
@@ -442,7 +452,7 @@ const deleteTagHandler = async (tag: any) => {
     // Delete tag clicked
     const confirmed = confirm(`Möchten Sie das Tag "${tag.name}" wirklich löschen?`)
     if (!confirmed) return
-    
+
     await deleteTag(tag.id)
     showSuccess('Tag erfolgreich gelöscht')
   } catch (err: any) {
@@ -452,7 +462,7 @@ const deleteTagHandler = async (tag: any) => {
 
 const applyBulkColor = async () => {
   if (!bulkColor.value || selectedTags.value.length === 0) return
-  
+
   isBulkProcessing.value = true
   try {
     await bulkUpdateTags(selectedTags.value, { color: bulkColor.value })
@@ -468,10 +478,10 @@ const applyBulkColor = async () => {
 
 const showBulkDeleteConfirm = async () => {
   if (selectedTags.value.length === 0) return
-  
+
   const confirmed = confirm(`Möchten Sie wirklich ${selectedTags.value.length} Tags löschen?`)
   if (!confirmed) return
-  
+
   isBulkProcessing.value = true
   try {
     await bulkDeleteTags(selectedTags.value)
@@ -484,46 +494,46 @@ const showBulkDeleteConfirm = async () => {
   }
 }
 
-const getColorInfo = (colorValue: string): { hex: string, name: string, tailwind: string } => {
-  const colorMap: Record<string, { hex: string, name: string, tailwind: string }> = {
+const getColorInfo = (colorValue: string): { hex: string; name: string; tailwind: string } => {
+  const colorMap: Record<string, { hex: string; name: string; tailwind: string }> = {
     // System Colors
-    'parent': { hex: '#6b7280', name: 'Parent', tailwind: 'gray-500' },
-    'default': { hex: '#6b7280', name: 'Default', tailwind: 'gray-500' },
-    'accent': { hex: '#007cba', name: 'Accent', tailwind: 'custom' },
-    'basic': { hex: '#6b7280', name: 'Basic', tailwind: 'gray-500' },
-    
+    parent: { hex: '#6b7280', name: 'Parent', tailwind: 'gray-500' },
+    default: { hex: '#6b7280', name: 'Default', tailwind: 'gray-500' },
+    accent: { hex: '#007cba', name: 'Accent', tailwind: 'custom' },
+    basic: { hex: '#6b7280', name: 'Basic', tailwind: 'gray-500' },
+
     // Standard Colors
-    'amber': { hex: '#f59e0b', name: 'Amber', tailwind: 'amber-500' },
-    'black': { hex: '#000000', name: 'Black', tailwind: 'black' },
-    'blue': { hex: '#3b82f6', name: 'Blue', tailwind: 'blue-500' },
-    'cyan': { hex: '#06b6d4', name: 'Cyan', tailwind: 'cyan-500' },
-    'emerald': { hex: '#10b981', name: 'Emerald', tailwind: 'emerald-500' },
-    'fuchsia': { hex: '#d946ef', name: 'Fuchsia', tailwind: 'fuchsia-500' },
-    'gray': { hex: '#6b7280', name: 'Gray', tailwind: 'gray-500' },
-    'green': { hex: '#16a34a', name: 'Green', tailwind: 'green-600' },
-    'indigo': { hex: '#6366f1', name: 'Indigo', tailwind: 'indigo-500' },
-    'lime': { hex: '#84cc16', name: 'Lime', tailwind: 'lime-500' },
-    'orange': { hex: '#f97316', name: 'Orange', tailwind: 'orange-500' },
-    'pink': { hex: '#ec4899', name: 'Pink', tailwind: 'pink-500' },
-    'purple': { hex: '#a855f7', name: 'Purple', tailwind: 'purple-500' },
-    'red': { hex: '#dc2626', name: 'Red', tailwind: 'red-600' },
-    'rose': { hex: '#f43f5e', name: 'Rose', tailwind: 'rose-500' },
-    'sky': { hex: '#0ea5e9', name: 'Sky', tailwind: 'sky-500' },
-    'teal': { hex: '#14b8a6', name: 'Teal', tailwind: 'teal-500' },
-    'violet': { hex: '#8b5cf6', name: 'Violet', tailwind: 'violet-500' },
-    'white': { hex: '#ffffff', name: 'White', tailwind: 'white' },
-    'yellow': { hex: '#eab308', name: 'Yellow', tailwind: 'yellow-500' },
-    
+    amber: { hex: '#f59e0b', name: 'Amber', tailwind: 'amber-500' },
+    black: { hex: '#000000', name: 'Black', tailwind: 'black' },
+    blue: { hex: '#3b82f6', name: 'Blue', tailwind: 'blue-500' },
+    cyan: { hex: '#06b6d4', name: 'Cyan', tailwind: 'cyan-500' },
+    emerald: { hex: '#10b981', name: 'Emerald', tailwind: 'emerald-500' },
+    fuchsia: { hex: '#d946ef', name: 'Fuchsia', tailwind: 'fuchsia-500' },
+    gray: { hex: '#6b7280', name: 'Gray', tailwind: 'gray-500' },
+    green: { hex: '#16a34a', name: 'Green', tailwind: 'green-600' },
+    indigo: { hex: '#6366f1', name: 'Indigo', tailwind: 'indigo-500' },
+    lime: { hex: '#84cc16', name: 'Lime', tailwind: 'lime-500' },
+    orange: { hex: '#f97316', name: 'Orange', tailwind: 'orange-500' },
+    pink: { hex: '#ec4899', name: 'Pink', tailwind: 'pink-500' },
+    purple: { hex: '#a855f7', name: 'Purple', tailwind: 'purple-500' },
+    red: { hex: '#dc2626', name: 'Red', tailwind: 'red-600' },
+    rose: { hex: '#f43f5e', name: 'Rose', tailwind: 'rose-500' },
+    sky: { hex: '#0ea5e9', name: 'Sky', tailwind: 'sky-500' },
+    teal: { hex: '#14b8a6', name: 'Teal', tailwind: 'teal-500' },
+    violet: { hex: '#8b5cf6', name: 'Violet', tailwind: 'violet-500' },
+    white: { hex: '#ffffff', name: 'White', tailwind: 'white' },
+    yellow: { hex: '#eab308', name: 'Yellow', tailwind: 'yellow-500' },
+
     // Semantic Colors
-    'critical': { hex: '#dc2626', name: 'Critical', tailwind: 'red-600' },
-    'constructive': { hex: '#16a34a', name: 'Constructive', tailwind: 'green-600' },
-    'destructive': { hex: '#dc2626', name: 'Destructive', tailwind: 'red-600' },
-    'danger': { hex: '#dc2626', name: 'Danger', tailwind: 'red-600' },
-    'error': { hex: '#dc2626', name: 'Error', tailwind: 'red-600' },
-    'info': { hex: '#3b82f6', name: 'Info', tailwind: 'blue-500' },
-    'success': { hex: '#16a34a', name: 'Success', tailwind: 'green-600' },
-    'warning': { hex: '#f59e0b', name: 'Warning', tailwind: 'amber-500' },
-    'magic': { hex: '#8b5cf6', name: 'Magic', tailwind: 'violet-500' }
+    critical: { hex: '#dc2626', name: 'Critical', tailwind: 'red-600' },
+    constructive: { hex: '#16a34a', name: 'Constructive', tailwind: 'green-600' },
+    destructive: { hex: '#dc2626', name: 'Destructive', tailwind: 'red-600' },
+    danger: { hex: '#dc2626', name: 'Danger', tailwind: 'red-600' },
+    error: { hex: '#dc2626', name: 'Error', tailwind: 'red-600' },
+    info: { hex: '#3b82f6', name: 'Info', tailwind: 'blue-500' },
+    success: { hex: '#16a34a', name: 'Success', tailwind: 'green-600' },
+    warning: { hex: '#f59e0b', name: 'Warning', tailwind: 'amber-500' },
+    magic: { hex: '#8b5cf6', name: 'Magic', tailwind: 'violet-500' },
   }
   return colorMap[colorValue] || { hex: '#6b7280', name: colorValue, tailwind: 'gray-500' }
 }
@@ -534,9 +544,9 @@ const getColorDisplayName = (color: string) => {
 
 const getDomainDisplayName = (domain: string) => {
   const domainNames = {
-    'person': 'Personen',
-    'song': 'Lieder', 
-    'group': 'Gruppen'
+    person: 'Personen',
+    song: 'Lieder',
+    group: 'Gruppen',
   }
   return domainNames[domain as keyof typeof domainNames] || domain
 }
@@ -552,22 +562,22 @@ const saveTag = async () => {
     tagFormError.value = 'Tag Name ist erforderlich'
     return
   }
-  
+
   if (!tagForm.value.domainType) {
     tagFormError.value = 'Domain ist erforderlich'
     return
   }
-  
+
   isSubmitting.value = true
   tagFormError.value = null
-  
+
   try {
     const tagData = {
       name: tagForm.value.name.trim(),
       description: tagForm.value.description.trim() || '',
-      color: tagForm.value.color || 'basic'
+      color: tagForm.value.color || 'basic',
     }
-    
+
     if (editingTag.value) {
       // Update existing tag
       await updateTag(editingTag.value.id, tagData)
@@ -577,7 +587,7 @@ const saveTag = async () => {
       await createTag({ ...tagData, domainType: tagForm.value.domainType })
       showSuccess('Tag erfolgreich erstellt')
     }
-    
+
     closeTagModal()
   } catch (err: any) {
     console.error('Error saving tag:', err)
@@ -588,11 +598,15 @@ const saveTag = async () => {
 }
 
 // Watch AdminTable search term
-watch(() => adminTableRef.value?.searchTerm, (newSearchTerm) => {
-  if (newSearchTerm !== undefined) {
-    searchTerm.value = newSearchTerm
-  }
-}, { immediate: true })
+watch(
+  () => adminTableRef.value?.searchTerm,
+  (newSearchTerm) => {
+    if (newSearchTerm !== undefined) {
+      searchTerm.value = newSearchTerm
+    }
+  },
+  { immediate: true }
+)
 
 // Initialize
 onMounted(() => {
@@ -840,7 +854,8 @@ onMounted(() => {
 .color-hex {
   font-size: 10px;
   color: #6b7280;
-  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-family:
+    'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
   line-height: 1.2;
   text-transform: uppercase;
   display: block;
@@ -1083,21 +1098,21 @@ onMounted(() => {
     flex-direction: column;
     gap: 1rem;
   }
-  
+
   .bulk-controls-row {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .action-buttons {
     flex-direction: column;
   }
-  
+
   .modal-content {
     width: 95%;
     margin: 1rem;
   }
-  
+
   .form-actions {
     flex-direction: column;
   }
