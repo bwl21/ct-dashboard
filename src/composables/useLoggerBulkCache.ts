@@ -258,7 +258,7 @@ export function useLoggerBulkCache(days: Ref<number> | number = 3) {
   const query = useQuery({
     queryKey: computed(() => ['logs-bulk', daysRef.value]),
     queryFn: () => fetchAllLogs(daysRef.value),
-    staleTime: 5 * 60 * 1000, // 5 minutes - reasonable for bulk data
+    staleTime: 20 * 1000, // 20 seconds - for page reload cache
     gcTime: 15 * 60 * 1000, // 15 minutes cache time
     refetchInterval: 2 * 60 * 1000, // Background update every 2 minutes
     retry: 3,

@@ -47,24 +47,6 @@
       </div>
     </template>
 
-    <!-- Custom Pagination -->
-    <template #pagination>
-      <div class="custom-pagination">
-        <button @click="prevPage" :disabled="!hasPrevPage" class="ct-btn ct-btn-outline ct-btn-sm">
-          ← Zurück
-        </button>
-
-        <span class="page-info">
-          Seite {{ currentPage }} von {{ totalPages }} ({{ paginatedLogs.length }} von
-          {{ allProcessedLogs.length }} Einträgen)
-        </span>
-
-        <button @click="nextPage" :disabled="!hasNextPage" class="ct-btn ct-btn-outline ct-btn-sm">
-          Weiter →
-        </button>
-      </div>
-    </template>
-
     <!-- EXACT copy from working LoggerSummaryAdmin.vue -->
     <template #cell-level="{ item }">
       <span class="log-level-badge" :class="getCategoryCssClass(item.category)">
@@ -96,12 +78,36 @@
 
     <template #cell-actions="{ item }">
       <div class="row-actions">
-        <button @click="viewDetails(item)" class="ct-btn ct-btn-sm ct-btn-outline ct-btn--outline" title="Details">
+        <button
+          @click="viewDetails(item)"
+          class="ct-btn ct-btn-sm ct-btn-outline ct-btn--outline"
+          title="Details"
+        >
           Details
         </button>
       </div>
     </template>
   </AdminTable>
+
+  <!-- Custom Pagination Controls -->
+  <div class="ct-card" v-if="totalPages > 1">
+    <div class="ct-card-body">
+      <div class="custom-pagination">
+        <button @click="prevPage" :disabled="!hasPrevPage" class="ct-btn ct-btn-outline ct-btn-sm">
+          ← Zurück
+        </button>
+
+        <span class="page-info">
+          Seite {{ currentPage }} von {{ totalPages }} ({{ paginatedLogs.length }} von
+          {{ allProcessedLogs.length }} Einträgen)
+        </span>
+
+        <button @click="nextPage" :disabled="!hasNextPage" class="ct-btn ct-btn-outline ct-btn-sm">
+          Weiter →
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- Log Details Modal - EXACT copy from working LoggerSummaryAdmin.vue -->
   <div v-if="selectedLog" class="modal-overlay" @click="closeDetails">
