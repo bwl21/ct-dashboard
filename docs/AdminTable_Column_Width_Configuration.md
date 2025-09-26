@@ -19,20 +19,21 @@ The LoggerAdmin component was using AdminTable but the column widths were not pr
 4. **Inconsistent Data Types**: Width values were mixed (strings vs numbers)
 
 ### Original Column Configuration (Broken)
+
 ```typescript
 // Before - LoggerAdmin.vue
 const tableColumns = [
   {
-    key: 'level',
-    label: 'Kategorie',
+    key: "level",
+    label: "Kategorie",
     sortable: true,
-    width: '150px', // String format - inconsistent
+    width: "150px", // String format - inconsistent
   },
   {
-    key: 'timestamp',
-    label: 'Zeitstempel',
+    key: "timestamp",
+    label: "Zeitstempel",
     sortable: true,
-    width: '180px', // String format
+    width: "180px", // String format
   },
   // ... missing resizable properties
   // ... missing cellSlot properties
@@ -47,51 +48,51 @@ const tableColumns = [
 // After - LoggerAdmin.vue
 const tableColumns = [
   {
-    key: 'level',
-    label: 'Level',
+    key: "level",
+    label: "Level",
     sortable: true,
-    width: 100,              // ✅ Numeric value
-    resizable: true,         // ✅ Enable resizing
-    cellSlot: 'cell-level',  // ✅ Custom rendering
+    width: 100, // ✅ Numeric value
+    resizable: true, // ✅ Enable resizing
+    cellSlot: "cell-level", // ✅ Custom rendering
   },
   {
-    key: 'category',
-    label: 'Kategorie',
+    key: "category",
+    label: "Kategorie",
     sortable: true,
     width: 140,
     resizable: true,
   },
   {
-    key: 'timestamp',
-    label: 'Zeitstempel',
+    key: "timestamp",
+    label: "Zeitstempel",
     sortable: true,
     width: 160,
     resizable: true,
-    cellSlot: 'cell-timestamp',
+    cellSlot: "cell-timestamp",
   },
   {
-    key: 'source',
-    label: 'Quelle',
+    key: "source",
+    label: "Quelle",
     sortable: true,
     width: 120,
     resizable: true,
-    cellSlot: 'cell-source',
+    cellSlot: "cell-source",
   },
   {
-    key: 'message',
-    label: 'Nachricht',
+    key: "message",
+    label: "Nachricht",
     sortable: true,
-    width: 400,              // ✅ More space for messages
+    width: 400, // ✅ More space for messages
     resizable: true,
-    cellSlot: 'cell-message',
+    cellSlot: "cell-message",
   },
   {
-    key: 'actions',
-    label: 'Aktionen',
+    key: "actions",
+    label: "Aktionen",
     sortable: false,
     width: 120,
-    resizable: false,        // ✅ Actions column fixed width
-    cellSlot: 'cell-actions',
+    resizable: false, // ✅ Actions column fixed width
+    cellSlot: "cell-actions",
   },
 ]
 ```
@@ -99,15 +100,17 @@ const tableColumns = [
 ### 2. Key Changes Made
 
 #### A. Width Property Format
+
 ```typescript
 // ❌ Wrong: String values
-width: '150px'
+width: "150px"
 
 // ✅ Correct: Numeric values
 width: 150
 ```
 
 #### B. Resizable Configuration
+
 ```typescript
 // ✅ Enable column resizing
 resizable: true,  // Allows user to drag column borders
@@ -117,6 +120,7 @@ resizable: false, // For action columns that should stay fixed
 ```
 
 #### C. Cell Slot Mapping
+
 ```typescript
 // ✅ Connect custom rendering slots
 cellSlot: 'cell-level',    // Maps to <template #cell-level>
@@ -129,8 +133,8 @@ The AdminTable component uses these properties as follows:
 
 ```typescript
 // AdminTable.vue - How it processes column configuration
-const initialWidths = computed(() => 
-  props.columns.map(col => col.width || 150) // Default 150px
+const initialWidths = computed(
+  () => props.columns.map((col) => col.width || 150) // Default 150px
 )
 
 const { columnWidths, startResize } = useTableResize(initialWidths.value)
@@ -145,11 +149,7 @@ const { columnWidths, startResize } = useTableResize(initialWidths.value)
   :class="{ resizable: column.resizable }"
 >
   {{ column.label }}
-  <div
-    v-if="column.resizable"
-    class="resize-handle"
-    @mousedown="startResize($event, index)"
-  ></div>
+  <div v-if="column.resizable" class="resize-handle" @mousedown="startResize($event, index)"></div>
 </th>
 ```
 
@@ -170,16 +170,17 @@ The AdminTable column width system consists of three layers:
 ```
 
 ### 2. Initial Width Setup
+
 ```typescript
 // 1. Column definitions provide initial widths
 const tableColumns = [
-  { key: 'name', width: 200, resizable: true },
-  { key: 'email', width: 300, resizable: true }
+  { key: "name", width: 200, resizable: true },
+  { key: "email", width: 300, resizable: true },
 ]
 
 // 2. AdminTable extracts initial widths
-const initialWidths = computed(() => 
-  props.columns.map(col => col.width || 150) // Default fallback
+const initialWidths = computed(
+  () => props.columns.map((col) => col.width || 150) // Default fallback
 )
 
 // 3. useTableResize composable manages dynamic widths
@@ -195,9 +196,9 @@ const { columnWidths, startResize } = useTableResize(initialWidths.value)
 
 // A. Component defines columns
 const tableColumns = [
-  { key: 'id', width: 80, resizable: false },
-  { key: 'name', width: 200, resizable: true },
-  { key: 'actions', width: 120, resizable: false }
+  { key: "id", width: 80, resizable: false },
+  { key: "name", width: 200, resizable: true },
+  { key: "actions", width: 120, resizable: false },
 ]
 
 // B. AdminTable processes columns
@@ -223,55 +224,55 @@ const columnWidths = ref([80, 200, 120])
 export const useTableResize = (initialWidths: number[]) => {
   // Reactive state for current column widths
   const columnWidths = ref([...initialWidths])
-  
+
   // Minimum width constraint
   const MIN_COLUMN_WIDTH = 50
-  
+
   // Track resize state
   const isResizing = ref(false)
   const resizingColumn = ref(-1)
-  
+
   const startResize = (event: MouseEvent, columnIndex: number) => {
     // Prevent text selection during resize
     event.preventDefault()
-    
+
     // Store initial state
     const startX = event.clientX
     const startWidth = columnWidths.value[columnIndex]
-    
+
     // Set resize state
     isResizing.value = true
     resizingColumn.value = columnIndex
-    
+
     // Mouse move handler
     const handleMouseMove = (e: MouseEvent) => {
       const deltaX = e.clientX - startX
       const newWidth = Math.max(MIN_COLUMN_WIDTH, startWidth + deltaX)
-      
+
       // Update reactive state
       columnWidths.value[columnIndex] = newWidth
     }
-    
+
     // Mouse up handler
     const handleMouseUp = () => {
       isResizing.value = false
       resizingColumn.value = -1
-      
+
       // Clean up event listeners
-      document.removeEventListener('mousemove', handleMouseMove)
-      document.removeEventListener('mouseup', handleMouseUp)
+      document.removeEventListener("mousemove", handleMouseMove)
+      document.removeEventListener("mouseup", handleMouseUp)
     }
-    
+
     // Attach global event listeners
-    document.addEventListener('mousemove', handleMouseMove)
-    document.addEventListener('mouseup', handleMouseUp)
+    document.addEventListener("mousemove", handleMouseMove)
+    document.addEventListener("mouseup", handleMouseUp)
   }
-  
+
   return {
     columnWidths: readonly(columnWidths),
     startResize,
     isResizing: readonly(isResizing),
-    resizingColumn: readonly(resizingColumn)
+    resizingColumn: readonly(resizingColumn),
   }
 }
 ```
@@ -299,7 +300,7 @@ export const useTableResize = (initialWidths: number[]) => {
         @click="column.sortable && sortBy(column.key)"
       >
         {{ column.label }}
-        
+
         <!-- Resize handle for resizable columns -->
         <div
           v-if="column.resizable"
@@ -312,8 +313,8 @@ export const useTableResize = (initialWidths: number[]) => {
   </thead>
   <tbody>
     <tr v-for="item in filteredData" :key="item[rowKey]">
-      <td 
-        v-for="(column, index) in columns" 
+      <td
+        v-for="(column, index) in columns"
         :key="column.key"
         :style="{ 
           width: columnWidths[index] + 'px',
@@ -364,43 +365,43 @@ columnWidths.value[1] = 250 // Triggers Vue reactivity
 
 ```typescript
 // Advanced width calculation with constraints
-const calculateNewWidth = (
-  startWidth: number, 
-  deltaX: number, 
-  columnIndex: number
-) => {
+const calculateNewWidth = (startWidth: number, deltaX: number, columnIndex: number) => {
   // Base calculation
   let newWidth = startWidth + deltaX
-  
+
   // Apply minimum width constraint
   newWidth = Math.max(MIN_COLUMN_WIDTH, newWidth)
-  
+
   // Apply maximum width constraint (optional)
   const maxWidth = getMaxWidthForColumn(columnIndex)
   newWidth = Math.min(maxWidth, newWidth)
-  
+
   // Ensure table doesn't exceed container width (optional)
   const totalWidth = columnWidths.value.reduce((sum, width, index) => {
     return sum + (index === columnIndex ? newWidth : width)
   }, 0)
-  
+
   const containerWidth = tableContainer.value?.clientWidth || Infinity
   if (totalWidth > containerWidth) {
     newWidth = containerWidth - (totalWidth - newWidth)
   }
-  
+
   return Math.max(MIN_COLUMN_WIDTH, newWidth)
 }
 
 // Column-specific constraints
 const getMaxWidthForColumn = (columnIndex: number) => {
   const column = props.columns[columnIndex]
-  
+
   switch (column.key) {
-    case 'id': return 100        // IDs don't need much space
-    case 'actions': return 200   // Actions have limited options
-    case 'message': return 600   // Messages can be longer
-    default: return 400          // Default maximum
+    case "id":
+      return 100 // IDs don't need much space
+    case "actions":
+      return 200 // Actions have limited options
+    case "message":
+      return 600 // Messages can be longer
+    default:
+      return 400 // Default maximum
   }
 }
 ```
@@ -408,6 +409,7 @@ const getMaxWidthForColumn = (columnIndex: number) => {
 ### 8. Resizable Columns Implementation
 
 #### A. CSS Foundation
+
 ```css
 /* AdminTable.vue - Resizable column styles */
 .admin-data-table th {
@@ -436,7 +438,7 @@ const getMaxWidthForColumn = (columnIndex: number) => {
   cursor: col-resize;
   background: transparent;
   z-index: 10;
-  
+
   /* Visual feedback */
   transition: background-color 0.2s ease;
 }
@@ -453,7 +455,7 @@ const getMaxWidthForColumn = (columnIndex: number) => {
 
 /* Resize indicator line */
 .resize-handle::after {
-  content: '';
+  content: "";
   position: absolute;
   right: 1px;
   top: 50%;
@@ -481,6 +483,7 @@ body.is-resizing-column * {
 ```
 
 #### B. Resizable Column Configuration
+
 ```typescript
 // Column definition with resizable properties
 interface TableColumn {
@@ -488,159 +491,154 @@ interface TableColumn {
   label: string
   sortable?: boolean
   width?: number
-  resizable?: boolean        // ✅ Enable/disable resizing
-  minWidth?: number         // ✅ Minimum width constraint
-  maxWidth?: number         // ✅ Maximum width constraint
+  resizable?: boolean // ✅ Enable/disable resizing
+  minWidth?: number // ✅ Minimum width constraint
+  maxWidth?: number // ✅ Maximum width constraint
   cellSlot?: string
 }
 
 // Example configurations
 const tableColumns: TableColumn[] = [
   {
-    key: 'id',
-    label: 'ID',
+    key: "id",
+    label: "ID",
     width: 80,
-    resizable: false,        // ✅ Fixed width - no resizing
+    resizable: false, // ✅ Fixed width - no resizing
     minWidth: 60,
-    maxWidth: 100
+    maxWidth: 100,
   },
   {
-    key: 'name',
-    label: 'Name',
+    key: "name",
+    label: "Name",
     width: 200,
-    resizable: true,         // ✅ User can resize
+    resizable: true, // ✅ User can resize
     minWidth: 100,
-    maxWidth: 400
+    maxWidth: 400,
   },
   {
-    key: 'message',
-    label: 'Message',
+    key: "message",
+    label: "Message",
     width: 400,
-    resizable: true,         // ✅ Most important - highly resizable
+    resizable: true, // ✅ Most important - highly resizable
     minWidth: 200,
-    maxWidth: 800
+    maxWidth: 800,
   },
   {
-    key: 'actions',
-    label: 'Actions',
+    key: "actions",
+    label: "Actions",
     width: 120,
-    resizable: false,        // ✅ Fixed - consistent UI
+    resizable: false, // ✅ Fixed - consistent UI
     minWidth: 100,
-    maxWidth: 150
-  }
+    maxWidth: 150,
+  },
 ]
 ```
 
 #### C. Enhanced Resize Logic
+
 ```typescript
 // Enhanced useTableResize composable
-export const useTableResize = (
-  initialWidths: number[], 
-  columns: TableColumn[]
-) => {
+export const useTableResize = (initialWidths: number[], columns: TableColumn[]) => {
   const columnWidths = ref([...initialWidths])
   const isResizing = ref(false)
   const resizingColumn = ref(-1)
-  
+
   // Global resize state management
   const startResize = (event: MouseEvent, columnIndex: number) => {
     const column = columns[columnIndex]
-    
+
     // Check if column is resizable
     if (!column.resizable) return
-    
+
     event.preventDefault()
     event.stopPropagation()
-    
+
     // Set global resize state
     isResizing.value = true
     resizingColumn.value = columnIndex
-    document.body.classList.add('is-resizing-column')
-    
+    document.body.classList.add("is-resizing-column")
+
     // Store initial values
     const startX = event.clientX
     const startWidth = columnWidths.value[columnIndex]
     const minWidth = column.minWidth || 50
     const maxWidth = column.maxWidth || 800
-    
+
     // Enhanced mouse move handler
     const handleMouseMove = (e: MouseEvent) => {
       const deltaX = e.clientX - startX
       let newWidth = startWidth + deltaX
-      
+
       // Apply column-specific constraints
       newWidth = Math.max(minWidth, Math.min(maxWidth, newWidth))
-      
+
       // Update width
       columnWidths.value[columnIndex] = newWidth
-      
+
       // Optional: Real-time table width adjustment
       adjustTableLayout(columnIndex, newWidth)
     }
-    
+
     // Enhanced mouse up handler
     const handleMouseUp = () => {
       // Clean up global state
       isResizing.value = false
       resizingColumn.value = -1
-      document.body.classList.remove('is-resizing-column')
-      
+      document.body.classList.remove("is-resizing-column")
+
       // Remove event listeners
-      document.removeEventListener('mousemove', handleMouseMove)
-      document.removeEventListener('mouseup', handleMouseUp)
-      
+      document.removeEventListener("mousemove", handleMouseMove)
+      document.removeEventListener("mouseup", handleMouseUp)
+
       // Optional: Save user preferences
       saveColumnWidths(columnWidths.value)
-      
+
       // Optional: Emit resize event
-      emit('column-resized', {
+      emit("column-resized", {
         columnIndex,
         newWidth: columnWidths.value[columnIndex],
-        column
+        column,
       })
     }
-    
+
     // Attach global listeners
-    document.addEventListener('mousemove', handleMouseMove)
-    document.addEventListener('mouseup', handleMouseUp)
+    document.addEventListener("mousemove", handleMouseMove)
+    document.addEventListener("mouseup", handleMouseUp)
   }
-  
+
   // Auto-size column to content
   const autoSizeColumn = (columnIndex: number) => {
     const column = columns[columnIndex]
     if (!column.resizable) return
-    
+
     // Measure content width (simplified)
     const optimalWidth = measureColumnContent(columnIndex)
     const constrainedWidth = Math.max(
       column.minWidth || 50,
       Math.min(column.maxWidth || 800, optimalWidth)
     )
-    
+
     columnWidths.value[columnIndex] = constrainedWidth
   }
-  
+
   // Reset all columns to default widths
   const resetColumnWidths = () => {
     columnWidths.value = [...initialWidths]
   }
-  
+
   // Fit all columns to container
   const fitColumnsToContainer = (containerWidth: number) => {
     const totalWidth = columnWidths.value.reduce((sum, width) => sum + width, 0)
     const scaleFactor = containerWidth / totalWidth
-    
+
     columnWidths.value = columnWidths.value.map((width, index) => {
       const column = columns[index]
       const scaledWidth = width * scaleFactor
-      
-      return Math.max(
-        column.minWidth || 50,
-        Math.min(column.maxWidth || 800, scaledWidth)
-      )
+
+      return Math.max(column.minWidth || 50, Math.min(column.maxWidth || 800, scaledWidth))
     })
   }
-  
+
   return {
     columnWidths: readonly(columnWidths),
     isResizing: readonly(isResizing),
@@ -648,47 +646,48 @@ export const useTableResize = (
     startResize,
     autoSizeColumn,
     resetColumnWidths,
-    fitColumnsToContainer
+    fitColumnsToContainer,
   }
 }
 ```
 
 #### D. Advanced Resize Features
+
 ```typescript
 // Content measurement for auto-sizing
 const measureColumnContent = (columnIndex: number) => {
   const column = columns[columnIndex]
   const tableElement = tableRef.value
-  
+
   if (!tableElement) return 150
-  
+
   // Create temporary measurement element
-  const measurer = document.createElement('div')
-  measurer.style.position = 'absolute'
-  measurer.style.visibility = 'hidden'
-  measurer.style.whiteSpace = 'nowrap'
+  const measurer = document.createElement("div")
+  measurer.style.position = "absolute"
+  measurer.style.visibility = "hidden"
+  measurer.style.whiteSpace = "nowrap"
   measurer.style.font = getComputedStyle(tableElement).font
-  
+
   document.body.appendChild(measurer)
-  
+
   let maxWidth = 0
-  
+
   // Measure header
   measurer.textContent = column.label
   maxWidth = Math.max(maxWidth, measurer.offsetWidth)
-  
+
   // Measure sample of cell content
   const cells = tableElement.querySelectorAll(`td:nth-child(${columnIndex + 1})`)
   const sampleSize = Math.min(10, cells.length) // Sample first 10 rows
-  
+
   for (let i = 0; i < sampleSize; i++) {
     const cell = cells[i]
-    measurer.textContent = cell.textContent || ''
+    measurer.textContent = cell.textContent || ""
     maxWidth = Math.max(maxWidth, measurer.offsetWidth)
   }
-  
+
   document.body.removeChild(measurer)
-  
+
   // Add padding
   return maxWidth + 32 // 16px padding on each side
 }
@@ -697,19 +696,20 @@ const measureColumnContent = (columnIndex: number) => {
 const adjustTableLayout = (columnIndex: number, newWidth: number) => {
   // Optional: Adjust other columns to maintain total width
   // This is useful for fixed-width table containers
-  
+
   const totalCurrentWidth = columnWidths.value.reduce((sum, width) => sum + width, 0)
   const containerWidth = tableContainer.value?.clientWidth
-  
+
   if (containerWidth && totalCurrentWidth > containerWidth) {
     // Shrink other resizable columns proportionally
     const otherColumns = columnWidths.value.map((width, index) => {
       if (index === columnIndex || !columns[index].resizable) return width
-      
-      const shrinkFactor = (containerWidth - newWidth) / (totalCurrentWidth - columnWidths.value[columnIndex])
+
+      const shrinkFactor =
+        (containerWidth - newWidth) / (totalCurrentWidth - columnWidths.value[columnIndex])
       return Math.max(columns[index].minWidth || 50, width * shrinkFactor)
     })
-    
+
     // Apply adjusted widths
     otherColumns.forEach((width, index) => {
       if (index !== columnIndex) {
@@ -721,12 +721,12 @@ const adjustTableLayout = (columnIndex: number, newWidth: number) => {
 
 // Persistence layer
 const saveColumnWidths = (widths: number[]) => {
-  const tableId = props.tableId || 'default'
+  const tableId = props.tableId || "default"
   localStorage.setItem(`table-column-widths-${tableId}`, JSON.stringify(widths))
 }
 
 const loadColumnWidths = (): number[] | null => {
-  const tableId = props.tableId || 'default'
+  const tableId = props.tableId || "default"
   const saved = localStorage.getItem(`table-column-widths-${tableId}`)
   return saved ? JSON.parse(saved) : null
 }
@@ -735,67 +735,79 @@ const loadColumnWidths = (): number[] | null => {
 ## Column Width Best Practices
 
 ### 1. Optimal Width Allocation
+
 ```typescript
 // ✅ Good width distribution
 const tableColumns = [
-  { key: 'id', width: 80 },        // Short IDs
-  { key: 'status', width: 100 },   // Status badges
-  { key: 'name', width: 200 },     // Names
-  { key: 'email', width: 250 },    // Email addresses
-  { key: 'description', width: 400 }, // Long text content
-  { key: 'actions', width: 120, resizable: false }, // Fixed actions
+  { key: "id", width: 80 }, // Short IDs
+  { key: "status", width: 100 }, // Status badges
+  { key: "name", width: 200 }, // Names
+  { key: "email", width: 250 }, // Email addresses
+  { key: "description", width: 400 }, // Long text content
+  { key: "actions", width: 120, resizable: false }, // Fixed actions
 ]
 ```
 
 ### 2. Content-Based Sizing
+
 ```typescript
 // ✅ Size based on expected content
 const getOptimalWidth = (columnType: string) => {
   switch (columnType) {
-    case 'id': return 80
-    case 'timestamp': return 160
-    case 'status': return 100
-    case 'email': return 250
-    case 'message': return 400  // Longest content gets most space
-    case 'actions': return 120
-    default: return 150
+    case "id":
+      return 80
+    case "timestamp":
+      return 160
+    case "status":
+      return 100
+    case "email":
+      return 250
+    case "message":
+      return 400 // Longest content gets most space
+    case "actions":
+      return 120
+    default:
+      return 150
   }
 }
 ```
 
 ### 3. Resizable Strategy
+
 ```typescript
 // ✅ Strategic resizable configuration
 const tableColumns = [
-  { key: 'id', resizable: false },      // IDs don't need resizing
-  { key: 'message', resizable: true },  // Content columns should be resizable
-  { key: 'actions', resizable: false }, // Actions should stay consistent
+  { key: "id", resizable: false }, // IDs don't need resizing
+  { key: "message", resizable: true }, // Content columns should be resizable
+  { key: "actions", resizable: false }, // Actions should stay consistent
 ]
 ```
 
 ## Testing Column Width Configuration
 
 ### 1. Visual Testing
+
 ```typescript
 // Test different screen sizes
 const testWidths = [
-  { screen: 'mobile', totalWidth: 768 },
-  { screen: 'tablet', totalWidth: 1024 },
-  { screen: 'desktop', totalWidth: 1440 },
+  { screen: "mobile", totalWidth: 768 },
+  { screen: "tablet", totalWidth: 1024 },
+  { screen: "desktop", totalWidth: 1440 },
 ]
 
 // Ensure columns fit within viewport
 const totalColumnWidth = tableColumns.reduce((sum, col) => sum + col.width, 0)
-console.log('Total width:', totalColumnWidth, 'px')
+console.log("Total width:", totalColumnWidth, "px")
 ```
 
 ### 2. Resize Functionality Testing
+
 ```typescript
 // Test resize handles
 const testResize = () => {
   // 1. Check if resize handles appear on resizable columns
-  const resizableColumns = tableColumns.filter(col => col.resizable)
-  
+  const resizableColumns = tableColumns.filter((col) => col.resizable)
+
   // 2. Test minimum width constraints
   // 3. Test maximum width behavior
   // 4. Test resize persistence (if implemented)
@@ -805,21 +817,24 @@ const testResize = () => {
 ## Comprehensive Troubleshooting Guide
 
 ### Issue 1: Columns Too Narrow for Content
+
 **Symptoms:**
+
 - Text is cut off or truncated
 - Content appears cramped
 - Horizontal scrolling within cells
 
 **Diagnosis:**
+
 ```typescript
 // Check current column widths
-console.log('Column widths:', columnWidths.value)
+console.log("Column widths:", columnWidths.value)
 
 // Measure actual content width
 const measureContent = (columnKey: string) => {
   const cells = document.querySelectorAll(`[data-column="${columnKey}"]`)
   let maxWidth = 0
-  cells.forEach(cell => {
+  cells.forEach((cell) => {
     maxWidth = Math.max(maxWidth, cell.scrollWidth)
   })
   return maxWidth
@@ -827,6 +842,7 @@ const measureContent = (columnKey: string) => {
 ```
 
 **Solutions:**
+
 ```typescript
 // ❌ Problem: Columns too narrow for content
 { key: 'message', width: 50 }
@@ -855,25 +871,29 @@ const measureContent = (columnKey: string) => {
 ```
 
 ### Issue 2: Fixed Width Not Working
+
 **Symptoms:**
+
 - Columns don't respect specified widths
 - All columns appear same size
 - Width changes don't take effect
 
 **Diagnosis:**
+
 ```typescript
 // Check column configuration
-console.log('Column config:', tableColumns)
+console.log("Column config:", tableColumns)
 
 // Verify width processing
-const processedWidths = tableColumns.map(col => col.width || 150)
-console.log('Processed widths:', processedWidths)
+const processedWidths = tableColumns.map((col) => col.width || 150)
+console.log("Processed widths:", processedWidths)
 
 // Check if useTableResize is called correctly
-console.log('Initial widths passed to composable:', initialWidths.value)
+console.log("Initial widths passed to composable:", initialWidths.value)
 ```
 
 **Solutions:**
+
 ```typescript
 // ❌ Problem: String widths not processed correctly
 { key: 'actions', width: '120px' }
@@ -899,34 +919,38 @@ console.log('Initial widths passed to composable:', initialWidths.value)
 ```
 
 ### Issue 3: Resize Handle Not Appearing
+
 **Symptoms:**
+
 - No resize cursor on column borders
 - Cannot drag to resize columns
 - Resize handles invisible
 
 **Diagnosis:**
+
 ```typescript
 // Check resizable configuration
-const resizableColumns = tableColumns.filter(col => col.resizable)
-console.log('Resizable columns:', resizableColumns)
+const resizableColumns = tableColumns.filter((col) => col.resizable)
+console.log("Resizable columns:", resizableColumns)
 
 // Check CSS for resize handles
-const handles = document.querySelectorAll('.resize-handle')
-console.log('Resize handles found:', handles.length)
+const handles = document.querySelectorAll(".resize-handle")
+console.log("Resize handles found:", handles.length)
 
 // Verify z-index and positioning
-handles.forEach(handle => {
+handles.forEach((handle) => {
   const styles = getComputedStyle(handle)
-  console.log('Handle styles:', {
+  console.log("Handle styles:", {
     position: styles.position,
     zIndex: styles.zIndex,
     width: styles.width,
-    display: styles.display
+    display: styles.display,
   })
 })
 ```
 
 **Solutions:**
+
 ```typescript
 // ❌ Problem: Missing resizable flag
 { key: 'name', width: 200 }
@@ -955,30 +979,33 @@ handles.forEach(handle => {
 <div class="resize-handle"></div>
 
 // ✅ Solution: Add event handler
-<div 
+<div
   class="resize-handle"
   @mousedown="startResize($event, index)"
 ></div>
 ```
 
 ### Issue 4: Content Overflow and Text Wrapping
+
 **Symptoms:**
+
 - Text wraps to multiple lines
 - Cell height increases unexpectedly
 - Content extends beyond cell boundaries
 
 **Diagnosis:**
+
 ```typescript
 // Check cell content dimensions
 const checkCellOverflow = () => {
-  const cells = document.querySelectorAll('.admin-data-table td')
+  const cells = document.querySelectorAll(".admin-data-table td")
   cells.forEach((cell, index) => {
     const isOverflowing = cell.scrollWidth > cell.clientWidth
     if (isOverflowing) {
       console.log(`Cell ${index} overflowing:`, {
         scrollWidth: cell.scrollWidth,
         clientWidth: cell.clientWidth,
-        content: cell.textContent?.substring(0, 50)
+        content: cell.textContent?.substring(0, 50),
       })
     }
   })
@@ -986,6 +1013,7 @@ const checkCellOverflow = () => {
 ```
 
 **Solutions:**
+
 ```typescript
 // ❌ Problem: Long content overflows
 { key: 'description', width: 100 }
@@ -1014,13 +1042,13 @@ const checkCellOverflow = () => {
 // ✅ Solution 4: Expandable content
 <template #cell-description="{ item }">
   <div class="expandable-cell">
-    <div 
+    <div
       class="cell-content"
       :class="{ expanded: expandedCells.includes(item.id) }"
     >
       {{ item.description }}
     </div>
-    <button 
+    <button
       v-if="item.description.length > 100"
       @click="toggleExpanded(item.id)"
       class="expand-btn"
@@ -1032,39 +1060,43 @@ const checkCellOverflow = () => {
 ```
 
 ### Issue 5: Resize Performance Problems
+
 **Symptoms:**
+
 - Laggy resize interaction
 - Browser freezes during resize
 - Memory usage increases
 
 **Diagnosis:**
+
 ```typescript
 // Monitor performance during resize
 const monitorResizePerformance = () => {
   let frameCount = 0
   let startTime = performance.now()
-  
+
   const countFrames = () => {
     frameCount++
     requestAnimationFrame(countFrames)
   }
-  
+
   // Start monitoring
   countFrames()
-  
+
   // Check FPS after 1 second
   setTimeout(() => {
     const fps = frameCount / ((performance.now() - startTime) / 1000)
-    console.log('Resize FPS:', fps)
-    
+    console.log("Resize FPS:", fps)
+
     if (fps < 30) {
-      console.warn('Poor resize performance detected')
+      console.warn("Poor resize performance detected")
     }
   }, 1000)
 }
 ```
 
 **Solutions:**
+
 ```typescript
 // ❌ Problem: Too frequent updates
 const handleMouseMove = (e: MouseEvent) => {
@@ -1073,7 +1105,7 @@ const handleMouseMove = (e: MouseEvent) => {
 }
 
 // ✅ Solution 1: Throttle updates
-import { throttle } from 'lodash-es'
+import { throttle } from "lodash-es"
 
 const handleMouseMove = throttle((e: MouseEvent) => {
   columnWidths.value[columnIndex] = startWidth + (e.clientX - startX)
@@ -1084,7 +1116,7 @@ let rafId: number | null = null
 
 const handleMouseMove = (e: MouseEvent) => {
   if (rafId) return // Skip if frame already scheduled
-  
+
   rafId = requestAnimationFrame(() => {
     columnWidths.value[columnIndex] = startWidth + (e.clientX - startX)
     rafId = null
@@ -1092,7 +1124,7 @@ const handleMouseMove = (e: MouseEvent) => {
 }
 
 // ✅ Solution 3: Debounce final update
-import { debounce } from 'lodash-es'
+import { debounce } from "lodash-es"
 
 const updateColumnWidth = debounce((index: number, width: number) => {
   columnWidths.value[index] = width
@@ -1102,24 +1134,28 @@ const updateColumnWidth = debounce((index: number, width: number) => {
 ```
 
 ### Issue 6: Mobile/Touch Device Problems
+
 **Symptoms:**
+
 - Cannot resize on touch devices
 - Resize handles too small to touch
 - Accidental resizing while scrolling
 
 **Diagnosis:**
+
 ```typescript
 // Detect touch device
-const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0
+const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0
 
 // Check handle size on mobile
 const checkMobileHandles = () => {
   if (isTouchDevice) {
-    const handles = document.querySelectorAll('.resize-handle')
-    handles.forEach(handle => {
+    const handles = document.querySelectorAll(".resize-handle")
+    handles.forEach((handle) => {
       const rect = handle.getBoundingClientRect()
-      if (rect.width < 44) { // Apple's minimum touch target
-        console.warn('Resize handle too small for touch:', rect.width)
+      if (rect.width < 44) {
+        // Apple's minimum touch target
+        console.warn("Resize handle too small for touch:", rect.width)
       }
     })
   }
@@ -1127,11 +1163,12 @@ const checkMobileHandles = () => {
 ```
 
 **Solutions:**
+
 ```typescript
 // ✅ Solution 1: Larger touch targets
 .resize-handle {
   width: 4px; /* Visual width */
-  
+
   /* Larger touch area */
   &::before {
     content: '';
@@ -1146,24 +1183,24 @@ const checkMobileHandles = () => {
 // ✅ Solution 2: Touch event handling
 const startResize = (event: MouseEvent | TouchEvent, columnIndex: number) => {
   event.preventDefault()
-  
+
   const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX
   const startX = clientX
   const startWidth = columnWidths.value[columnIndex]
-  
+
   const handleMove = (e: MouseEvent | TouchEvent) => {
     const currentX = 'touches' in e ? e.touches[0].clientX : e.clientX
     const deltaX = currentX - startX
     columnWidths.value[columnIndex] = Math.max(50, startWidth + deltaX)
   }
-  
+
   const handleEnd = () => {
     document.removeEventListener('mousemove', handleMove)
     document.removeEventListener('mouseup', handleEnd)
     document.removeEventListener('touchmove', handleMove)
     document.removeEventListener('touchend', handleEnd)
   }
-  
+
   // Add both mouse and touch listeners
   document.addEventListener('mousemove', handleMove)
   document.addEventListener('mouseup', handleEnd)
@@ -1178,13 +1215,13 @@ const startResize = (event: MouseEvent | TouchEvent, columnIndex: number) => {
       Adjust Columns
     </button>
   </div>
-  
+
   <!-- Mobile column settings modal -->
   <div v-if="showColumnSettings" class="column-settings-modal">
     <div v-for="(column, index) in columns" :key="column.key">
       <label>{{ column.label }}</label>
-      <input 
-        type="range" 
+      <input
+        type="range"
         :min="column.minWidth || 50"
         :max="column.maxWidth || 400"
         v-model="columnWidths[index]"
@@ -1196,47 +1233,51 @@ const startResize = (event: MouseEvent | TouchEvent, columnIndex: number) => {
 ```
 
 ### Issue 7: Browser Compatibility Problems
+
 **Symptoms:**
+
 - Resize doesn't work in specific browsers
 - Different behavior across browsers
 - CSS not applied correctly
 
 **Diagnosis:**
+
 ```typescript
 // Check browser support
 const checkBrowserSupport = () => {
   const features = {
-    flexbox: CSS.supports('display', 'flex'),
-    gridLayout: CSS.supports('display', 'grid'),
-    customProperties: CSS.supports('--custom', 'property'),
-    resizeObserver: 'ResizeObserver' in window
+    flexbox: CSS.supports("display", "flex"),
+    gridLayout: CSS.supports("display", "grid"),
+    customProperties: CSS.supports("--custom", "property"),
+    resizeObserver: "ResizeObserver" in window,
   }
-  
-  console.log('Browser support:', features)
-  
+
+  console.log("Browser support:", features)
+
   // Check for known issues
   const userAgent = navigator.userAgent
-  if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) {
-    console.warn('Safari detected - may have resize issues')
+  if (userAgent.includes("Safari") && !userAgent.includes("Chrome")) {
+    console.warn("Safari detected - may have resize issues")
   }
 }
 ```
 
 **Solutions:**
+
 ```typescript
 // ✅ Solution 1: Feature detection and fallbacks
 const useTableResize = (initialWidths: number[]) => {
   // Check for ResizeObserver support
   const hasResizeObserver = 'ResizeObserver' in window
-  
+
   if (!hasResizeObserver) {
     // Fallback to window resize events
     window.addEventListener('resize', debounce(handleWindowResize, 250))
   }
-  
+
   // Check for CSS custom properties support
   const hasCustomProperties = CSS.supports('--custom', 'property')
-  
+
   if (!hasCustomProperties) {
     // Use inline styles instead of CSS variables
     applyInlineStyles()
@@ -1270,6 +1311,7 @@ if (!window.ResizeObserver) {
 ### Debugging Tools and Techniques
 
 #### 1. Visual Debug Mode
+
 ```typescript
 // Add debug mode to visualize column boundaries
 const debugMode = ref(false)
@@ -1281,7 +1323,7 @@ const debugMode = ref(false)
     border: 2px solid red !important;
     position: relative;
   }
-  
+
   .admin-data-table th::after,
   .admin-data-table td::after {
     content: attr(data-width);
@@ -1296,31 +1338,33 @@ const debugMode = ref(false)
 ```
 
 #### 2. Performance Monitoring
+
 ```typescript
 // Monitor resize performance
 const performanceMonitor = {
-  start: () => performance.mark('resize-start'),
+  start: () => performance.mark("resize-start"),
   end: () => {
-    performance.mark('resize-end')
-    performance.measure('resize-duration', 'resize-start', 'resize-end')
-    const measure = performance.getEntriesByName('resize-duration')[0]
-    console.log('Resize took:', measure.duration, 'ms')
-  }
+    performance.mark("resize-end")
+    performance.measure("resize-duration", "resize-start", "resize-end")
+    const measure = performance.getEntriesByName("resize-duration")[0]
+    console.log("Resize took:", measure.duration, "ms")
+  },
 }
 ```
 
 #### 3. State Inspector
+
 ```typescript
 // Vue DevTools integration
 const debugState = computed(() => ({
   columnWidths: columnWidths.value,
   isResizing: isResizing.value,
   resizingColumn: resizingColumn.value,
-  totalWidth: columnWidths.value.reduce((sum, width) => sum + width, 0)
+  totalWidth: columnWidths.value.reduce((sum, width) => sum + width, 0),
 }))
 
 // Expose for debugging
-if (process.env.NODE_ENV === 'development') {
+if (process.env.NODE_ENV === "development") {
   window.tableDebug = debugState
 }
 ```
@@ -1328,6 +1372,7 @@ if (process.env.NODE_ENV === 'development') {
 ## Files Modified
 
 ### 1. LoggerAdmin.vue
+
 ```typescript
 // Changes made:
 - Updated tableColumns configuration
@@ -1338,6 +1383,7 @@ if (process.env.NODE_ENV === 'development') {
 ```
 
 ### 2. AdminTable.vue (No changes needed)
+
 ```typescript
 // Already supported:
 - Column width processing
@@ -1357,20 +1403,22 @@ if (process.env.NODE_ENV === 'development') {
 ## Future Enhancements
 
 ### 1. Persistent Column Widths
+
 ```typescript
 // Save user preferences
 const saveColumnWidths = (widths: number[]) => {
-  localStorage.setItem('logger-column-widths', JSON.stringify(widths))
+  localStorage.setItem("logger-column-widths", JSON.stringify(widths))
 }
 
 // Restore on component mount
 const restoreColumnWidths = () => {
-  const saved = localStorage.getItem('logger-column-widths')
+  const saved = localStorage.getItem("logger-column-widths")
   return saved ? JSON.parse(saved) : initialWidths
 }
 ```
 
 ### 2. Auto-sizing Columns
+
 ```typescript
 // Auto-size based on content
 const autoSizeColumn = (columnIndex: number) => {
@@ -1379,9 +1427,10 @@ const autoSizeColumn = (columnIndex: number) => {
 ```
 
 ### 3. Column Visibility Toggle
+
 ```typescript
 // Allow hiding/showing columns
-const visibleColumns = ref(tableColumns.map(col => col.key))
+const visibleColumns = ref(tableColumns.map((col) => col.key))
 const toggleColumn = (columnKey: string) => {
   // Toggle column visibility
 }

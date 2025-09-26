@@ -155,7 +155,7 @@ export function getAppointmentUrl(appointment: Appointment): string {
   const churchtoolsBaseUrl = import.meta.env.DEV
     ? import.meta.env.VITE_BASE_URL
     : window.location.origin
-  
+
   const startDate = 'base' in appointment ? appointment.base.startDate : appointment.startDate
   const calendarId = 'base' in appointment ? appointment.base.calendar.id : appointment.calendar.id
   // const appointmentId= 'base' in appointment ? appointment.base.id : appointment.id

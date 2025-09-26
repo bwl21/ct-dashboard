@@ -33,6 +33,7 @@ node scripts/package.js
 ### URL-Zugriff
 
 Nach der Installation verfügbar unter:
+
 ```
 https://ihre-domain.church.tools/ccm/ctdashboard/
 ```
@@ -42,14 +43,15 @@ https://ihre-domain.church.tools/ccm/ctdashboard/
 ### Build-Einstellungen
 
 **vite.config.ts:**
+
 ```typescript
 export default defineConfig({
   base: "/ccm/ctdashboard/",
   build: {
     outDir: "dist",
     sourcemap: false,
-    minify: "terser"
-  }
+    minify: "terser",
+  },
 })
 ```
 
@@ -69,6 +71,7 @@ ct-dashboard-v1.0.0-abc123.zip
 ### Häufige Probleme
 
 **Build-Fehler:**
+
 ```bash
 # Dependencies neu installieren
 rm -rf node_modules package-lock.json
@@ -76,10 +79,12 @@ npm install
 ```
 
 **Upload-Fehler:**
+
 - ZIP-Datei unter 10MB halten
 - Nur `dist/` Inhalt ohne Source Maps
 
 **Berechtigungen:**
+
 - ChurchTools-Admin-Rechte erforderlich
 - API-Zugriff automatisch über Session
 

@@ -34,18 +34,10 @@
             {{ getCategoryDisplayName(category) }}
           </option>
         </select>
-        <button
-          @click="resetFilters"
-          class="ct-btn ct-btn-secondary"
-          :disabled="loading"
-        >
+        <button @click="resetFilters" class="ct-btn ct-btn-secondary" :disabled="loading">
           Filter zurücksetzen
         </button>
-        <button
-          @click="refreshLogs"
-          class="ct-btn ct-btn-primary refresh-btn"
-          :disabled="loading"
-        >
+        <button @click="refreshLogs" class="ct-btn ct-btn-primary refresh-btn" :disabled="loading">
           {{ loading ? 'Lädt...' : 'Aktualisieren' }}
         </button>
       </div>
@@ -82,11 +74,7 @@
 
     <template #cell-actions="{ item }">
       <div class="row-actions">
-        <button
-          @click="viewDetails(item)"
-          class="ct-btn ct-btn-sm ct-btn-outline"
-          title="Details"
-        >
+        <button @click="viewDetails(item)" class="ct-btn ct-btn-sm ct-btn-outline" title="Details">
           Details
         </button>
       </div>
@@ -158,7 +146,15 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import AdminTable from '../common/AdminTable.vue'
-import { useLoggerSummary, type ProcessedLogEntry, LogCategory, getCategoryDisplayName, getCategoryIcon, getCategoryCssClass, getAllCategories } from './useLoggerSummary'
+import {
+  useLoggerSummary,
+  type ProcessedLogEntry,
+  LogCategory,
+  getCategoryDisplayName,
+  getCategoryIcon,
+  getCategoryCssClass,
+  getAllCategories,
+} from './useLoggerSummary'
 
 // Use the ProcessedLogEntry type from the composable
 type LogEntry = ProcessedLogEntry
@@ -174,13 +170,13 @@ defineProps<{
 }>()
 
 // Use composable
-const { 
-  loading, 
-  error, 
-  logs: logEntries, 
+const {
+  loading,
+  error,
+  logs: logEntries,
   loadDetailedLogs,
   filterLogsByCategory,
-  filterLogsBySearch
+  filterLogsBySearch,
 } = useLoggerSummary()
 
 // AdminTable reference
@@ -249,12 +245,12 @@ const tableColumns = [
 // Computed
 const filteredLogs = computed(() => {
   let filtered = logEntries.value
-  
+
   // Apply category filter first
   if (selectedCategory.value) {
     filtered = filterLogsByCategory(filtered, selectedCategory.value)
   }
-  
+
   return filtered
 })
 
@@ -286,7 +282,7 @@ const formatTimestamp = (timestamp: string) => {
 
 const refreshLogs = async () => {
   await loadDetailedLogs(selectedDays.value, {
-    category: selectedCategory.value
+    category: selectedCategory.value,
   })
 }
 
@@ -304,12 +300,12 @@ const resetFilters = async () => {
   // Reset all filters to default values
   selectedCategory.value = ''
   selectedDays.value = 3
-  
+
   // Reset AdminTable search
   if (adminTableRef.value?.clearSearch) {
     adminTableRef.value.clearSearch()
   }
-  
+
   // Reload logs with default settings
   await refreshLogs()
 }
@@ -468,8 +464,6 @@ onMounted(() => {
   border-color: var(--color-info);
 }
 
-
-
 .action-btn:disabled {
   opacity: calc(var(--spacing-sm) / var(--spacing-md));
   cursor: not-allowed;
@@ -501,7 +495,9 @@ onMounted(() => {
 .modal-content {
   background: var(--color-background-card, #ffffff);
   border-radius: var(--border-radius-lg, 12px);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
   max-width: 800px;
   max-height: 80vh;
   width: 90%;

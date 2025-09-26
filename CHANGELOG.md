@@ -10,6 +10,7 @@ und dieses Projekt folgt [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 ## [1.0.4] - 2025-09-24
 
 ### ✨ Added
+
 - **Priority-basierte Log-Kategorisierung** mit intelligenter Konfliktauflösung
 - **Funktionale Filter-Bedingungen** (messageIncludes, domainTypeIs, and, or)
 - **Zentrale UI-Konfiguration** für Log-Kategorien (Icons, Labels, CSS-Klassen)
@@ -18,6 +19,7 @@ und dieses Projekt folgt [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - **Automatische Filter-Generierung** aus Kategorisierungs-Regeln
 
 ### 🔄 Changed
+
 - **Log-Kategorisierung** von if-else Kette zu rule-basiertem System
 - **UI-Mappings** zentralisiert statt verteilt in Komponenten
 - **Button-Terminologie** standardisiert: "Details" statt "Details anzeigen"
@@ -25,12 +27,14 @@ und dieses Projekt folgt [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - **Modal z-index** erhöht für bessere Overlay-Darstellung
 
 ### 🐛 Fixed
+
 - **Modal-Overlay** deckt jetzt vollständig das Admin Panel ab
 - **Überlappende Log-Kategorien** durch Priority-System gelöst
 - **String-Duplikation** eliminiert durch LogCategory-Konstanten
 - **ChurchTools API Kompatibilität** für simulatePersonId (OpenAPI-Spec Typo dokumentiert)
 
 ### 🔧 Technical Improvements
+
 - **TypeScript-Typsicherheit** durch LogCategory-Konstanten
 - **Testbarkeit** durch isolierte Kategorisierungs-Regeln
 - **Erweiterbarkeit** durch einfaches Hinzufügen neuer Regeln
@@ -40,6 +44,7 @@ und dieses Projekt folgt [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 ## [1.0.3] - 2025-09-24
 
 ### ✨ Added
+
 - **Logger System** mit kategorie-basierter Klassifizierung
 - **Neue Kategorie** "Personen angesehen" für getPersonDetails Logs
 - **BaseCard System** mit großen Icon-Headern (60x60px)
@@ -49,6 +54,7 @@ und dieses Projekt folgt [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - **Ona KI-Assistent** Erwähnung in README.md
 
 ### 🔄 Changed
+
 - **BaseCard Design** komplett überarbeitet mit großen Icons und vertikalem Layout
 - **AdminTable Scrolling** - nur Tabelle scrollt, Filter bleiben sichtbar
 - **Logger Action Buttons** standardisiert mit ct-btn Klassen
@@ -57,6 +63,7 @@ und dieses Projekt folgt [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - **Konsistente Button-Styling** über alle Komponenten
 
 ### 🐛 Fixed
+
 - **Sticky Table Headers** funktionieren jetzt für alle Spalten (nicht nur "Aktionen")
 - **Layout-Sprünge** beim Laden von Karten durch vorberechnete Höhen eliminiert
 - **Kategorie-basierte Icons** im Logger statt Level-basiert
@@ -65,8 +72,9 @@ und dieses Projekt folgt [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - **Titel und Count Spacing** in BaseCard optimiert
 
 ### 🔒 Security
+
 - **Vertrauliche Informationen** vollständig aus Repository entfernt
-- **.ona-context.md** bereinigt und sicher neu erstellt
+- **Dokumentation** bereinigt und sicher neu erstellt
 - **Remote Repository** von sensiblen Daten bereinigt
 
 ## [1.0.0] - 2025-09-20

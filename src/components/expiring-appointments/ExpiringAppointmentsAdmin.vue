@@ -44,11 +44,7 @@
       <div class="filter-container">
         <select v-model="calendarFilter" class="ct-select filter-select">
           <option value="">Alle Kalender</option>
-          <option
-            v-for="calendar in availableCalendars"
-            :key="calendar.id"
-            :value="calendar.id"
-          >
+          <option v-for="calendar in availableCalendars" :key="calendar.id" :value="calendar.id">
             {{ calendar.name }}
           </option>
         </select>
@@ -73,11 +69,7 @@
       >
         Filter löschen
       </button>
-      <button
-        @click="refreshData"
-        class="ct-btn ct-btn-primary refresh-btn"
-        :disabled="isLoading"
-      >
+      <button @click="refreshData" class="ct-btn ct-btn-primary refresh-btn" :disabled="isLoading">
         {{ isLoading ? 'Lädt...' : 'Aktualisieren' }}
       </button>
     </template>
@@ -131,11 +123,7 @@
 import { ref, computed, onMounted } from 'vue'
 import type { DashboardModule } from '@/types/modules'
 import type { TableColumn } from '@/types/table'
-import {
-  findExpiringSeries,
-  getAppointmentUrl,
-  type Appointment,
-} from '@/services/churchtools'
+import { findExpiringSeries, getAppointmentUrl, type Appointment } from '@/services/churchtools'
 import AdminTable from '@/components/common/AdminTable.vue'
 
 defineProps<{
@@ -161,11 +149,39 @@ const appointments = ref<Appointment[]>([])
 // Table configuration
 const tableColumns: TableColumn[] = [
   { key: 'id', label: 'ID', sortable: true, resizable: true, width: 55, cellSlot: 'cell-id' },
-  { key: 'base.title', label: 'Titel', sortable: true, resizable: true, width: 225, cellSlot: 'cell-title' },
-  { key: 'base.calendar.name', label: 'Kalender', sortable: true, resizable: true, width: 200, cellSlot: 'cell-calendar' },
-  { key: 'base.startDate', label: 'Anfang', sortable: true, resizable: true, width: 180, cellSlot: 'cell-startDate' },
-  { key: 'base.repeatUntil', label: 'Ende', sortable: true, resizable: true, width: 180, cellSlot: 'cell-endDate' },
-  { key: 'actions', label: 'Aktionen', resizable: false, width: 120, cellSlot: 'cell-actions' }
+  {
+    key: 'base.title',
+    label: 'Titel',
+    sortable: true,
+    resizable: true,
+    width: 225,
+    cellSlot: 'cell-title',
+  },
+  {
+    key: 'base.calendar.name',
+    label: 'Kalender',
+    sortable: true,
+    resizable: true,
+    width: 200,
+    cellSlot: 'cell-calendar',
+  },
+  {
+    key: 'base.startDate',
+    label: 'Anfang',
+    sortable: true,
+    resizable: true,
+    width: 180,
+    cellSlot: 'cell-startDate',
+  },
+  {
+    key: 'base.repeatUntil',
+    label: 'Ende',
+    sortable: true,
+    resizable: true,
+    width: 180,
+    cellSlot: 'cell-endDate',
+  },
+  { key: 'actions', label: 'Aktionen', resizable: false, width: 120, cellSlot: 'cell-actions' },
 ]
 
 // Computed properties for filters
@@ -184,11 +200,7 @@ const availableCalendars = computed(() => {
 })
 
 const hasActiveFilters = computed(() => {
-  return (
-    calendarFilter.value !== '' ||
-    statusFilter.value !== '' ||
-    daysInAdvance.value !== 'alle'
-  )
+  return calendarFilter.value !== '' || statusFilter.value !== '' || daysInAdvance.value !== 'alle'
 })
 
 // Helper function to get appointment status
@@ -273,7 +285,7 @@ const clearFilters = () => {
   calendarFilter.value = ''
   statusFilter.value = ''
   daysInAdvance.value = 'alle'
-  
+
   // Reset AdminTable search
   if (adminTableRef.value?.clearSearch) {
     adminTableRef.value.clearSearch()
