@@ -45,6 +45,9 @@ npm run format       # Auto-format code with Prettier
 npm run type-check   # TypeScript type checking only
 npm run clean        # Clean build artifacts
 npm run deploy       # Build and package for ChurchTools
+npm run test         # Run Playwright tests
+npm run test:ui      # Run tests with UI mode
+npm run test:headed  # Run tests in headed mode
 ```
 
 ### Basic Development Workflow
