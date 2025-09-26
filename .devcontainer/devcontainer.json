@@ -32,7 +32,8 @@
         "esbenp.prettier-vscode",
         "ms-vscode.vscode-typescript-next",
         "mhutchie.git-graph",
-        "EditorConfig.EditorConfig"
+        "EditorConfig.EditorConfig",
+        "ms-playwright.playwright"
       ],
       "settings": {
         "editor.formatOnSave": true,
@@ -48,13 +49,17 @@
   },
 
   // Post-create commands to run after container creation
-  "postCreateCommand": "npm install && npm run format",
+  "postCreateCommand": "npm install && npx playwright install --with-deps && npm run format",
 
   // Forward ports for development
-  "forwardPorts": [5173],
+  "forwardPorts": [5173, 9324],
   "portsAttributes": {
     "5173": {
       "label": "Vite Dev Server",
+      "onAutoForward": "notify"
+    },
+    "9324": {
+      "label": "Playwright Report",
       "onAutoForward": "notify"
     }
   }

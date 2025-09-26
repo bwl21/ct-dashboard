@@ -13,10 +13,14 @@
     "type-check": "tsc --noEmit",
     "lint": "npm run type-check && npm run format:check",
     "clean": "rm -rf dist node_modules/.vite",
-    "reinstall": "rm -rf node_modules package-lock.json && npm install"
+    "reinstall": "rm -rf node_modules package-lock.json && npm install",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed"
   },
   "devDependencies": {
     "@churchtools/churchtools-client": "^1.4.0",
+    "@playwright/test": "^1.48.0",
     "@types/node": "^24.3.0",
     "@vue/compiler-sfc": "^3.5.21",
     "prettier": "^3.3.3",
