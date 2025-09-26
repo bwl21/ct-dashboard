@@ -7,8 +7,16 @@ This directory contains internal development documentation, session notes, and t
 - **[DEVELOPMENT.md](./DEVELOPMENT.md)** - Developer handbook and architecture
 - **[API.md](./API.md)** - API documentation and interfaces
 - **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Build and deployment process
+- **[LESSONS-LEARNED.md](./LESSONS-LEARNED.md)** - Key insights and solutions
 
 ## Development Sessions
+
+### Recent Sessions
+
+- **[DEVELOPMENT_SESSION_2025-09-26_Issue7_Button_Layout_Fix.md](./DEVELOPMENT_SESSION_2025-09-26_Issue7_Button_Layout_Fix.md)** - Issue #7: Button layout shift fix
+- **[DEVELOPMENT_SESSION_2025-09-25_Documentation_Optimization.md](./DEVELOPMENT_SESSION_2025-09-25_Documentation_Optimization.md)** - Documentation optimization
+
+### Previous Sessions
 
 - **[DEVELOPMENT_SESSION_2025-09-24_Logger_UI_Improvements.md](./DEVELOPMENT_SESSION_2025-09-24_Logger_UI_Improvements.md)** - Logger UI improvements
 - **[DEVELOPMENT_SESSION_2025-09-24_Log_Categorization_Refactor.md](./DEVELOPMENT_SESSION_2025-09-24_Log_Categorization_Refactor.md)** - Log categorization refactor

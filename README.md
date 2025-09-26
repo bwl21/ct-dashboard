@@ -48,6 +48,10 @@ npm run deploy       # Build and package for ChurchTools
 npm run test         # Run Playwright tests
 npm run test:ui      # Run tests with UI mode
 npm run test:headed  # Run tests in headed mode
+npm run test:report  # Serve test report on port 9323
+npm run test:smoke   # Run smoke tests only
+npm run test:layout  # Run layout tests (Issue #7)
+npm run test:mobile  # Run mobile-specific tests
 ```
 
 ### Basic Development Workflow
@@ -55,8 +59,39 @@ npm run test:headed  # Run tests in headed mode
 1. **Create feature branch**: `git checkout -b feature/your-feature`
 2. **Follow patterns**: See `src/components/` for examples
 3. **Use BaseCard + AdminTable**: For consistent UI
-4. **Test changes**: `npm run lint` before committing
+4. **Test changes**: `npm run lint` and `npm run test` before committing
 5. **Deploy**: `npm run deploy` creates ChurchTools plugin package
+
+### Testing
+
+```bash
+# Run all tests
+npm run test
+
+# Run specific test categories
+npm run test:smoke     # Basic functionality tests
+npm run test:layout    # UI layout tests (Issue #7)
+npm run test:mobile    # Mobile-specific tests
+
+# Test with specific browsers
+npm run test -- --project chromium
+npm run test -- --project "Mobile Safari"
+
+# Run tests with tags
+npm run test -- --grep "@smoke"
+npm run test -- --grep "@issue7"
+
+# View test report
+npm run test:report    # Serves report on http://localhost:9323
+```
+
+**Available Test Tags:**
+
+- `@smoke` - Basic functionality
+- `@layout` - UI/Layout tests
+- `@issue7` - Issue #7 specific tests
+- `@responsive` - Mobile/responsive tests
+- `@interaction` - User interaction tests
 
 ### Project Structure
 
@@ -80,6 +115,8 @@ src/components/[module]/
 - **Vite** - Fast build tool and dev server
 - **ChurchTools Client** - Official API integration
 - **ChurchTools Design System** - Native styling
+- **Playwright** - End-to-end testing framework
+- **Prettier** - Code formatting
 
 ## 📚 Documentation
 
@@ -101,17 +138,21 @@ src/components/[module]/
 - **Responsive:** Mobile-first Ansatz
 - **Performance:** Optimierte Bundle-Größe
 - **Accessibility:** WCAG-konforme Implementierung
+- **Stable Layouts:** No layout shifts during loading (Issue #7 ✅)
 
-## 📊 Status
+## 🐛 Recent Fixes
 
-| Feature                  | Status    | Dokumentation                                                            |
-| ------------------------ | --------- | ------------------------------------------------------------------------ |
-| Auslaufende Terminserien | ✅ Stabil | [API.md](docs/API.md)                                                    |
-| Automatische Gruppen     | ✅ Stabil | [API.md](docs/API.md)                                                    |
-| Tags-Verwaltung          | ✅ Stabil | [Features](docs/FEATURES_TAGS_COLORPICKER_TOAST.md)                      |
-| Logger System            | ✅ Stabil | [Session](docs/DEVELOPMENT_SESSION_2025-09-24_Logger_UI_Improvements.md) |
-| Log-Kategorisierung      | ✅ Stabil | Priority-basiertes System                                                |
-| BaseCard-System          | ✅ Stabil | [Development](docs/DEVELOPMENT.md)                                       |
+### Issue #7: Card Button Layout Shifts ✅
+
+**Problem:** Dashboard card buttons jumped from left to right during loading states, causing poor user experience.
+
+**Solution:**
+
+- Implemented stable CSS layout with `margin-left: auto`
+- Added loading placeholder text to prevent footer layout shifts
+- Comprehensive Playwright tests to prevent regression
+
+**Testing:** `npm run test:layout` or `npm run test -- --grep "@issue7"`
 
 ## 🤝 Contributing
 
@@ -277,4 +318,4 @@ Dieses Projekt steht unter der MIT-Lizenz. Siehe LICENSE-Datei für Details.
 ---
 
 **Entwickelt für ChurchTools** - Die moderne Gemeindeverwaltung  
-**Version:** 1.0.0 | **Dokumentation:** [docs/](./docs/) | **Support:** [GitHub Issues](https://github.com/ihr-username/ct-dashboard/issues)
+**Version:** 1.0.4 | **Dokumentation:** [docs/](./docs/) | **Support:** [GitHub Issues](https://github.com/bwl21/ct-dashboard/issues)
