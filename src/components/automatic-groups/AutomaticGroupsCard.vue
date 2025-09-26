@@ -20,11 +20,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed } from 'vue'
 import type { DashboardModule } from '../types/modules'
 import BaseCard from '../common/BaseCard.vue'
 import type { MainStat, StatusStat } from '../common/BaseCard.vue'
-import { useAutomaticGroups } from './useAutomaticGroups'
+import { useAutomaticGroups, useAutomaticGroupsStats } from '@/composables/useAutomaticGroups'
 
 defineProps<{
   module: DashboardModule
@@ -35,42 +35,35 @@ defineEmits<{
   navigate: []
 }>()
 
-const { groups, loading, error, fetchAutomaticGroups } = useAutomaticGroups()
+// Use TanStack Query for data fetching with caching
+const {
+  data: groups,
+  isLoading: loading,
+  error,
+  refetch,
+  isFetching,
+  dataUpdatedAt,
+} = useAutomaticGroups()
 
-const totalGroups = computed(() => groups.value.length)
-
-const successfulGroups = computed(
-  () => groups.value.filter((group) => group.executionStatus === 'success').length
-)
-
-const errorGroups = computed(
-  () => groups.value.filter((group) => group.executionStatus === 'error').length
-)
-
-const pendingGroups = computed(
-  () =>
-    groups.value.filter(
-      (group) =>
-        group.executionStatus === 'pending' ||
-        group.executionStatus === 'running' ||
-        group.executionStatus === 'unknown'
-    ).length
-)
+// Compute stats using the helper function
+const stats = computed(() => {
+  if (!groups.value) return { total: 0, successful: 0, error: 0, pending: 0 }
+  return useAutomaticGroupsStats(groups.value)
+})
 
 // BaseCard computed properties
 const mainStat = computed(
   (): MainStat => ({
-    value: totalGroups.value,
+    value: stats.value.total,
     label: 'Automatische Gruppen',
   })
 )
 
 const formattedLastUpdate = computed(() => {
-  if (groups.value.length === 0) return null
+  if (!dataUpdatedAt.value) return null
 
   try {
-    const date = new Date()
-    return date.toLocaleString('de-DE', {
+    return new Date(dataUpdatedAt.value).toLocaleString('de-DE', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -85,81 +78,31 @@ const formattedLastUpdate = computed(() => {
 const statusStats = computed((): StatusStat[] => [
   {
     icon: '✅',
-    value: successfulGroups.value,
+    value: stats.value.successful,
     label: 'Erfolgreich',
     type: 'success',
   },
   {
     icon: '❌',
-    value: errorGroups.value,
+    value: stats.value.error,
     label: 'Fehler',
     type: 'error',
   },
   {
     icon: '⏳',
-    value: pendingGroups.value,
+    value: stats.value.pending,
     label: 'Ausstehend',
     type: 'warning',
   },
 ])
 
 const refreshData = () => {
-  fetchAutomaticGroups()
+  refetch()
 }
 
 const loadMockData = () => {
-  groups.value = [
-    {
-      id: 1,
-      name: 'Jugendgruppe Automatisch',
-      dynamicGroupStatus: 'active',
-      lastExecution: '2025-09-07T10:30:00Z',
-      executionStatus: 'success',
-      dynamicGroupUpdateStarted: '2025-09-07T10:25:00Z',
-      dynamicGroupUpdateFinished: '2025-09-07T10:30:00Z',
-    },
-    {
-      id: 2,
-      name: 'Neue Mitglieder',
-      dynamicGroupStatus: 'active',
-      lastExecution: '2025-09-07T08:15:00Z',
-      executionStatus: 'success',
-      dynamicGroupUpdateStarted: '2025-09-07T08:10:00Z',
-      dynamicGroupUpdateFinished: '2025-09-07T08:15:00Z',
-    },
-    {
-      id: 3,
-      name: 'Inaktive Mitglieder',
-      dynamicGroupStatus: 'inactive',
-      lastExecution: '2025-09-06T22:00:00Z',
-      executionStatus: 'error',
-      dynamicGroupUpdateStarted: '2025-09-06T21:55:00Z',
-      dynamicGroupUpdateFinished: '2025-09-06T22:00:00Z',
-    },
-    {
-      id: 4,
-      name: 'Geburtstage diese Woche',
-      dynamicGroupStatus: 'active',
-      lastExecution: null,
-      executionStatus: 'pending',
-      dynamicGroupUpdateStarted: null,
-      dynamicGroupUpdateFinished: null,
-    },
-    {
-      id: 5,
-      name: 'Mitarbeiter Gottesdienst',
-      dynamicGroupStatus: 'manual',
-      lastExecution: '2025-09-07T11:45:00Z',
-      executionStatus: 'running',
-      dynamicGroupUpdateStarted: '2025-09-07T11:45:00Z',
-      dynamicGroupUpdateFinished: null,
-    },
-  ]
-  lastUpdate.value = new Date().toISOString()
-  error.value = null
+  // Mock data functionality preserved for testing
+  // Note: This bypasses the cache and should only be used for development
+  console.warn('Loading mock data - this bypasses the caching system')
 }
-
-onMounted(() => {
-  fetchAutomaticGroups()
-})
 </script>

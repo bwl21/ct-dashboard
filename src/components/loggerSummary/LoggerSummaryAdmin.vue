@@ -155,6 +155,7 @@ import {
   getCategoryCssClass,
   getAllCategories,
 } from './useLoggerSummary'
+import { useLoggerSummary as useLoggerSummaryQuery } from '@/composables/useLoggerSummaryQuery'
 
 // Use the ProcessedLogEntry type from the composable
 type LogEntry = ProcessedLogEntry
