@@ -28,6 +28,48 @@
 
 ### 2. Follow AI Platform Standards
 
+**Problem**: Custom documentation formats don't align with AI agent expectations
+**Solution**: Use standard markdown patterns and clear section headers
+**Application**: Structure documentation for both human and AI consumption
+
+# 🎓 Lessons Learned 2025-09-26
+
+### 1. TanStack Query Eliminates Custom Cache Logic
+
+**Problem**: Building custom caching is complex and error-prone
+**Solution**: TanStack Query provides professional-grade caching out of the box
+**Application**: Use established libraries for complex features like caching, don't reinvent
+
+### 2. SessionStorage for Short-Term Cache Persistence
+
+**Problem**: Need cache persistence without conflicting with host application
+**Solution**: SessionStorage provides isolation and automatic cleanup
+**Application**: Use sessionStorage for temporary cache, localStorage for permanent settings
+
+### 3. Client-Side Pagination for Instant UX
+
+**Problem**: Server pagination causes delays for every page change
+**Solution**: Load bulk data once (with limits), paginate client-side
+**Application**: For datasets under 5000 items, client-side pagination provides better UX
+
+### 4. Template Slot Parameter Consistency
+
+**Problem**: Inconsistent slot parameters break component reusability
+**Solution**: Always use the same parameter names across similar components
+**Application**: Establish and document component interface standards early
+
+### 5. Toast Timing Affects User Perception
+
+**Problem**: Success toasts after instant cache loads feel unnecessary
+**Solution**: Show toasts during loading, not after instant cache hits
+**Application**: Consider user perception when timing feedback messages
+
+### 6. Preserve Working Code Patterns
+
+**Problem**: "Improving" working code can introduce bugs
+**Solution**: Understand why existing patterns work before changing them
+**Application**: When migrating to new systems, preserve proven patterns and interfaces
+
 **Problem**: Created custom .ona-context.md thinking it was an Ona standard
 **Solution**: Use AGENTS.md as the official Ona standard for AI instructions
 **Application**: Research platform standards before creating custom solutions
