@@ -564,3 +564,88 @@ return {
 **Das wichtigste Learning 2025-09-23:** Systematische Herangehensweise mit paralleler Dokumentation, iterativer Problemlösung und konsequenter Qualitätssicherung führt zu nachhaltigen, production-ready Lösungen! 🎯
 
 **Gesamtfazit:** Systematisches Vorgehen, klare Kommunikation und kontinuierliche Dokumentation führen zu nachhaltigen, qualitativ hochwertigen Ergebnissen! 🚀
+
+# 🎓 Lessons Learned 2025-09-26
+
+### 1. Simple Solutions Often Win
+
+**Problem**: Complex CSS positioning to fix button layout shifts during loading
+**Solution**: Simple placeholder text approach instead of complex flexbox manipulation
+**Application**: Always consider content-based solutions before complex CSS positioning
+
+**Technical Details:**
+
+```vue
+<!-- Simple but effective solution -->
+<span class="last-update">
+  <template v-if="isLoading">Lade Daten...</template>
+  <template v-else-if="error">Fehler beim Laden</template>
+  <template v-else-if="lastUpdate">{{ lastUpdate }}</template>
+  <template v-else>&nbsp;</template>
+</span>
+```
+
+### 2. User Feedback is Invaluable
+
+**Problem**: Over-engineering the CSS solution for Issue #7
+**Solution**: User suggested much simpler text placeholder approach
+**Application**: Listen to user suggestions - they often see simpler paths that developers miss
+
+**Impact**: Reduced complexity from 20+ lines of CSS to 4 lines of template logic
+
+### 3. Comprehensive Testing Prevents Regression
+
+**Problem**: Layout issues are hard to catch manually across browsers
+**Solution**: Visual positioning tests with pixel-perfect accuracy using Playwright
+**Application**: Implement visual tests for UI-critical features from the start
+
+**Test Strategy:**
+
+- Cross-browser testing (5 browsers)
+- Pixel-accurate position measurement
+- Tag-based test organization
+- Visual regression prevention
+
+### 4. Tag-Based Test Organization Improves Workflow
+
+**Problem**: Hard to run specific test categories during development
+**Solution**: Comprehensive tagging system with npm scripts
+**Application**: Use tags for test organization from project start
+
+**Tags Implemented:**
+
+- `@smoke` - Basic functionality
+- `@layout` - Layout and positioning
+- `@issue7` - Issue-specific tests
+- `@responsive` - Mobile tests
+- `@interaction` - User interactions
+
+### 5. Documentation During Development is Efficient
+
+**Problem**: Documenting after development leads to knowledge loss
+**Solution**: Create session documentation in parallel with development
+**Application**: Document decisions and insights immediately while context is fresh
+
+**Session Documentation Benefits:**
+
+- Preserves decision context
+- Enables knowledge transfer
+- Facilitates debugging
+- Improves code review quality
+
+### 6. Visual Testing Catches What Manual Testing Misses
+
+**Problem**: Layout shifts are subtle and browser-dependent
+**Solution**: Automated visual positioning tests with screenshots
+**Application**: Use visual testing for any UI behavior that affects user experience
+
+**Visual Test Features:**
+
+- Before/during/after screenshots
+- Pixel-perfect position comparison
+- Cross-browser validation
+- Automated regression detection
+
+---
+
+**Key Insight 2025-09-26:** The best technical solution is often the simplest one that addresses the root cause. User feedback combined with comprehensive testing creates robust, maintainable solutions. 🎯
