@@ -46,7 +46,9 @@ test.describe('Dashboard Cards', () => {
     await page.waitForSelector('h3', { timeout: 10000 })
 
     // Check if module cards have proper structure and are clickable
-    const automaticGroupsCard = page.locator('h3', { hasText: 'Automatische Gruppen' }).locator('..')
+    const automaticGroupsCard = page
+      .locator('h3', { hasText: 'Automatische Gruppen' })
+      .locator('..')
     await expect(automaticGroupsCard).toBeVisible()
 
     // Check if refresh buttons are present
