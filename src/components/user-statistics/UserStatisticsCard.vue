@@ -1,30 +1,91 @@
 <template>
-  <div class="ct-card feature-card user-stats-card">
-    <div class="ct-card-header">
-      <h3 class="ct-card-title">{{ module.title }}</h3>
-    </div>
-    <div class="ct-card-body">
-      <div class="feature-icon">👥</div>
-      <div class="stats-container">
-        <div class="stat-item">
-          <div class="stat-value">1,245</div>
-          <div class="stat-label">Benutzer</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value">842</div>
-          <div class="stat-label">Aktiv (30 Tage)</div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <BaseCard
+    :title="module.title"
+    :icon="'👥'"
+    :is-loading="isLoading"
+    :error="error?.message"
+    :main-stat="mainStat"
+    :status-stats="statusStats"
+    :last-update="formattedLastUpdate"
+    loading-text="Lade Benutzerstatistiken..."
+    retry-text="Erneut versuchen"
+    refresh-text="Aktualisieren"
+    refreshing-text="Aktualisieren..."
+    details-text="Details"
+    last-update-text="Letzte Aktualisierung"
+    @navigate="$emit('navigate')"
+    @refresh="refreshData"
+    @retry="refreshData"
+  />
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { DashboardModule } from '../types/modules'
+import BaseCard from '../common/BaseCard.vue'
+import { useUserStatistics } from '@/composables/useUserStatistics'
 
 defineProps<{
   module: DashboardModule
 }>()
+
+defineEmits<{
+  navigate: []
+}>()
+
+// Use TanStack Query for data fetching with caching
+const {
+  data: statistics,
+  isLoading,
+  error,
+  refetch,
+  isFetching,
+  dataUpdatedAt,
+} = useUserStatistics()
+
+const mainStat = computed(() => ({
+  value: statistics.value?.totalUsers || 0,
+  label: 'Benutzer gesamt',
+}))
+
+const statusStats = computed(() => [
+  {
+    key: 'active',
+    value: statistics.value?.activeUsers || 0,
+    label: 'Aktiv (30 Tage)',
+    icon: '✅',
+    type: 'success' as const,
+  },
+  {
+    key: 'new',
+    value: statistics.value?.newUsers || 0,
+    label: 'Neue (30 Tage)',
+    icon: '🆕',
+    type: 'info' as const,
+  },
+  {
+    key: 'inactive',
+    value: statistics.value?.inactiveUsers || 0,
+    label: 'Inaktiv (90+ Tage)',
+    icon: '😴',
+    type: 'warning' as const,
+  },
+])
+
+const formattedLastUpdate = computed(() => {
+  if (!dataUpdatedAt.value) return ''
+  return new Date(dataUpdatedAt.value).toLocaleString('de-DE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+})
+
+const refreshData = () => {
+  refetch()
+}
 </script>
 
 <style scoped>

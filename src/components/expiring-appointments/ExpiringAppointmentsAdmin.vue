@@ -120,10 +120,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import type { DashboardModule } from '@/types/modules'
 import type { TableColumn } from '@/types/table'
 import { findExpiringSeries, getAppointmentUrl, type Appointment } from '@/services/churchtools'
+import { useExpiringAppointments } from '@/composables/useExpiringAppointments'
 import AdminTable from '@/components/common/AdminTable.vue'
 
 defineProps<{
@@ -133,9 +134,17 @@ defineProps<{
 // Configuration
 const DAYS_TO_SHOW = 90
 
-// State
-const isLoading = ref(true)
-const error = ref<string | null>(null)
+// Use cached appointments data from TanStack Query
+const {
+  data: cachedAppointments,
+  isLoading: cacheLoading,
+  error: cacheError,
+  refetch,
+} = useExpiringAppointments()
+
+// Local state
+const localLoading = ref(false)
+const localError = ref<string | null>(null)
 const calendarFilter = ref('')
 const statusFilter = ref('')
 const daysInAdvance = ref('alle') // Default to "alle"
@@ -143,8 +152,21 @@ const daysInAdvance = ref('alle') // Default to "alle"
 // AdminTable reference
 const adminTableRef = ref()
 
-// Data
+// Data - prefer cached data
 const appointments = ref<Appointment[]>([])
+const isLoading = computed(() => cacheLoading.value || localLoading.value)
+const error = computed(() => cacheError.value?.message || localError.value)
+
+// Use cached appointments if available
+watch(
+  cachedAppointments,
+  (newCachedAppointments) => {
+    if (newCachedAppointments && newCachedAppointments.length > 0) {
+      appointments.value = newCachedAppointments
+    }
+  },
+  { immediate: true }
+)
 
 // Table configuration
 const tableColumns: TableColumn[] = [
@@ -294,8 +316,8 @@ const clearFilters = () => {
 
 // Data loading
 const fetchData = async () => {
-  isLoading.value = true
-  error.value = null
+  localLoading.value = true
+  localError.value = null
 
   try {
     const expiringSeries = await findExpiringSeries(300000)
@@ -359,19 +381,23 @@ const fetchData = async () => {
     appointments.value = filtered
   } catch (err) {
     console.error('Error fetching appointments:', err)
-    error.value = 'Fehler beim Laden der Termine. Bitte versuchen Sie es erneut.'
+    localError.value = 'Fehler beim Laden der Termine. Bitte versuchen Sie es erneut.'
   } finally {
-    isLoading.value = false
+    localLoading.value = false
   }
 }
 
 const refreshData = () => {
-  fetchData()
+  refetch() // Refresh cached data
+  fetchData() // Also refresh local data if needed
 }
 
 // Initialize component
 onMounted(() => {
-  fetchData()
+  // Only fetch if no cached data available
+  if (!cachedAppointments.value || cachedAppointments.value.length === 0) {
+    fetchData()
+  }
 })
 </script>
 
