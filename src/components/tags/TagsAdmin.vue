@@ -269,6 +269,7 @@ import AdminTable from '@/components/common/AdminTable.vue'
 import ColorPicker from '@/components/common/ColorPicker.vue'
 import { useToast } from '@/composables/useToast'
 
+import { useTags as useTagsQuery } from '@/composables/useTags'
 import { useTags } from './useTags'
 
 defineProps<{
@@ -278,11 +279,14 @@ defineProps<{
 // Toast functionality
 const { showSuccess, showError, showInfo } = useToast()
 
-// Use tags composable
+// Use cached tags data from TanStack Query
+const { data: cachedTags, isLoading: cacheLoading, error: cacheError, refetch } = useTagsQuery()
+
+// Use local tags composable for admin functions
 const {
   tags,
-  loading: isLoading,
-  error,
+  loading: localLoading,
+  error: localError,
   selectedDomain,
   personTagsCount,
   songTagsCount,
@@ -293,6 +297,27 @@ const {
   bulkUpdateTags,
   bulkDeleteTags,
 } = useTags()
+
+// Prefer cached data when available, fallback to local
+const isLoading = computed(() => cacheLoading.value || localLoading.value)
+const error = computed(() => cacheError.value?.message || localError.value)
+
+// Use cached tags if available, otherwise use local tags
+watch(
+  cachedTags,
+  (newCachedTags) => {
+    if (newCachedTags && newCachedTags.length > 0) {
+      console.log('🏷️ TagsAdmin: Using cached tags:', newCachedTags.length)
+      tags.value = newCachedTags
+    } else {
+      console.log('🏷️ TagsAdmin: No cached tags available')
+    }
+  },
+  { immediate: true }
+)
+
+// Log when component mounts
+console.log('🏷️ TagsAdmin: Component mounted')
 
 // Local state for UI
 const selectedTags = ref<number[]>([])
@@ -418,9 +443,10 @@ const selectByPrefix = () => {
     .map((tag) => tag.id)
 }
 
-// Data loading
+// Data loading - use cache refetch for better performance
 const refreshData = () => {
-  fetchTags()
+  refetch() // Refresh cached data
+  fetchTags() // Also refresh local data for admin functions
 }
 
 const showCreateModal = () => {
@@ -608,9 +634,12 @@ watch(
   { immediate: true }
 )
 
-// Initialize
+// Initialize - no need to fetch since cache will provide data
 onMounted(() => {
-  fetchTags()
+  // Only fetch if no cached data available
+  if (!cachedTags.value || cachedTags.value.length === 0) {
+    fetchTags()
+  }
 })
 </script>
 

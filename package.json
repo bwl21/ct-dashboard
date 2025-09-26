@@ -36,6 +36,9 @@
     "@fortawesome/fontawesome-svg-core": "^7.0.1",
     "@fortawesome/free-solid-svg-icons": "^7.0.1",
     "@fortawesome/vue-fontawesome": "^3.1.2",
+    "@tanstack/query-persist-client-core": "^5.90.2",
+    "@tanstack/query-sync-storage-persister": "^5.90.2",
+    "@tanstack/vue-query": "^5.90.2",
     "@vitejs/plugin-vue": "^6.0.1",
     "vue": "^3.5.21",
     "vue-i18n": "^9.14.5"

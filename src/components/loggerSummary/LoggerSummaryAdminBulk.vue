@@ -1,22 +1,22 @@
 <template>
   <AdminTable
     ref="adminTableRef"
-    :data="filteredLogs"
-    :loading="loading"
-    :error="error"
+    :data="paginatedLogs"
+    :loading="isLoading"
+    :error="error?.message || null"
     :columns="tableColumns"
     row-key="id"
-    title="Logger System - Admin Panel"
+    title="Logger System - Admin Panel (Bulk Cache)"
     description="Überwachung und Verwaltung aller Log-Einträge"
     searchable
     search-placeholder="Log-Einträge durchsuchen..."
     :search-fields="['message', 'source', 'userId', 'details']"
-    default-sort-field="timestamp"
+    default-sort-field="level"
     default-sort-order="desc"
     loading-text="Lade Log-Einträge..."
     empty-text="Keine Log-Einträge gefunden."
-    @retry="refreshLogs"
-    @reload="refreshLogs"
+    @retry="refetch"
+    @reload="refetch"
   >
     <!-- Custom Actions -->
     <template #actions>
@@ -28,22 +28,26 @@
           <option value="14">Letzte 14 Tage</option>
           <option value="30">Letzter Monat</option>
         </select>
-        <select v-model="selectedCategory" @change="filterByCategory" class="ct-select">
+
+        <select v-model="selectedCategory" @change="applyFilters" class="ct-select">
           <option value="">Alle Kategorien</option>
-          <option v-for="category in availableCategories" :key="category" :value="category">
+          <option v-for="category in categories" :key="category" :value="category">
             {{ getCategoryDisplayName(category) }}
           </option>
         </select>
-        <button @click="resetFilters" class="ct-btn ct-btn-secondary" :disabled="loading">
-          Filter zurücksetzen
-        </button>
-        <button @click="refreshLogs" class="ct-btn ct-btn-primary refresh-btn" :disabled="loading">
-          {{ loading ? 'Lädt...' : 'Aktualisieren' }}
-        </button>
+
+        <div class="bulk-info">
+          <span class="info-text">
+            {{ allProcessedLogs.length }} Einträge
+            <span v-if="actualDays !== selectedDays" class="limited-indicator">
+              ({{ actualDays }} Tage)
+            </span>
+          </span>
+        </div>
       </div>
     </template>
 
-    <!-- Custom Cell Rendering -->
+    <!-- EXACT copy from working LoggerSummaryAdmin.vue -->
     <template #cell-level="{ item }">
       <span class="log-level-badge" :class="getCategoryCssClass(item.category)">
         <span class="icon">{{ getCategoryIcon(item.category) }}</span>
@@ -76,7 +80,7 @@
       <div class="row-actions">
         <button
           @click="viewDetails(item)"
-          class="ct-btn ct-btn-sm ct-btn-outline ct-btn-primary-outline"
+          class="ct-btn ct-btn-sm ct-btn-outline ct-btn--outline"
           title="Details"
         >
           Details
@@ -85,7 +89,27 @@
     </template>
   </AdminTable>
 
-  <!-- Log Details Modal -->
+  <!-- Custom Pagination Controls -->
+  <div class="ct-card" v-if="totalPages > 1">
+    <div class="ct-card-body">
+      <div class="custom-pagination">
+        <button @click="prevPage" :disabled="!hasPrevPage" class="ct-btn ct-btn-outline ct-btn-sm">
+          ← Zurück
+        </button>
+
+        <span class="page-info">
+          Seite {{ currentPage }} von {{ totalPages }} ({{ paginatedLogs.length }} von
+          {{ allProcessedLogs.length }} Einträgen)
+        </span>
+
+        <button @click="nextPage" :disabled="!hasNextPage" class="ct-btn ct-btn-outline ct-btn-sm">
+          Weiter →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Log Details Modal - EXACT copy from working LoggerSummaryAdmin.vue -->
   <div v-if="selectedLog" class="modal-overlay" @click="closeDetails">
     <div class="modal-content" @click.stop>
       <div class="modal-header">
@@ -134,35 +158,25 @@
           <strong>Original-Level:</strong>
           <span>{{ selectedLog.originalLevel }}</span>
         </div>
-        <div v-if="selectedLog.details" class="log-detail-item">
-          <strong>Details:</strong>
-          <pre>{{ selectedLog.details }}</pre>
-        </div>
-        <div v-if="selectedLog.stackTrace" class="log-detail-item">
-          <strong>Stack Trace:</strong>
-          <pre class="stack-trace">{{ selectedLog.stackTrace }}</pre>
-        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import AdminTable from '../common/AdminTable.vue'
 import {
-  useLoggerSummary,
-  type ProcessedLogEntry,
-  LogCategory,
+  useLoggerBulkCache,
+  usePaginatedLogs,
   getCategoryDisplayName,
   getCategoryIcon,
   getCategoryCssClass,
   getAllCategories,
-} from './useLoggerSummary'
-import { useLoggerSummary as useLoggerSummaryQuery } from '@/composables/useLoggerSummaryQuery'
-
-// Use the ProcessedLogEntry type from the composable
-type LogEntry = ProcessedLogEntry
+  type ProcessedLogEntry,
+} from '@/composables/useLoggerBulkCache'
+import { useToast } from '@/composables/useToast'
+import type { TableColumn } from '@/types/table'
 
 // Props
 defineProps<{
@@ -174,29 +188,78 @@ defineProps<{
   }
 }>()
 
-// Use composable
-const {
-  loading,
-  error,
-  logs: logEntries,
-  loadDetailedLogs,
-  filterLogsByCategory,
-  filterLogsBySearch,
-} = useLoggerSummary()
+// Toast functionality
+const { showInfo, showWarning } = useToast()
 
-// AdminTable reference
-const adminTableRef = ref()
-
-// Local state
-const selectedCategory = ref('')
+// State
 const selectedDays = ref(3)
-const selectedLog = ref<LogEntry | null>(null)
+const selectedCategory = ref('')
+const searchTerm = ref('')
 
-// Available categories for filter dropdown
-const availableCategories = getAllCategories()
+// Use bulk cache with reactive days
+const {
+  processedLogs: allProcessedLogs,
+  statistics,
+  isLoading,
+  isFetching,
+  error,
+  refetch,
+  actualDays,
+  wasLimited,
+  limitReason,
+} = useLoggerBulkCache(selectedDays)
+
+// Watch for limitation and show toast
+watch(
+  [wasLimited, limitReason],
+  ([limited, reason]) => {
+    if (limited && reason) {
+      showWarning(reason)
+    }
+  },
+  { immediate: true }
+)
+
+// Filter logs by category and search
+const filteredLogs = computed(() => {
+  let logs = allProcessedLogs.value
+
+  // Filter by category
+  if (selectedCategory.value) {
+    logs = logs.filter((log) => log.category === selectedCategory.value)
+  }
+
+  // Filter by search term
+  if (searchTerm.value) {
+    const term = searchTerm.value.toLowerCase()
+    logs = logs.filter(
+      (log) =>
+        log.message.toLowerCase().includes(term) ||
+        log.source.toLowerCase().includes(term) ||
+        log.details?.toLowerCase().includes(term)
+    )
+  }
+
+  return logs
+})
+
+// Client-side pagination
+const {
+  paginatedLogs,
+  currentPage,
+  totalPages,
+  hasNextPage,
+  hasPrevPage,
+  nextPage,
+  prevPage,
+  goToPage,
+} = usePaginatedLogs(filteredLogs, 50)
+
+// Categories for filter dropdown
+const categories = getAllCategories()
 
 // Table configuration
-const tableColumns = [
+const tableColumns: TableColumn[] = [
   {
     key: 'level',
     label: 'Typ',
@@ -247,75 +310,22 @@ const tableColumns = [
   },
 ]
 
-// Computed
-const filteredLogs = computed(() => {
-  let filtered = logEntries.value
-
-  // Apply category filter first
-  if (selectedCategory.value) {
-    filtered = filterLogsByCategory(filtered, selectedCategory.value)
-  }
-
-  return filtered
-})
-
-// Methods - now using centralized functions from useLoggerSummary
-// getCategoryDisplayName, getCategoryIcon, getCategoryCssClass are imported
-
-const getActorDisplay = (log: LogEntry) => {
-  if (log.personId === -1) {
-    return 'System'
-  } else if (log.personId) {
-    return `Person ID: ${log.personId}`
-  } else {
-    return 'Unbekannt'
-  }
+// Methods
+const changeDaysFilter = () => {
+  // This will trigger a new query with the new days value
+  // The reactivity will handle the rest
 }
 
-const formatTimestamp = (timestamp: string) => {
-  return new Date(timestamp).toLocaleString('de-DE', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  })
+const applyFilters = () => {
+  // Reset to first page when filters change
+  goToPage(1)
 }
 
-// generateMockLogs function removed - using composable instead
+// Modal state
+const selectedLog = ref<ProcessedLogEntry | null>(null)
 
-const refreshLogs = async () => {
-  await loadDetailedLogs(selectedDays.value, {
-    category: selectedCategory.value,
-  })
-}
-
-const filterByCategory = async () => {
-  // Reload logs with new category filter
-  await refreshLogs()
-}
-
-const changeDaysFilter = async () => {
-  // Reload logs with new time range
-  await refreshLogs()
-}
-
-const resetFilters = async () => {
-  // Reset all filters to default values
-  selectedCategory.value = ''
-  selectedDays.value = 3
-
-  // Reset AdminTable search
-  if (adminTableRef.value?.clearSearch) {
-    adminTableRef.value.clearSearch()
-  }
-
-  // Reload logs with default settings
-  await refreshLogs()
-}
-
-const viewDetails = (log: LogEntry) => {
+// Functions - EXACT copy from working LoggerSummaryAdmin.vue
+const viewDetails = (log: ProcessedLogEntry) => {
   selectedLog.value = log
 }
 
@@ -323,13 +333,41 @@ const closeDetails = () => {
   selectedLog.value = null
 }
 
-// Initialize
-onMounted(() => {
-  refreshLogs()
-})
+const getActorDisplay = (log: ProcessedLogEntry) => {
+  if (log.personId === -1) {
+    return 'System'
+  }
+  return `Person ID: ${log.personId}`
+}
+
+const formatTimestamp = (timestamp: string) => {
+  return new Date(timestamp).toLocaleString('de-DE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  })
+}
+
+// The query will automatically refetch when selectedDays changes
+// due to the reactive queryKey in the composable
+
+// Show toast when loading new data to explain wait time
+watch(
+  isFetching,
+  (fetching) => {
+    if (fetching) {
+      showInfo('🔄 Logger-Daten werden aktualisiert...')
+    }
+  },
+  { immediate: true } // Trigger immediately if already fetching
+)
 </script>
 
 <style scoped>
+/* EXACT copy from working LoggerSummaryAdmin.vue */
 .admin-actions {
   display: flex;
   gap: var(--spacing-sm);
@@ -427,41 +465,6 @@ onMounted(() => {
   justify-content: center;
 }
 
-/* ChurchTools Button Styles */
-.ct-btn {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 500;
-  transition: all 0.2s;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  text-decoration: none;
-}
-
-.ct-btn-sm {
-  padding: 0.5rem 1rem;
-  font-size: 0.8rem;
-}
-
-.ct-btn-outline {
-  background: transparent;
-  border: 1px solid var(--color-border);
-  color: var(--color-text-primary);
-}
-
-.ct-btn-outline:hover {
-  background: var(--color-background);
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
 /* Action Button Styles */
 .action-btn {
   display: inline-flex;
@@ -488,36 +491,6 @@ onMounted(() => {
   box-shadow: var(--shadow-sm);
 }
 
-.action-btn:active {
-  transform: translateY(0);
-  box-shadow: none;
-}
-
-.action-btn-view {
-  border-color: var(--color-info);
-  color: var(--color-info);
-}
-
-.action-btn-view:hover {
-  background: var(--color-info);
-  color: white;
-  border-color: var(--color-info);
-}
-
-.action-btn:disabled {
-  opacity: calc(var(--spacing-sm) / var(--spacing-md));
-  cursor: not-allowed;
-  transform: none;
-}
-
-.action-btn:disabled:hover {
-  background: var(--color-background-card);
-  color: var(--color-text-secondary);
-  border-color: var(--color-border);
-  transform: none;
-  box-shadow: none;
-}
-
 /* Modal Styles */
 .modal-overlay {
   position: fixed;
@@ -525,27 +498,21 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
+  z-index: 1000;
 }
 
 .modal-content {
-  background: var(--color-background-card, #ffffff);
-  border-radius: var(--border-radius-lg, 12px);
-  box-shadow:
-    0 20px 25px -5px rgba(0, 0, 0, 0.1),
-    0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  max-width: 800px;
-  max-height: 80vh;
+  background: var(--color-background-card);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-lg);
+  max-width: 600px;
   width: 90%;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  z-index: 10000;
+  max-height: 80vh;
+  overflow-y: auto;
 }
 
 .modal-header {
@@ -553,222 +520,84 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: var(--spacing-lg);
-  border-bottom: var(--spacing-xs) solid var(--color-border);
-}
-
-.modal-header h3 {
-  margin: 0;
-  color: var(--color-text-primary);
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-semibold);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .modal-close {
   background: none;
   border: none;
-  font-size: var(--font-size-xl);
+  font-size: 1.5rem;
   cursor: pointer;
   color: var(--color-text-secondary);
-  padding: 0;
-  width: var(--spacing-xxl);
-  height: var(--spacing-xxl);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.modal-close:hover {
-  color: var(--color-text-primary);
 }
 
 .modal-body {
   padding: var(--spacing-lg);
-  overflow-y: auto;
 }
 
 .log-detail-item {
   margin-bottom: var(--spacing-md);
-  padding: var(--spacing-sm);
-  background-color: var(--color-background-muted, #f8f9fa);
-  border-radius: var(--border-radius-sm);
-  border-left: 3px solid var(--color-primary, #3498db);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.log-detail-item strong {
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-semibold);
 }
 
 .category-detail {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: var(--spacing-sm);
 }
 
 .category-text {
   font-weight: var(--font-weight-medium);
-  color: var(--color-text-primary);
 }
 
-.log-detail-item strong {
-  display: inline-block;
-  min-width: 140px;
-  margin-bottom: 0.25rem;
-  margin-right: 0.5rem;
-  color: var(--color-text-primary);
-  font-weight: 600;
+/* Bulk Cache specific styles */
+.bulk-info {
+  margin-left: auto;
 }
 
-.log-detail-item p {
-  margin: 0;
-  color: var(--color-text-secondary);
-  display: inline;
-}
-
-.log-detail-item span {
+.info-text {
+  font-size: 14px;
   color: var(--color-text-secondary);
 }
 
-.log-detail-item pre {
-  background-color: var(--color-background-muted);
-  padding: var(--spacing-sm);
-  border-radius: var(--border-radius-sm);
-  font-family: var(--font-family-mono);
-  font-size: var(--font-size-xs);
-  overflow-x: auto;
-  margin: 0;
+.limited-indicator {
+  color: var(--color-warning);
+  font-weight: 500;
 }
 
-.stack-trace {
-  color: var(--color-error);
-  white-space: pre-wrap;
-}
-
-/* Ensure ct-btn styles are available */
-.ct-btn {
-  display: inline-flex;
+.custom-pagination {
+  display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem 1rem;
-  border: 1px solid transparent;
-  border-radius: var(--border-radius-sm, 4px);
-  font-size: 0.875rem;
-  font-weight: 500;
-  line-height: 1.5;
-  text-decoration: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  gap: 0.5rem;
+  gap: 16px;
+  padding: 16px;
+  border-top: 1px solid var(--color-border);
 }
 
-.ct-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.page-info {
+  font-size: 14px;
+  color: var(--color-text-secondary);
 }
 
 .ct-btn-primary {
   background: transparent;
-  border-color: #3498db;
+  border: 1px solid #3498db;
   color: #3498db;
 }
 
-.ct-btn-primary:hover:not(:disabled) {
+.ct-btn-primary:hover {
   background: #3498db;
   border-color: #3498db;
   color: white;
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
-}
-
-.ct-btn-danger {
-  background: var(--ct-danger, #dc3545);
-  border-color: var(--ct-danger, #dc3545);
-  color: white;
-}
-
-.ct-btn-danger:hover:not(:disabled) {
-  background: #c82333;
-  border-color: #bd2130;
-}
-
-.ct-btn-secondary {
-  background: var(--ct-secondary, #6c757d);
-  border-color: var(--ct-secondary, #6c757d);
-  color: white;
-}
-
-.ct-btn-secondary:hover:not(:disabled) {
-  background: var(--ct-secondary-dark, #5a6268);
-  border-color: var(--ct-secondary-dark, #5a6268);
-}
-
-.ct-btn-outline {
-  background: transparent;
-  border-color: var(--ct-border-color, #e0e0e0);
-  color: var(--ct-text-primary, #2c3e50);
-}
-
-.ct-btn-outline:hover:not(:disabled) {
-  background: var(--ct-bg-hover, #f8f9fa);
-  border-color: var(--ct-primary, #3498db);
-  color: var(--ct-primary, #3498db);
-}
-
-.ct-btn-sm {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.75rem;
-}
-
-.ct-select {
-  padding: 0.5rem;
-  border: 1px solid var(--ct-border-color, #e0e0e0);
-  border-radius: var(--border-radius-sm, 4px);
-  background: var(--ct-bg-primary, #ffffff);
-  color: var(--ct-text-primary, #2c3e50);
-  font-size: 0.875rem;
-  min-width: 150px;
-}
-
-.ct-select:focus {
-  outline: none;
-  border-color: var(--ct-primary, #3498db);
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .admin-actions {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--spacing-sm);
-  }
-
-  .ct-select {
-    width: 100%;
-  }
-
-  .modal-content {
-    width: 95%;
-    max-height: 90vh;
-    margin: var(--spacing-sm);
-  }
-
-  .modal-header {
-    padding: var(--spacing-md);
-  }
-
-  .modal-body {
-    padding: var(--spacing-md);
-  }
-
-  .log-message {
-    max-width: none;
-  }
-
-  .log-detail-item strong {
-    display: block;
-    min-width: auto;
-    margin-bottom: var(--spacing-xs);
-  }
-
-  .log-detail-item {
-    padding: var(--spacing-sm);
-  }
 }
 
 .ct-btn-primary-outline {
@@ -780,5 +609,17 @@ onMounted(() => {
   background: #3498db !important;
   border-color: #3498db !important;
   color: white !important;
+}
+
+@media (max-width: 768px) {
+  .admin-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .bulk-info {
+    margin-left: 0;
+    margin-top: 8px;
+  }
 }
 </style>

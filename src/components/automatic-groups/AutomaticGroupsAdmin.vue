@@ -63,19 +63,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import type { DashboardModule } from '@/types/modules'
 import type { TableColumn } from '@/types/table'
 import AdminTable from '@/components/common/AdminTable.vue'
-import { useAutomaticGroups } from './useAutomaticGroups'
+import { useAutomaticGroups } from '@/composables/useAutomaticGroups'
 import { getGroupUrl } from '@/services/churchtools'
 
 defineProps<{
   module: DashboardModule
 }>()
 
-// Use composable for data management
-const { groups, loading, error, fetchAutomaticGroups } = useAutomaticGroups()
+// Use TanStack Query composable for data management
+const { data: groups, isLoading: loading, error, refetch } = useAutomaticGroups()
 
 // AdminTable reference
 const adminTableRef = ref()
@@ -194,7 +194,7 @@ const formatDate = (dateString: string | null) => {
 
 // Data loading
 const refreshGroups = () => {
-  fetchAutomaticGroups()
+  refetch()
 }
 
 const clearSearch = () => {
@@ -203,10 +203,7 @@ const clearSearch = () => {
   }
 }
 
-// Initialize
-onMounted(() => {
-  fetchAutomaticGroups()
-})
+// No need for onMounted - TanStack Query starts automatically
 </script>
 
 <style scoped>

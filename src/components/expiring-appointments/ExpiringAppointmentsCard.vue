@@ -20,8 +20,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { findExpiringSeries, type Appointment } from '@/services/churchtools'
+import { computed } from 'vue'
+import {
+  useExpiringAppointments,
+  useExpiringAppointmentsStats,
+} from '@/composables/useExpiringAppointments'
 import BaseCard from '../common/BaseCard.vue'
 
 // Configuration
@@ -41,45 +44,45 @@ defineEmits<{
   navigate: []
 }>()
 
-// State
-const isLoading = ref(true)
-const error = ref<string | null>(null)
+// Use TanStack Query for data fetching with caching
+const {
+  data: appointments,
+  isLoading,
+  error,
+  refetch,
+  isFetching,
+  dataUpdatedAt,
+} = useExpiringAppointments()
 
-// Data
-const appointments = ref<Appointment[]>([])
-
-// Computed properties
-const expiringCount = computed(() => {
-  return appointments.value.filter((a) => getAppointmentStatus(a) === 'expiring').length
-})
-
-const expiredCount = computed(() => {
-  return appointments.value.filter((a) => getAppointmentStatus(a) === 'expired').length
+// Compute stats using the helper function
+const stats = computed(() => {
+  if (!appointments.value) return { total: 0, expiring: 0, expired: 0 }
+  return useExpiringAppointmentsStats(appointments.value, DAYS_TO_SHOW)
 })
 
 const mainStat = computed(() => ({
-  value: appointments.value.length,
+  value: stats.value.total,
   label: 'auslaufende Terminserien',
 }))
 
 const statusStats = computed(() => [
   {
     key: 'total',
-    value: appointments.value.length,
+    value: stats.value.total,
     label: 'Gesamt',
     icon: '📊',
     type: 'info' as const,
   },
   {
     key: 'expiring',
-    value: expiringCount.value,
+    value: stats.value.expiring,
     label: 'Läuft ab',
     icon: '⏰',
     type: 'warning' as const,
   },
   {
     key: 'expired',
-    value: expiredCount.value,
+    value: stats.value.expired,
     label: 'Abgelaufen',
     icon: '❌',
     type: 'error' as const,
@@ -87,8 +90,8 @@ const statusStats = computed(() => [
 ])
 
 const formattedLastUpdate = computed(() => {
-  if (appointments.value.length === 0) return ''
-  return new Date().toLocaleString('de-DE', {
+  if (!dataUpdatedAt.value) return ''
+  return new Date(dataUpdatedAt.value).toLocaleString('de-DE', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -97,47 +100,8 @@ const formattedLastUpdate = computed(() => {
   })
 })
 
-// Get status of an appointment
-const getAppointmentStatus = (appointment: Appointment): string => {
-  if (!appointment.base?.repeatUntil) return 'active'
-
-  const endDate = new Date(appointment.base.repeatUntil)
-  const today = new Date()
-  const daysUntilEnd = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
-
-  if (endDate < today) return 'expired'
-  if (daysUntilEnd <= DAYS_TO_SHOW) return 'expiring'
-  return 'active'
-}
-
-// Fetch data from ChurchTools API
-const fetchData = async () => {
-  isLoading.value = true
-  error.value = null
-
-  try {
-    const expiringSeries = await findExpiringSeries(300000)
-    // Log the first few appointments to debug date issues
-    if (expiringSeries.length > 0) {
-      // First appointment structure available
-    }
-
-    appointments.value = expiringSeries
-  } catch (err) {
-    console.error('Error fetching appointments:', err)
-    error.value = 'Fehler beim Laden der Termine. Bitte versuchen Sie es erneut.'
-  } finally {
-    isLoading.value = false
-  }
-}
-
-// Refresh data
+// Refresh data - now uses TanStack Query's refetch
 const refreshData = () => {
-  fetchData()
+  refetch()
 }
-
-// Initialize component
-onMounted(() => {
-  fetchData()
-})
 </script>
