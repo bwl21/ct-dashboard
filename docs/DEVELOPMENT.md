@@ -54,9 +54,42 @@ See working examples:
 
 ### Testing Strategy
 
-- Component tests with Vue Test Utils
-- API mocking with Jest
-- E2E tests for critical workflows
+#### Playwright E2E Testing
+
+- **Framework**: Playwright with TypeScript
+- **Browsers**: Chromium, Firefox, WebKit, Mobile Chrome, Mobile Safari
+- **Test Organization**: Tag-based system for easy filtering
+
+**Available Test Tags:**
+
+- `@smoke` - Basic functionality tests
+- `@layout` - UI layout and positioning tests
+- `@issue7` - Issue #7 specific button layout tests
+- `@responsive` - Mobile and responsive design tests
+- `@interaction` - User interaction tests
+- `@alignment` - Button alignment tests
+
+**Test Commands:**
+
+```bash
+npm run test              # All tests
+npm run test:smoke        # Smoke tests only
+npm run test:layout       # Layout tests (Issue #7)
+npm run test:mobile       # Mobile-specific tests
+npm run test:report       # Serve test report
+```
+
+**Test Structure:**
+
+- Tests in `tests/` directory
+- Screenshots on failure
+- Video recording for debugging
+- Cross-browser compatibility testing
+
+#### Component Testing
+
+- Vue Test Utils for component isolation
+- API mocking for reliable tests
 - Visual regression testing for UI components
 
 ## Build & Deployment

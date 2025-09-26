@@ -16,7 +16,12 @@
     "reinstall": "rm -rf node_modules package-lock.json && npm install",
     "test": "playwright test",
     "test:ui": "playwright test --ui",
-    "test:headed": "playwright test --headed"
+    "test:headed": "playwright test --headed",
+    "test:report": "playwright show-report --host 0.0.0.0 --port 9323",
+    "test:smoke": "playwright test --grep @smoke",
+    "test:layout": "playwright test --grep @layout",
+    "test:issue7": "playwright test --grep @issue7",
+    "test:mobile": "playwright test --grep @responsive --project 'Mobile Safari'"
   },
   "devDependencies": {
     "@churchtools/churchtools-client": "^1.4.0",

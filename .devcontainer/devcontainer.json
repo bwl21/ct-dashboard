@@ -52,7 +52,7 @@
   "postCreateCommand": "npm install && npx playwright install --with-deps && npm run format",
 
   // Forward ports for development
-  "forwardPorts": [5173, 9324],
+  "forwardPorts": [5173, 5174, 9323, 9324],
   "portsAttributes": {
     "5173": {
       "label": "Vite Dev Server",
