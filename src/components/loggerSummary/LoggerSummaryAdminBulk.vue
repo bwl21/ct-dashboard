@@ -7,7 +7,7 @@
     :columns="tableColumns"
     row-key="id"
     title="Logger System - Admin Panel (Bulk Cache)"
-    description="Überwachung und Verwaltung aller Log-Einträge mit intelligentem Caching"
+    description="Überwachung und Verwaltung aller Log-Einträge"
     searchable
     search-placeholder="Log-Einträge durchsuchen..."
     :search-fields="['message', 'source', 'userId', 'details']"
@@ -96,7 +96,7 @@
 
     <template #cell-actions="{ item }">
       <div class="row-actions">
-        <button @click="viewDetails(item)" class="ct-btn ct-btn-sm ct-btn-outline" title="Details">
+        <button @click="viewDetails(item)" class="ct-btn ct-btn-sm ct-btn-outline ct-btn--outline" title="Details">
           Details
         </button>
       </div>
@@ -195,6 +195,7 @@ const {
   processedLogs: allProcessedLogs,
   statistics,
   isLoading,
+  isFetching,
   error,
   refetch,
   actualDays,
@@ -347,10 +348,16 @@ const formatTimestamp = (timestamp: string) => {
 // The query will automatically refetch when selectedDays changes
 // due to the reactive queryKey in the composable
 
-// Show info about bulk loading on mount
-onMounted(() => {
-  showInfo('Logger-Daten werden intelligent gecacht für bessere Performance.')
-})
+// Show toast when loading new data to explain wait time
+watch(
+  isFetching,
+  (fetching) => {
+    if (fetching) {
+      showInfo('🔄 Logger-Daten werden aktualisiert...')
+    }
+  },
+  { immediate: true } // Trigger immediately if already fetching
+)
 </script>
 
 <style scoped>
@@ -571,6 +578,31 @@ onMounted(() => {
 .page-info {
   font-size: 14px;
   color: var(--color-text-secondary);
+}
+
+.ct-btn-primary {
+  background: transparent;
+  border: 1px solid #3498db;
+  color: #3498db;
+}
+
+.ct-btn-primary:hover {
+  background: #3498db;
+  border-color: #3498db;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
+}
+
+.ct-btn-primary-outline {
+  border-color: #3498db !important;
+  color: #3498db !important;
+}
+
+.ct-btn-primary-outline:hover {
+  background: #3498db !important;
+  border-color: #3498db !important;
+  color: white !important;
 }
 
 @media (max-width: 768px) {
