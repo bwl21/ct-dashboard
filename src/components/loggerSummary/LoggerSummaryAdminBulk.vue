@@ -452,6 +452,32 @@ onMounted(() => {
   justify-content: center;
 }
 
+/* Action Button Styles */
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(var(--spacing-xl) + var(--spacing-sm));
+  height: calc(var(--spacing-xl) + var(--spacing-sm));
+  border: var(--spacing-xs) solid var(--color-border);
+  border-radius: var(--border-radius-sm);
+  background: var(--color-background-card);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: var(--transition-base);
+  padding: 0;
+  text-decoration: none;
+}
+
+.action-btn:hover {
+  border-color: var(--color-primary);
+  background: var(--color-background);
+  color: var(--color-primary);
+  transform: translateY(calc(-1 * var(--spacing-xs)));
+  box-shadow: var(--shadow-sm);
+}
+
 /* Modal Styles */
 .modal-overlay {
   position: fixed;

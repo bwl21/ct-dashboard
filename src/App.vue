@@ -1,9 +1,5 @@
 <template>
   <div class="cts">
-    <!-- Cache Debug Panel (Development only) -->
-    <CacheDebug />
-    <CacheTest />
-
     <nav class="ct-navbar" v-if="isDevelopment">
       <div class="ct-navbar-brand">
         <span class="ct-navbar-title">ChurchTools Development</span>
@@ -56,8 +52,7 @@ import LoggerSummaryCard from './components/loggerSummary/LoggerSummaryCard.vue'
 import LoggerSummaryAdmin from './components/loggerSummary/LoggerSummaryAdmin.vue'
 import LoggerSummaryAdminBulk from './components/loggerSummary/LoggerSummaryAdminBulk.vue'
 import Toast from './components/common/Toast.vue'
-import CacheDebug from './components/common/CacheDebug.vue'
-import CacheTest from './components/common/CacheTest.vue'
+
 import { useToast } from './composables/useToast'
 
 const modules: DashboardModule[] = [
