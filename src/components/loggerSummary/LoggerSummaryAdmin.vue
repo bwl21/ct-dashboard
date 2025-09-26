@@ -74,7 +74,7 @@
 
     <template #cell-actions="{ item }">
       <div class="row-actions">
-        <button @click="viewDetails(item)" class="ct-btn ct-btn-sm ct-btn-outline" title="Details">
+        <button @click="viewDetails(item)" class="ct-btn ct-btn-sm ct-btn-outline ct-btn-primary-outline" title="Details">
           Details
         </button>
       </div>
@@ -423,6 +423,41 @@ onMounted(() => {
   justify-content: center;
 }
 
+/* ChurchTools Button Styles */
+.ct-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+.ct-btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+}
+
+.ct-btn-outline {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+}
+
+.ct-btn-outline:hover {
+  background: var(--color-background);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 /* Action Button Styles */
 .action-btn {
   display: inline-flex;
@@ -623,14 +658,17 @@ onMounted(() => {
 }
 
 .ct-btn-primary {
-  background: var(--ct-primary, #3498db);
-  border-color: var(--ct-primary, #3498db);
-  color: white;
+  background: transparent;
+  border-color: #3498db;
+  color: #3498db;
 }
 
 .ct-btn-primary:hover:not(:disabled) {
-  background: var(--ct-primary-dark, #2980b9);
-  border-color: var(--ct-primary-dark, #2980b9);
+  background: #3498db;
+  border-color: #3498db;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
 }
 
 .ct-btn-danger {
@@ -727,5 +765,16 @@ onMounted(() => {
   .log-detail-item {
     padding: var(--spacing-sm);
   }
+}
+
+.ct-btn-primary-outline {
+  border-color: #3498db !important;
+  color: #3498db !important;
+}
+
+.ct-btn-primary-outline:hover {
+  background: #3498db !important;
+  border-color: #3498db !important;
+  color: white !important;
 }
 </style>
