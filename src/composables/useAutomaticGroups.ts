@@ -5,11 +5,18 @@ export interface AutomaticGroup {
   id: number
   name: string
   groupTypeId?: string
+  groupTypeName?: string
   dynamicGroupStatus: string
   lastExecution: string | null
   executionStatus: 'success' | 'error' | 'running' | 'pending' | 'unknown'
   dynamicGroupUpdateStarted: string | null
   dynamicGroupUpdateFinished: string | null
+}
+
+interface GroupType {
+  id: number
+  name: string
+  namePlural: string
 }
 
 function determineExecutionStatus(group: any): AutomaticGroup['executionStatus'] {
@@ -29,6 +36,22 @@ function determineExecutionStatus(group: any): AutomaticGroup['executionStatus']
 }
 
 async function fetchAutomaticGroups(): Promise<AutomaticGroup[]> {
+  // First, fetch all group types to create a lookup map
+  const groupTypesResponse = await churchtoolsClient.get('/group/grouptypes')
+
+  // Handle the response structure - ChurchTools client may unwrap the data
+  let groupTypes: GroupType[] = []
+  if (Array.isArray(groupTypesResponse)) {
+    groupTypes = groupTypesResponse
+  } else if (groupTypesResponse && Array.isArray((groupTypesResponse as any).data)) {
+    groupTypes = (groupTypesResponse as any).data
+  }
+
+  const groupTypeMap = new Map<number, string>()
+  groupTypes.forEach((type) => {
+    groupTypeMap.set(type.id, type.name)
+  })
+
   let allGroups: any[] = []
   let page = 1
   const limit = 100
@@ -70,16 +93,20 @@ async function fetchAutomaticGroups(): Promise<AutomaticGroup[]> {
         group.settings.dynamicGroupStatus !== 'none' &&
         group.settings.dynamicGroupStatus !== null
     )
-    .map((group) => ({
-      id: group.id,
-      name: group.name || `Gruppe ${group.id}`,
-      groupTypeId: group.groupTypeId || group.groupType?.name || 'N/A',
-      dynamicGroupStatus: group.settings?.dynamicGroupStatus || 'none',
-      lastExecution: group.settings?.dynamicGroupUpdateFinished || null,
-      executionStatus: determineExecutionStatus(group),
-      dynamicGroupUpdateStarted: group.settings?.dynamicGroupUpdateStarted || null,
-      dynamicGroupUpdateFinished: group.settings?.dynamicGroupUpdateFinished || null,
-    }))
+    .map((group) => {
+      const groupTypeId = group.information?.groupTypeId || group.groupTypeId
+      return {
+        id: group.id,
+        name: group.name || `Gruppe ${group.id}`,
+        groupTypeId: groupTypeId?.toString() || 'N/A',
+        groupTypeName: groupTypeId ? groupTypeMap.get(groupTypeId) || 'Unbekannt' : 'N/A',
+        dynamicGroupStatus: group.settings?.dynamicGroupStatus || 'none',
+        lastExecution: group.settings?.dynamicGroupUpdateFinished || null,
+        executionStatus: determineExecutionStatus(group),
+        dynamicGroupUpdateStarted: group.settings?.dynamicGroupUpdateStarted || null,
+        dynamicGroupUpdateFinished: group.settings?.dynamicGroupUpdateFinished || null,
+      }
+    })
 
   return automaticGroups
 }
