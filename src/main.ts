@@ -1,6 +1,8 @@
 import { createApp } from 'vue'
 import { createI18n } from 'vue-i18n'
 import { VueQueryPlugin, QueryClient } from '@tanstack/vue-query'
+import { persistQueryClient } from '@tanstack/query-persist-client-core'
+import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister'
 import App from './App.vue'
 import './style.css'
 import { churchtoolsClient } from '@churchtools/churchtools-client'
@@ -109,13 +111,28 @@ export { KEY }
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes - data is considered fresh
+      staleTime: 20 * 1000, // 20 seconds - for page reload cache
       gcTime: 10 * 60 * 1000, // 10 minutes - cache time (formerly cacheTime)
       retry: 3,
       refetchOnWindowFocus: false,
       refetchOnReconnect: true,
     },
   },
+})
+
+// Create sessionStorage persister for cache persistence across page reloads
+const persister = createSyncStoragePersister({
+  storage: window.sessionStorage,
+  key: 'CT_DASHBOARD_CACHE',
+  serialize: JSON.stringify,
+  deserialize: JSON.parse,
+})
+
+// Setup cache persistence
+persistQueryClient({
+  queryClient,
+  persister,
+  maxAge: 20 * 1000, // 20 seconds - cache expires after this time
 })
 
 const app = createApp(App)

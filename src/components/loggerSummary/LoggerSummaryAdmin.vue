@@ -74,7 +74,11 @@
 
     <template #cell-actions="{ item }">
       <div class="row-actions">
-        <button @click="viewDetails(item)" class="ct-btn ct-btn-sm ct-btn-outline ct-btn-primary-outline" title="Details">
+        <button
+          @click="viewDetails(item)"
+          class="ct-btn ct-btn-sm ct-btn-outline ct-btn-primary-outline"
+          title="Details"
+        >
           Details
         </button>
       </div>

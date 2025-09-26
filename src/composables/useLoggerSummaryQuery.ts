@@ -249,7 +249,7 @@ export function useLoggerSummary(days: number = 3) {
   return useQuery({
     queryKey: ['logger-summary', days],
     queryFn: () => fetchLogStatistics(days),
-    staleTime: 2 * 60 * 1000, // 2 minutes - logs change frequently
+    staleTime: 20 * 1000, // 20 seconds - for page reload cache
     gcTime: 5 * 60 * 1000, // 5 minutes cache time
     refetchInterval: 60 * 1000, // Background update every minute
     retry: 3,
