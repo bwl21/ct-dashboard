@@ -7,6 +7,35 @@ und dieses Projekt folgt [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [1.0.5] - 2025-09-26
+
+### 🐛 Fixed
+
+- **Issue #7: Card Button Layout Shifts** - Buttons no longer jump from left to right during loading states
+- **Stable Loading States** - Added placeholder text to prevent footer layout shifts
+- **Cross-Browser Compatibility** - Fixed button positioning across all supported browsers
+
+### ✨ Added
+
+- **Comprehensive Testing Suite** - Playwright tests with tag-based organization
+- **Visual Regression Testing** - Pixel-accurate button position verification
+- **Test Categories** - `@smoke`, `@layout`, `@issue7`, `@responsive`, `@interaction` tags
+- **Test Scripts** - Easy test execution with `npm run test:smoke`, `test:layout`, etc.
+- **Test Report Server** - `npm run test:report` for viewing test results
+
+### 🔄 Changed
+
+- **Button Positioning** - Simplified CSS approach using `margin-left: auto`
+- **Loading Text** - Consistent placeholder text across all card states
+- **Test Organization** - Tag-based system for better test management
+- **Documentation** - Updated with Issue #7 fix and testing information
+
+### 📚 Documentation
+
+- **Session Documentation** - Comprehensive Issue #7 development session
+- **Testing Guide** - Complete testing strategy and commands
+- **Lessons Learned** - Key insights from Issue #7 resolution
+
 ## [1.0.4] - 2025-09-24
 
 ### ✨ Added

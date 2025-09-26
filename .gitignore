@@ -62,5 +62,11 @@ ehthumbs.db
 .vscode/settings.json.bak
 *.local.env
 
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
+/.auth/
+
 
 

@@ -5,7 +5,10 @@
         <div class="large-icon">{{ icon }}</div>
         <div class="title-section">
           <h3 class="ct-card-title">{{ title }}</h3>
-          <span class="total-count">{{ mainStat.value }} Einträge</span>
+          <span class="total-count" :class="{ 'loading-placeholder': isLoading }">
+            <template v-if="isLoading">... Einträge</template>
+            <template v-else>{{ mainStat.value }} Einträge</template>
+          </span>
         </div>
       </div>
       <div class="ct-card-actions">
@@ -71,7 +74,12 @@
       </div>
 
       <div class="ct-card-footer">
-        <span v-if="lastUpdate" class="last-update">{{ lastUpdate }}</span>
+        <span class="last-update">
+          <template v-if="isLoading">Lade Daten...</template>
+          <template v-else-if="error">Fehler beim Laden</template>
+          <template v-else-if="lastUpdate">{{ lastUpdate }}</template>
+          <template v-else>&nbsp;</template>
+        </span>
         <div class="footer-actions">
           <button
             type="button"
@@ -179,8 +187,8 @@ const getStatusClass = (type?: string) => {
 
 .base-card .ct-card-header {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: flex-start;
   min-height: 60px;
   padding: var(--spacing-md) var(--spacing-lg);
   border-bottom: 1px solid var(--color-border-light);
@@ -205,7 +213,9 @@ const getStatusClass = (type?: string) => {
 }
 
 .base-card .ct-card-actions {
-  margin-left: var(--spacing-sm);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
 }
 
 .base-card .ct-card-body {
@@ -423,12 +433,22 @@ const getStatusClass = (type?: string) => {
   color: #007bff;
 }
 
+/* Ensure header button stays on the right */
+.base-card .ct-card-header .ct-card-actions {
+  order: 2; /* Force to the right */
+}
+
+.base-card .ct-card-header .header-content {
+  order: 1; /* Force to the left */
+}
+
 /* Header Layout */
 .header-content {
-  flex: 1;
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
+  min-width: 0; /* Prevents flex item from overflowing */
+  flex: 1;
 }
 
 .large-icon {
@@ -463,6 +483,11 @@ const getStatusClass = (type?: string) => {
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
   font-weight: var(--font-weight-normal);
+}
+
+.total-count.loading-placeholder {
+  color: var(--color-text-tertiary, #999);
+  opacity: 0.7;
 }
 
 .table-content {
