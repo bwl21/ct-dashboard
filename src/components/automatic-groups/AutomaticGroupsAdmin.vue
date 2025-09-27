@@ -10,7 +10,7 @@
     description="Überwachung und Verwaltung aller automatischen Gruppen"
     searchable
     search-placeholder="Gruppen durchsuchen..."
-    :search-fields="['name', 'groupTypeId']"
+    :search-fields="['name', 'groupTypeName']"
     default-sort-field="id"
     loading-text="Lade automatische Gruppen..."
     empty-text="Keine automatischen Gruppen gefunden."
@@ -83,7 +83,7 @@ const adminTableRef = ref()
 // Table configuration
 const tableColumns: TableColumn[] = [
   { key: 'id', label: 'Gruppen-ID', sortable: true, resizable: true, width: 100 },
-  { key: 'groupTypeId', label: 'Gruppentyp', sortable: true, resizable: true, width: 120 },
+  { key: 'groupTypeName', label: 'Gruppentyp', sortable: true, resizable: true, width: 120 },
   {
     key: 'name',
     label: 'Name',
