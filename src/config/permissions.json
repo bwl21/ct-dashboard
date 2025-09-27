@@ -1,8 +1,8 @@
 {
   "modulePermissions": {
     "automatic-groups": {
-      "module": "churchdb",
-      "permission": "administer groups",
+      "module": "churchgroup",
+      "permission": "view",
       "description": "Zugriff auf automatische Gruppen - benötigt Gruppen-Administration"
     },
     "expiring-appointments": {
