@@ -20,7 +20,25 @@
 
 # 🎓 Lessons Learned 2025-09-27
 
-### 1. Vue Computed Race Conditions
+### 1. ChurchTools API Response Structure Patterns
+
+**Problem**: Inconsistent handling of ChurchTools API responses leading to data access failures
+**Solution**: ChurchTools APIs consistently return `{ data: Array<...>, meta?: ... }` structure, not direct arrays
+**Application**: Always check for `.data` property first, then fallback to direct array access for robustness
+
+### 2. Group Data Structure Navigation
+
+**Problem**: Assuming groupTypeId would be at root level of group objects
+**Solution**: Core group properties are nested in `information` object (e.g., `group.information.groupTypeId`)
+**Application**: Consult TypeScript definitions and use debug logging to understand actual API response structure
+
+### 3. ID-to-Name Mapping Strategy
+
+**Problem**: Displaying numeric IDs instead of human-readable names in UI
+**Solution**: Fetch reference data (like group types) upfront and create efficient Map<ID, Name> lookups
+**Application**: Use this pattern for any entity that needs ID-to-name resolution (group types, statuses, categories)
+
+### 4. Vue Computed Race Conditions
 
 **Problem**: Computed properties can execute before async dependencies are ready
 **Solution**: Always check for null/undefined dependencies in computed properties
