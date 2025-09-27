@@ -11,8 +11,24 @@
       </div>
     </div>
 
-    <!-- Modules Grid -->
-    <div class="features-grid">
+    <!-- Loading State -->
+    <div v-if="permissionsLoading" class="loading-state">
+      <div class="loading-skeleton">
+        <div v-for="i in 4" :key="i" class="skeleton-card"></div>
+      </div>
+      <p class="loading-text">Lade Berechtigungen...</p>
+    </div>
+
+    <!-- Error State -->
+    <PermissionErrorComponent
+      v-else-if="permissionsError"
+      :error="permissionsError"
+      :retrying="permissionsLoading"
+      @retry="$emit('retry-permissions')"
+    />
+
+    <!-- Success State - Show Available Modules -->
+    <div v-else-if="modules.length > 0" class="features-grid">
       <div v-for="module in modules" :key="module.id" class="module-wrapper">
         <component
           :is="module.cardComponent"
@@ -22,12 +38,32 @@
         />
       </div>
     </div>
+
+    <!-- No Modules Available -->
+    <div v-else class="no-modules">
+      <div class="no-modules-content">
+        <div class="no-modules-icon">🔒</div>
+        <h3 class="no-modules-title">Keine Module verfügbar</h3>
+        <p class="no-modules-message">
+          Sie haben derzeit keine Berechtigungen für Dashboard-Module.
+        </p>
+        <p class="no-modules-contact">
+          Kontaktieren Sie Ihren Administrator für weitere Informationen.
+        </p>
+      </div>
+    </div>
+
+    <!-- Permission Debugger (nur in Development) -->
+    <PermissionDebugger />
   </div>
 </template>
 
 <script setup lang="ts">
 import type { PropType } from 'vue'
-import type { DashboardModule } from '../types/modules'
+import type { DashboardModule } from '../../types/modules'
+import type { PermissionError } from '../../services/permissions'
+import PermissionErrorComponent from './PermissionError.vue'
+import PermissionDebugger from './PermissionDebugger.vue'
 import packageJson from '../../../package.json'
 
 const version = packageJson.version
@@ -37,10 +73,19 @@ defineProps({
     type: Array as PropType<DashboardModule[]>,
     required: true,
   },
+  permissionsLoading: {
+    type: Boolean,
+    default: false,
+  },
+  permissionsError: {
+    type: Object as PropType<PermissionError | null>,
+    default: null,
+  },
 })
 
 defineEmits<{
   (e: 'navigate', moduleId: string): void
+  (e: 'retry-permissions'): void
 }>()
 </script>
 
@@ -252,6 +297,85 @@ defineEmits<{
   }
 }
 
+/* Loading State */
+.loading-state {
+  text-align: center;
+  padding: 2rem;
+}
+
+.loading-skeleton {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-bottom: 1rem;
+}
+
+.skeleton-card {
+  height: 200px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: var(--border-radius-lg);
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.loading-text {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-lg);
+  margin: 0;
+}
+
+/* No Modules State */
+.no-modules {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  padding: 2rem;
+}
+
+.no-modules-content {
+  text-align: center;
+  max-width: 500px;
+  padding: 2rem;
+  background: var(--color-background-secondary, #f8f9fa);
+  border-radius: var(--border-radius-lg);
+  border: 1px solid var(--color-border, #dee2e6);
+}
+
+.no-modules-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.no-modules-title {
+  color: var(--color-text-primary);
+  margin-bottom: 1rem;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+}
+
+.no-modules-message {
+  color: var(--color-text-secondary);
+  margin-bottom: 0.5rem;
+  line-height: var(--line-height-relaxed);
+}
+
+.no-modules-contact {
+  color: var(--color-text-secondary);
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-relaxed);
+}
+
 @media (max-width: 768px) {
   .features-grid {
     grid-template-columns: 1fr;
@@ -277,6 +401,23 @@ defineEmits<{
   .dashboard-container {
     gap: var(--spacing-lg);
     padding: var(--spacing-md);
+  }
+
+  .loading-skeleton {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+  }
+
+  .skeleton-card {
+    height: 150px;
+  }
+
+  .no-modules-content {
+    padding: 1.5rem;
+  }
+
+  .no-modules-icon {
+    font-size: 2.5rem;
   }
 }
 </style>
