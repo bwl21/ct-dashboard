@@ -84,7 +84,7 @@ const permissions = inject<any>('appPermissions')
 const permissionsLoading = inject<any>('appPermissionsLoading')
 const permissionsError = inject<any>('appPermissionsError')
 
-const isDevelopment = import.meta.env.MODE === 'development'
+const isDevelopment = false // Temporarily disabled
 const testModules = ['automatic-groups', 'expiring-appointments', 'tags', 'loggerSummary']
 
 // Permission configuration
