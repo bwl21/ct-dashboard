@@ -78,7 +78,7 @@
 fix: display group type names instead of IDs in automatic groups
 
 - Fetch group types from /group/grouptypes API to create ID-to-name mapping
-- Access groupTypeId from correct field path (group.information.groupTypeId)  
+- Access groupTypeId from correct field path (group.information.groupTypeId)
 - Update interface to include both groupTypeId (number) and groupTypeName (string)
 - Update admin table to display groupTypeName instead of groupTypeId
 - Add robust error handling for group types API calls
