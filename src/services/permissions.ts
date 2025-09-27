@@ -69,37 +69,15 @@ function createPermissionError(error: any): PermissionError {
 }
 
 export async function fetchUserPermissions(): Promise<GlobalPermissions> {
-  console.log('🔍 Fetching permissions from API...')
-
   try {
-    console.log('🔍 Trying /permissions/global...')
     const response = await churchtoolsClient.get('/permissions/global')
-    console.log('🔍 Raw API Response:', response)
-    console.log('🔍 Response type:', typeof response)
-    console.log('🔍 Response keys:', Object.keys(response || {}))
-    console.log('🔍 Response.data:', (response as any)?.data)
-    console.log('🔍 Response structure:', JSON.stringify(response, null, 2))
-
-    // ChurchTools Client entfernt data-Wrapper automatisch
     return response as GlobalPermissions
   } catch (error: any) {
-    console.error('🔍 Permission API error:', error)
-    console.error('🔍 Error details:', {
-      message: error.message,
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data,
-    })
-
     // Fallback: Versuche andere Endpoints
-    console.log('🔍 Trying fallback endpoints...')
     try {
-      console.log('🔍 Trying /permissions...')
       const fallback1 = (await churchtoolsClient.get('/permissions')) as GlobalPermissions
-      console.log('🔍 Fallback /permissions response:', fallback1)
       return fallback1
     } catch (fallbackError: any) {
-      console.log('🔍 /permissions also failed:', fallbackError.message)
     }
 
     throw createPermissionError(error)

@@ -12,24 +12,18 @@ export function usePermissions() {
   const error = ref<PermissionError | null>(null)
 
   const loadPermissions = async () => {
-    console.log('🔍 usePermissions: Starting loadPermissions...')
     loading.value = true
     error.value = null
 
     try {
-      console.log('🔍 usePermissions: Calling fetchUserPermissions...')
       const result = await fetchUserPermissions()
-      console.log('🔍 usePermissions: Got result:', result)
       permissions.value = result
-      console.log('🔍 usePermissions: Set permissions.value to:', permissions.value)
     } catch (err) {
-      console.error('🔍 usePermissions: Error occurred:', err)
       error.value = err as PermissionError
       // Clear permissions on error to ensure no unauthorized access
       permissions.value = {}
     } finally {
       loading.value = false
-      console.log('🔍 usePermissions: Finished. Final permissions:', permissions.value)
     }
   }
 

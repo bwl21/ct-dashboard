@@ -237,7 +237,8 @@ if (typeof window !== 'undefined') {
 
 // Filter modules based on permissions
 const availableModules = computed(() => {
-  if (permissionsError.value || permissionsLoading.value) {
+  // Warten bis Permissions vollständig geladen sind
+  if (permissionsError.value || permissionsLoading.value || !permissions.value) {
     return []
   }
   return modules.filter((module) => canAccessModule(module.id))
