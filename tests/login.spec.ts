@@ -4,13 +4,13 @@ test.describe('Login System', () => {
   test('should login successfully and show user data', async ({ page }) => {
     // Console-Logs abfangen
     const logs: string[] = []
-    page.on('console', msg => {
+    page.on('console', (msg) => {
       logs.push(`${msg.type()}: ${msg.text()}`)
     })
 
     // Errors abfangen
     const errors: string[] = []
-    page.on('pageerror', error => {
+    page.on('pageerror', (error) => {
       errors.push(`ERROR: ${error.message}`)
     })
 
@@ -36,11 +36,11 @@ test.describe('Login System', () => {
 
     // Ausgabe aller Console-Logs
     console.log('\n=== CONSOLE LOGS ===')
-    logs.forEach(log => console.log(log))
+    logs.forEach((log) => console.log(log))
 
     if (errors.length > 0) {
       console.log('\n=== ERRORS ===')
-      errors.forEach(error => console.log(error))
+      errors.forEach((error) => console.log(error))
     }
 
     // Assertions
@@ -48,8 +48,4 @@ test.describe('Login System', () => {
     expect(userDisplay).not.toContain('Anonymous')
     expect(moduleCount).toBeGreaterThan(0)
   })
-
-
-
-
 })

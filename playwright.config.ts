@@ -14,11 +14,16 @@ export default defineConfig({
   /* Configure workers for parallel execution */
   workers: process.env.CI ? 2 : 4, // CI: 2 workers, Local: 4 workers
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: [['html', { 
-    open: 'never',
-    host: '0.0.0.0',
-    port: 9323
-  }]],
+  reporter: [
+    [
+      'html',
+      {
+        open: 'never',
+        host: '0.0.0.0',
+        port: 9323,
+      },
+    ],
+  ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */

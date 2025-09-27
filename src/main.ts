@@ -93,7 +93,7 @@ const password = import.meta.env.VITE_PASSWORD
 if (import.meta.env.MODE === 'development' && username && password) {
   try {
     await churchtoolsClient.post('/login', { username, password })
-    
+
     // Test a simple API call
     await churchtoolsClient.get('/whoami')
   } catch (error) {

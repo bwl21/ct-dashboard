@@ -77,8 +77,7 @@ export async function fetchUserPermissions(): Promise<GlobalPermissions> {
     try {
       const fallback1 = (await churchtoolsClient.get('/permissions')) as GlobalPermissions
       return fallback1
-    } catch (fallbackError: any) {
-    }
+    } catch (fallbackError: any) {}
 
     throw createPermissionError(error)
   }

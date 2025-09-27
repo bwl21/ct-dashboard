@@ -10,12 +10,14 @@ The ChurchTools Dashboard extension shows different behavior in Safari/Webkit co
 ## Evidence
 
 ### Chrome Test (Working):
+
 - ✅ User Display: "Bernhard Weichel (Admin)"
 - ✅ All 4 modules visible
 - ✅ All permissions available
 
 ### Safari Test (Failing):
-- ❌ User Display: "Anonymous" 
+
+- ❌ User Display: "Anonymous"
 - ❌ Only 1 module visible ("Auslaufende Terminserien")
 - ❌ Limited permissions (only `churchcal.view` available)
 
@@ -24,7 +26,7 @@ The ChurchTools Dashboard extension shows different behavior in Safari/Webkit co
 ```
 Module Access:
 - automatic-groups: ❌
-- expiring-appointments: ✅  
+- expiring-appointments: ✅
 - tags: ❌
 - loggerSummary: ❌
 
@@ -51,17 +53,20 @@ Configured Permissions:
 ## Investigation Needed
 
 ### 1. Production Verification
+
 - [ ] Test extension in real Safari browser
 - [ ] Check if issue exists outside test environment
 - [ ] Verify with different Safari versions
 
 ### 2. Technical Analysis
+
 - [ ] Debug Safari network requests during login
 - [ ] Check browser console for errors
 - [ ] Analyze cookie behavior in Safari
 - [ ] Test CORS configuration
 
 ### 3. Browser Compatibility
+
 - [ ] Test in other WebKit-based browsers
 - [ ] Verify Firefox behavior
 - [ ] Check mobile Safari (if applicable)
@@ -69,12 +74,13 @@ Configured Permissions:
 ## Workaround (Temporary)
 
 For tests, we've made them browser-agnostic:
+
 ```typescript
 // Instead of expecting specific modules
-await expect(page.locator('h3', { hasText: 'Automatische Gruppen' })).toBeVisible()
+await expect(page.locator("h3", { hasText: "Automatische Gruppen" })).toBeVisible()
 
 // Now check for any modules
-const moduleCount = await page.locator('h3').count()
+const moduleCount = await page.locator("h3").count()
 expect(moduleCount).toBeGreaterThan(0)
 ```
 
