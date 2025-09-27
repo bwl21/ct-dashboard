@@ -92,13 +92,10 @@ const username = import.meta.env.VITE_USERNAME
 const password = import.meta.env.VITE_PASSWORD
 if (import.meta.env.MODE === 'development' && username && password) {
   try {
-    console.log('🔐 Attempting ChurchTools login...')
     await churchtoolsClient.post('/login', { username, password })
-    console.log('✅ ChurchTools login successful')
 
     // Test a simple API call
-    const whoami = await churchtoolsClient.get('/whoami')
-    console.log('👤 Current user:', whoami)
+    await churchtoolsClient.get('/whoami')
   } catch (error) {
     console.error('❌ ChurchTools login failed in development mode:', error)
   }

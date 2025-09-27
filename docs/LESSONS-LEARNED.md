@@ -18,6 +18,32 @@
 **Erkenntnis:** Große Änderungen in kleinen Schritten durchführen
 **Anwendung:** Jede Komponente einzeln konvertieren und testen
 
+# 🎓 Lessons Learned 2025-09-27
+
+### 1. Vue Computed Race Conditions
+
+**Problem**: Computed properties can execute before async dependencies are ready
+**Solution**: Always check for null/undefined dependencies in computed properties
+**Application**: Critical for any computed that depends on async-loaded data like API responses
+
+### 2. Configuration-Driven vs Hardcoded Systems
+
+**Problem**: Hardcoded permission checks required code changes for each new permission
+**Solution**: Design systems to be fully configuration-driven from the start
+**Application**: Any system dealing with dynamic configurations should avoid hardcoding
+
+### 3. Browser-Specific Authentication in Tests
+
+**Problem**: Different browsers handle authentication differently in test environments
+**Solution**: Document browser-specific issues and exclude problematic browsers temporarily
+**Application**: Always test authentication across multiple browsers, especially Safari/WebKit
+
+### 4. Permission System Timing
+
+**Problem**: Permission-based filtering happened before permissions were loaded
+**Solution**: Ensure permission checks wait for complete permission loading
+**Application**: Any security-dependent UI must wait for authorization data
+
 # 🎓 Lessons Learned 2025-09-25
 
 ### 1. Documentation Redundancy is Costly

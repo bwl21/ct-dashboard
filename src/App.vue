@@ -11,7 +11,13 @@
 
     <div class="ct-main">
       <div v-if="currentView === 'dashboard'">
-        <Start :modules="modules" @navigate="navigateToModule" />
+        <Start
+          :modules="availableModules"
+          :permissions-loading="permissionsLoading"
+          :permissions-error="permissionsError"
+          @navigate="navigateToModule"
+          @retry-permissions="handleRetryPermissions"
+        />
       </div>
 
       <div v-else>
@@ -35,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, provide } from 'vue'
 import { churchtoolsClient } from '@churchtools/churchtools-client'
 import type { Person } from './ct-types'
 import type { DashboardModule } from './types/modules'
@@ -54,6 +60,7 @@ import LoggerSummaryAdminBulk from './components/loggerSummary/LoggerSummaryAdmi
 import Toast from './components/common/Toast.vue'
 
 import { useToast } from './composables/useToast'
+import { usePermissions } from './composables/usePermissions'
 
 const modules: DashboardModule[] = [
   {
@@ -95,6 +102,21 @@ const isDevelopment = ref<boolean>(false)
 const currentView = ref<'dashboard' | string>('dashboard')
 const currentModuleId = ref<string>('')
 
+// Permission system
+const {
+  permissions,
+  loading: permissionsLoading,
+  error: permissionsError,
+  loadPermissions,
+  retry: retryPermissions,
+  canAccessModule,
+} = usePermissions()
+
+// Provide permissions für child components (wie PermissionDebugger)
+provide('appPermissions', permissions)
+provide('appPermissionsLoading', permissionsLoading)
+provide('appPermissionsError', permissionsError)
+
 // Toast testing
 const {
   showSuccess,
@@ -106,8 +128,9 @@ const {
   showValidationError,
 } = useToast()
 
-// Make toast functions globally available for console testing
+// Make toast functions and ChurchTools client globally available for console testing
 if (typeof window !== 'undefined') {
+  // Toast functions
   ;(window as any).toast = {
     success: showSuccess,
     error: showError,
@@ -117,24 +140,142 @@ if (typeof window !== 'undefined') {
     apiError: showApiError,
     validationError: showValidationError,
   }
+
+  // ChurchTools Client für Console-Tests
+  ;(window as any).churchtoolsClient = churchtoolsClient
+
+  // Debug functions for permissions
+  ;(window as any).debug = {
+    permissions: () => permissions.value,
+    canAccess: (moduleId: string) => canAccessModule(moduleId),
+    testModule: (moduleId: string) => {
+      console.log(`Testing module: ${moduleId}`)
+      console.log(`Can access: ${canAccessModule(moduleId)}`)
+      console.log(`Permissions:`, permissions.value)
+    },
+    proxyAnalysis: () => {
+      const perms = permissions.value
+      console.group('🔍 Proxy Analysis')
+      console.log('Type:', typeof perms)
+      console.log('Constructor:', perms.constructor.name)
+      console.log('Is Proxy:', perms.constructor.name === 'Object')
+      console.log('Raw object:', perms)
+      console.log('JSON.stringify:', JSON.stringify(perms, null, 2))
+      console.log('Object.keys:', Object.keys(perms))
+      console.log('Object.getOwnPropertyNames:', Object.getOwnPropertyNames(perms))
+      console.log('Prototype:', Object.getPrototypeOf(perms))
+
+      // Test specific properties
+      console.log('churchdb exists:', 'churchdb' in perms)
+      console.log('churchdb value:', perms.churchdb)
+      console.log('churchdb.view:', perms.churchdb?.view)
+
+      console.groupEnd()
+      return perms
+    },
+    rawPermissions: () => {
+      // Versuche das rohe Objekt zu extrahieren
+      const perms = permissions.value
+      return JSON.parse(JSON.stringify(perms))
+    },
+    availableModules: () => {
+      console.log('🔍 Available modules debug:')
+      console.log('Permissions error:', permissionsError.value)
+      console.log('Permissions loading:', permissionsLoading.value)
+      console.log(
+        'All modules:',
+        modules.map((m) => m.id)
+      )
+      console.log(
+        'Available modules:',
+        availableModules.value.map((m) => m.id)
+      )
+      modules.forEach((module) => {
+        const hasAccess = canAccessModule(module.id)
+        console.log(`Module ${module.id}: ${hasAccess ? '✅' : '❌'}`)
+      })
+      return availableModules.value
+    },
+    testApiEndpoints: async () => {
+      console.group('🔍 Testing API Endpoints')
+
+      const endpoints = [
+        '/permissions/global',
+        '/permissions',
+        '/whoami',
+        '/persons/current/permissions',
+      ]
+
+      for (const endpoint of endpoints) {
+        try {
+          console.log(`Testing ${endpoint}...`)
+          const response = await churchtoolsClient.get(endpoint)
+          console.log(`✅ ${endpoint}:`, response)
+        } catch (error) {
+          console.log(`❌ ${endpoint}:`, error.message)
+        }
+      }
+
+      console.groupEnd()
+    },
+    reloadPermissions: () => {
+      console.log('🔄 Reloading permissions...')
+      loadPermissions()
+    },
+    currentPermissions: () => {
+      console.log('🔍 Current permissions state:', permissions.value)
+      console.log('🔍 Loading state:', permissionsLoading.value)
+      console.log('🔍 Error state:', permissionsError.value)
+      return {
+        permissions: permissions.value,
+        loading: permissionsLoading.value,
+        error: permissionsError.value,
+      }
+    },
+  }
 }
+
+// Filter modules based on permissions
+const availableModules = computed(() => {
+  // Warten bis Permissions vollständig geladen sind
+  if (permissionsError.value || permissionsLoading.value || !permissions.value) {
+    return []
+  }
+  return modules.filter((module) => canAccessModule(module.id))
+})
 
 const currentModule = computed(() => modules.find((m) => m.id === currentModuleId.value))
 
 const navigateToModule = (moduleId: string) => {
-  currentModuleId.value = moduleId
-  currentView.value = moduleId
+  // Only allow navigation if user has permission
+  if (canAccessModule(moduleId)) {
+    currentModuleId.value = moduleId
+    currentView.value = moduleId
+  } else {
+    showError('Keine Berechtigung für dieses Modul')
+  }
+}
+
+const handleRetryPermissions = () => {
+  retryPermissions()
 }
 
 onMounted(async () => {
   isDevelopment.value = import.meta.env.MODE === 'development'
 
-  try {
-    const user = await churchtoolsClient.get<Person>('/whoami')
-    userDisplayName.value = [user.firstName, user.lastName].filter(Boolean).join(' ') || 'Benutzer'
-  } catch (error) {
-    console.error('Fehler beim Laden der Benutzerdaten:', error)
-    userDisplayName.value = 'Benutzer'
+  // Load permissions first - critical for security
+  await loadPermissions()
+
+  // Only load user data if permissions succeeded
+  if (!permissionsError.value) {
+    try {
+      const user = await churchtoolsClient.get<Person>('/whoami')
+      userDisplayName.value =
+        [user.firstName, user.lastName].filter(Boolean).join(' ') || 'Benutzer'
+    } catch (error) {
+      console.error('Fehler beim Laden der Benutzerdaten:', error)
+      userDisplayName.value = 'Benutzer'
+    }
   }
 })
 </script>
