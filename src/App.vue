@@ -182,9 +182,15 @@ if (typeof window !== 'undefined') {
       console.log('🔍 Available modules debug:')
       console.log('Permissions error:', permissionsError.value)
       console.log('Permissions loading:', permissionsLoading.value)
-      console.log('All modules:', modules.map(m => m.id))
-      console.log('Available modules:', availableModules.value.map(m => m.id))
-      modules.forEach(module => {
+      console.log(
+        'All modules:',
+        modules.map((m) => m.id)
+      )
+      console.log(
+        'Available modules:',
+        availableModules.value.map((m) => m.id)
+      )
+      modules.forEach((module) => {
         const hasAccess = canAccessModule(module.id)
         console.log(`Module ${module.id}: ${hasAccess ? '✅' : '❌'}`)
       })

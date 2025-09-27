@@ -108,60 +108,38 @@ export async function fetchUserPermissions(): Promise<GlobalPermissions> {
 
 export function hasModulePermission(permissions: GlobalPermissions, moduleId: string): boolean {
   // Konfigurierbare Permission-Prüfung mit Type-Safety
-  const moduleConfig = permissionConfig.modulePermissions[moduleId as keyof typeof permissionConfig.modulePermissions]
-  
+  const moduleConfig =
+    permissionConfig.modulePermissions[moduleId as keyof typeof permissionConfig.modulePermissions]
+
   if (!moduleConfig) {
     console.warn(`No permission configuration found for module: ${moduleId}`)
     return false
   }
 
   const { module: permissionModule, permission: requiredPermission } = moduleConfig
-  
-  // Type-sichere Permission-Prüfung basierend auf Konfiguration
-  switch (permissionModule) {
-    case 'churchdb':
-      const churchdbPermissions = permissions.churchdb
-      if (!churchdbPermissions) return false
-      
-      // Type-sichere Prüfung der spezifischen Permission
-      switch (requiredPermission) {
-        case 'view':
-          return churchdbPermissions.view ?? false
-        case 'view tags':
-          return churchdbPermissions['view tags'] ?? false
-        case 'administer groups':
-          return churchdbPermissions['administer groups'] ?? false
-        default:
-          console.warn(`Unknown churchdb permission: ${requiredPermission}`)
-          return false
-      }
-      
-    case 'churchcal':
-      const churchcalPermissions = permissions.churchcal
-      if (!churchcalPermissions) return false
-      
-      switch (requiredPermission) {
-        case 'view':
-          return churchcalPermissions.view ?? false
-        default:
-          console.warn(`Unknown churchcal permission: ${requiredPermission}`)
-          return false
-      }
-      
-    case 'churchcore':
-      const churchcorePermissions = permissions.churchcore
-      if (!churchcorePermissions) return false
-      
-      switch (requiredPermission) {
-        case 'view logfile':
-          return churchcorePermissions['view logfile'] ?? false
-        default:
-          console.warn(`Unknown churchcore permission: ${requiredPermission}`)
-          return false
-      }
-      
-    default:
-      console.warn(`Unknown permission module: ${permissionModule}`)
-      return false
+
+  // Dynamische Permission-Prüfung basierend auf Konfiguration
+  const modulePermissions = permissions[permissionModule as keyof GlobalPermissions]
+
+  if (!modulePermissions || typeof modulePermissions !== 'object') {
+    console.warn(`No permissions found for module: ${permissionModule}`)
+    return false
   }
+
+  // Dynamische Prüfung der Permission
+  const hasPermissionValue = (modulePermissions as any)[requiredPermission]
+
+  // Permission kann boolean oder object sein
+  if (typeof hasPermissionValue === 'boolean') {
+    return hasPermissionValue
+  }
+
+  // Wenn es ein Object ist, interpretieren wir es als "vorhanden" = true
+  if (typeof hasPermissionValue === 'object' && hasPermissionValue !== null) {
+    return true
+  }
+
+  // Fallback: Permission nicht gefunden
+  console.warn(`Permission '${requiredPermission}' not found in module '${permissionModule}'`)
+  return false
 }

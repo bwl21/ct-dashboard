@@ -6,18 +6,18 @@
       "description": "Zugriff auf automatische Gruppen - benötigt Gruppen-Administration"
     },
     "expiring-appointments": {
-      "module": "churchcal", 
+      "module": "churchcal",
       "permission": "view",
       "description": "Zugriff auf auslaufende Termine"
     },
     "tags": {
-      "module": "churchdb",
-      "permission": "view tags",
+      "module": "churchcore",
+      "permission": "administer persons",
       "description": "Zugriff auf Tag-Verwaltung"
     },
     "loggerSummary": {
       "module": "churchcore",
-      "permission": "view logfile", 
+      "permission": "view logfile",
       "description": "Zugriff auf Logger-System"
     }
   }
