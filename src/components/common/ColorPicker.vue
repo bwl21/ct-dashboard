@@ -29,48 +29,50 @@
     </button>
 
     <!-- Color Picker Modal -->
-    <div v-if="showModal" class="color-picker-modal" @click="closeModal">
-      <div class="color-picker-content" @click.stop>
-        <div class="color-picker-header">
-          <h3>Choose a Color</h3>
-          <button type="button" class="close-button" @click="closeModal">×</button>
-        </div>
-        <p class="color-picker-subtitle">Click a color to select it, or press Escape to cancel</p>
+    <Teleport to="body">
+      <div v-if="showModal" class="color-picker-modal" @click="closeModal">
+        <div class="color-picker-content" @click.stop>
+          <div class="color-picker-header">
+            <h3>Choose a Color</h3>
+            <button type="button" class="close-button" @click="closeModal">×</button>
+          </div>
+          <p class="color-picker-subtitle">Click a color to select it, or press Escape to cancel</p>
 
-        <!-- No Color Option -->
-        <div class="no-color-section">
-          <div
-            class="color-item no-color"
-            :class="{ selected: !selectedColor }"
-            @click="selectColor(null)"
-          >
-            <div class="color-circle no-color-circle">
-              <span class="no-color-x">×</span>
-            </div>
-            <div class="color-info">
-              <div class="color-name">No Color</div>
+          <!-- No Color Option -->
+          <div class="no-color-section">
+            <div
+              class="color-item no-color"
+              :class="{ selected: !selectedColor }"
+              @click="selectColor(null)"
+            >
+              <div class="color-circle no-color-circle">
+                <span class="no-color-x">×</span>
+              </div>
+              <div class="color-info">
+                <div class="color-name">No Color</div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Color Grid -->
-        <div class="color-grid">
-          <div
-            v-for="color in colors"
-            :key="color.value"
-            class="color-item"
-            :class="{ selected: selectedColor === color.value }"
-            @click="selectColor(color.value)"
-          >
-            <div class="color-circle" :style="{ backgroundColor: color.hex }"></div>
-            <div class="color-info">
-              <div class="color-name">{{ color.name }}</div>
-              <div class="color-hex">{{ color.hex }}</div>
+          <!-- Color Grid -->
+          <div class="color-grid">
+            <div
+              v-for="color in colors"
+              :key="color.value"
+              class="color-item"
+              :class="{ selected: selectedColor === color.value }"
+              @click="selectColor(color.value)"
+            >
+              <div class="color-circle" :style="{ backgroundColor: color.hex }"></div>
+              <div class="color-info">
+                <div class="color-name">{{ color.name }}</div>
+                <div class="color-hex">{{ color.hex }}</div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </Teleport>
   </div>
 </template>
 
@@ -316,7 +318,7 @@ watch(
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 10001;
 }
 
 .color-picker-content {
