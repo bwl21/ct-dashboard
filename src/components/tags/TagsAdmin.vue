@@ -103,6 +103,7 @@
             <option value="person">Personen</option>
             <option value="song">Lieder</option>
             <option value="group">Gruppen</option>
+            <option value="appointment">Termine</option>
           </select>
         </div>
       </template>
@@ -232,6 +233,7 @@
               <option value="person">Personen</option>
               <option value="song">Lieder</option>
               <option value="group">Gruppen</option>
+              <option value="appointment">Termine</option>
             </select>
             <input
               v-else
@@ -573,6 +575,7 @@ const getDomainDisplayName = (domain: string) => {
     person: 'Personen',
     song: 'Lieder',
     group: 'Gruppen',
+    appointment: 'Termine',
   }
   return domainNames[domain as keyof typeof domainNames] || domain
 }

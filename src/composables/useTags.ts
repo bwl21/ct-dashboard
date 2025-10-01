@@ -7,7 +7,7 @@ export interface Tag {
   name: string
   description?: string
   color?: string
-  domainType: 'person' | 'song' | 'group'
+  domainType: 'person' | 'song' | 'group' | 'appointment'
 }
 
 type TagsApiResponse = Tag[]
@@ -16,10 +16,11 @@ async function fetchTags(): Promise<Tag[]> {
   const startTime = performance.now()
   console.log('🏷️ Fetching tags...')
   // Fetch tags from different domains using modern API endpoints
-  const [personTags, songTags, groupTags] = await Promise.allSettled([
+  const [personTags, songTags, groupTags, appointmentTags] = await Promise.allSettled([
     churchtoolsClient.get<TagsApiResponse>('/tags/person').catch(() => []),
     churchtoolsClient.get<TagsApiResponse>('/tags/song').catch(() => []),
     churchtoolsClient.get<TagsApiResponse>('/tags/group').catch(() => []),
+    churchtoolsClient.get<TagsApiResponse>('/tags/appointment').catch(() => []),
   ])
 
   const allTags: Tag[] = []
@@ -42,6 +43,14 @@ async function fetchTags(): Promise<Tag[]> {
     allTags.push(...groupTagsData.map((tag: any) => ({ ...tag, domainType: 'group' as const })))
   }
 
+  // Process appointment tags
+  if (appointmentTags.status === 'fulfilled' && appointmentTags.value) {
+    const appointmentTagsData = Array.isArray(appointmentTags.value) ? appointmentTags.value : []
+    allTags.push(
+      ...appointmentTagsData.map((tag: any) => ({ ...tag, domainType: 'appointment' as const }))
+    )
+  }
+
   const endTime = performance.now()
   console.log(`🏷️ Tags fetched: ${allTags.length} tags in ${Math.round(endTime - startTime)}ms`)
   return allTags
@@ -62,11 +71,13 @@ export function useTagsStats(tags: Tag[]) {
   const personTagsCount = tags.filter((tag) => tag.domainType === 'person').length
   const songTagsCount = tags.filter((tag) => tag.domainType === 'song').length
   const groupTagsCount = tags.filter((tag) => tag.domainType === 'group').length
+  const appointmentTagsCount = tags.filter((tag) => tag.domainType === 'appointment').length
 
   return {
     total: tags.length,
     person: personTagsCount,
     song: songTagsCount,
     group: groupTagsCount,
+    appointment: appointmentTagsCount,
   }
 }
