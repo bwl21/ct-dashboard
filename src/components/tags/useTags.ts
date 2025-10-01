@@ -26,6 +26,10 @@ export function useTags() {
     () => tags.value.filter((tag) => tag.domainType === 'group').length
   )
 
+  const appointmentTagsCount = computed(
+    () => tags.value.filter((tag) => tag.domainType === 'appointment').length
+  )
+
   // Note: Domain filtering is now handled at API level in fetchTags
   // No need for client-side domain filtering since we only load the selected domain
 
@@ -35,7 +39,9 @@ export function useTags() {
     error.value = null
 
     try {
-      const domains = selectedDomain.value ? [selectedDomain.value] : ['person', 'song', 'group']
+      const domains = selectedDomain.value
+        ? [selectedDomain.value]
+        : ['person', 'song', 'group', 'appointment']
 
       const tagPromises = domains.map(async (domain) => {
         try {
@@ -164,6 +170,7 @@ export function useTags() {
     personTagsCount,
     songTagsCount,
     groupTagsCount,
+    appointmentTagsCount,
 
     fetchTags,
     createTag,

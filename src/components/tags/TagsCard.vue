@@ -43,7 +43,7 @@ const { data: tags, isLoading, error, refetch, isFetching, dataUpdatedAt } = use
 
 // Compute stats using the helper function
 const stats = computed(() => {
-  if (!tags.value) return { total: 0, person: 0, song: 0, group: 0 }
+  if (!tags.value) return { total: 0, person: 0, song: 0, group: 0, appointment: 0 }
   return useTagsStats(tags.value)
 })
 
@@ -73,6 +73,13 @@ const statusStats = computed(() => [
     label: 'Gruppen',
     icon: '👥',
     type: 'warning' as const,
+  },
+  {
+    key: 'appointment',
+    value: stats.value.appointment,
+    label: 'Termine',
+    icon: '📅',
+    type: 'primary' as const,
   },
 ])
 
