@@ -1,12 +1,12 @@
 <template>
   <AdminTable
     ref="adminTableRef"
-    :data="paginatedLogs"
+    :data="filteredLogs"
     :loading="isLoading"
     :error="error?.message || null"
     :columns="tableColumns"
     row-key="id"
-    title="Logger System - Admin Panel"
+    :title="tableTitle"
     description="Überwachung und Verwaltung aller Log-Einträge"
     searchable
     search-placeholder="Log-Einträge durchsuchen..."
@@ -94,26 +94,6 @@
     </template>
   </AdminTable>
 
-  <!-- Custom Pagination Controls -->
-  <div class="ct-card" v-if="totalPages > 1">
-    <div class="ct-card-body">
-      <div class="custom-pagination">
-        <button @click="prevPage" :disabled="!hasPrevPage" class="ct-btn ct-btn-outline ct-btn-sm">
-          ← Zurück
-        </button>
-
-        <span class="page-info">
-          Seite {{ currentPage }} von {{ totalPages }} ({{ paginatedLogs.length }} von
-          {{ allProcessedLogs.length }} Einträgen)
-        </span>
-
-        <button @click="nextPage" :disabled="!hasNextPage" class="ct-btn ct-btn-outline ct-btn-sm">
-          Weiter →
-        </button>
-      </div>
-    </div>
-  </div>
-
   <!-- Log Details Modal - EXACT copy from working LoggerSummaryAdmin.vue -->
   <div v-if="selectedLog" class="modal-overlay" @click="closeDetails">
     <div class="modal-content" @click.stop>
@@ -173,7 +153,6 @@ import { ref, computed, watch, onMounted } from 'vue'
 import AdminTable from '../common/AdminTable.vue'
 import {
   useLoggerBulkCache,
-  usePaginatedLogs,
   getCategoryDisplayName,
   getCategoryIcon,
   getCategoryCssClass,
@@ -197,9 +176,8 @@ defineProps<{
 const { showInfo, showWarning } = useToast()
 
 // State
-const selectedDays = ref(1)
+const selectedDays = ref(1) // Start with 1 day to match Card
 const selectedCategory = ref('')
-const searchTerm = ref('')
 
 // Use bulk cache with reactive days
 const {
@@ -228,7 +206,23 @@ watch(
   { immediate: true }
 )
 
-// Filter logs by category and search
+// Dynamic table title based on filters
+const tableTitle = computed(() => {
+  const parts = ['Logger System']
+
+  // Add days filter
+  const daysText = selectedDays.value === 1 ? 'Letzter Tag' : `Letzte ${selectedDays.value} Tage`
+  parts.push(daysText)
+
+  // Add category filter if active
+  if (selectedCategory.value) {
+    parts.push(getCategoryDisplayName(selectedCategory.value))
+  }
+
+  return parts.join(' - ')
+})
+
+// Filter logs by category
 const filteredLogs = computed(() => {
   let logs = allProcessedLogs.value
 
@@ -237,31 +231,8 @@ const filteredLogs = computed(() => {
     logs = logs.filter((log) => log.category === selectedCategory.value)
   }
 
-  // Filter by search term
-  if (searchTerm.value) {
-    const term = searchTerm.value.toLowerCase()
-    logs = logs.filter(
-      (log) =>
-        log.message.toLowerCase().includes(term) ||
-        log.source.toLowerCase().includes(term) ||
-        log.details?.toLowerCase().includes(term)
-    )
-  }
-
   return logs
 })
-
-// Client-side pagination
-const {
-  paginatedLogs,
-  currentPage,
-  totalPages,
-  hasNextPage,
-  hasPrevPage,
-  nextPage,
-  prevPage,
-  goToPage,
-} = usePaginatedLogs(filteredLogs, 50)
 
 // Categories for filter dropdown
 const categories = getAllCategories()
@@ -325,8 +296,7 @@ const changeDaysFilter = () => {
 }
 
 const applyFilters = () => {
-  // Reset to first page when filters change
-  goToPage(1)
+  // Filters are reactive, no action needed
 }
 
 // Modal state
@@ -381,6 +351,23 @@ watch(
   gap: var(--spacing-sm);
   align-items: center;
   flex-wrap: wrap;
+}
+
+.search-input {
+  flex: 1;
+  min-width: 200px;
+  padding: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-sm);
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--ct-primary, #3498db);
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
 }
 
 .ct-select {

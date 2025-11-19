@@ -51,13 +51,17 @@ const {
   refetch,
   isFetching,
   dataUpdatedAt,
-} = useLoggerSummary(3) // Load last 3 days
+} = useLoggerSummary(1) // Load last 1 day
 
 // Computed properties
-const mainStat = computed(() => ({
-  value: statistics.value?.total || 0,
-  label: 'Einträge',
-}))
+const mainStat = computed(() => {
+  const total = statistics.value?.total || 0
+  const wasLimited = statistics.value?.wasLimited || false
+  return {
+    value: wasLimited ? `${total}+` : total,
+    label: 'Einträge',
+  }
+})
 
 const statusStats = computed(() => {
   if (!statistics.value) {
