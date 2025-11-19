@@ -55,7 +55,7 @@ import TagsAdmin from './components/tags/TagsAdmin.vue'
 import BeispielCard from './components/beispiel/BeispielCard.vue'
 import ColorPickerExample from './components/common/ColorPickerExample.vue'
 import LoggerSummaryCard from './components/loggerSummary/LoggerSummaryCard.vue'
-import LoggerSummaryAdminBulk from './components/loggerSummary/LoggerSummaryAdminBulk.vue'
+import LoggerSummaryAdmin from './components/loggerSummary/LoggerSummaryAdmin.vue'
 import Toast from './components/common/Toast.vue'
 
 import { useToast } from './composables/useToast'
@@ -92,7 +92,7 @@ const modules: DashboardModule[] = [
     icon: '📋',
     description: 'Überwachung und Verwaltung von Log-Einträgen',
     cardComponent: LoggerSummaryCard,
-    adminComponent: LoggerSummaryAdminBulk,
+    adminComponent: LoggerSummaryAdmin,
   },
 ]
 

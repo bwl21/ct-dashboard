@@ -6,7 +6,7 @@
     :error="error?.message || null"
     :columns="tableColumns"
     row-key="id"
-    title="Logger System - Admin Panel (Bulk Cache)"
+    title="Logger System - Admin Panel"
     description="Überwachung und Verwaltung aller Log-Einträge"
     searchable
     search-placeholder="Log-Einträge durchsuchen..."
