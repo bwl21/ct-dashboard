@@ -44,6 +44,11 @@
             </span>
           </span>
         </div>
+
+        <button @click="refetch" class="ct-btn ct-btn-primary refresh-btn" :disabled="isLoading">
+          <span v-if="isLoading" class="btn-spinner"></span>
+          {{ isLoading ? 'Lädt...' : 'Aktualisieren' }}
+        </button>
       </div>
     </template>
 
@@ -192,7 +197,7 @@ defineProps<{
 const { showInfo, showWarning } = useToast()
 
 // State
-const selectedDays = ref(3)
+const selectedDays = ref(1)
 const selectedCategory = ref('')
 const searchTerm = ref('')
 
@@ -200,7 +205,7 @@ const searchTerm = ref('')
 const {
   processedLogs: allProcessedLogs,
   statistics,
-  isLoading,
+  isLoading: isInitialLoading,
   isFetching,
   error,
   refetch,
@@ -208,6 +213,9 @@ const {
   wasLimited,
   limitReason,
 } = useLoggerBulkCache(selectedDays)
+
+// Combine loading states for better UX
+const isLoading = computed(() => isInitialLoading.value || isFetching.value)
 
 // Watch for limitation and show toast
 watch(
@@ -586,18 +594,47 @@ watch(
   color: var(--color-text-secondary);
 }
 
-.ct-btn-primary {
-  background: transparent;
-  border: 1px solid #3498db;
-  color: #3498db;
+/* Button styles */
+.ct-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-decoration: none;
 }
 
-.ct-btn-primary:hover {
-  background: #3498db;
-  border-color: #3498db;
+.ct-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ct-btn-primary {
+  background-color: var(--ct-primary, #3498db);
   color: white;
+}
+
+.ct-btn-primary:hover:not(:disabled) {
+  background-color: var(--ct-primary-dark, #2980b9);
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.ct-btn-secondary {
+  background-color: var(--ct-secondary, #6c757d);
+  color: white;
+}
+
+.ct-btn-secondary:hover:not(:disabled) {
+  background-color: var(--ct-secondary-dark, #5a6268);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .ct-btn-primary-outline {
@@ -620,6 +657,26 @@ watch(
   .bulk-info {
     margin-left: 0;
     margin-top: 8px;
+  }
+}
+
+.btn-spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  margin-right: 0.5rem;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
   }
 }
 </style>

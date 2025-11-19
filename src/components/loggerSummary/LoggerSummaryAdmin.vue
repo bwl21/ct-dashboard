@@ -38,6 +38,7 @@
           Filter zurücksetzen
         </button>
         <button @click="refreshLogs" class="ct-btn ct-btn-primary refresh-btn" :disabled="loading">
+          <span v-if="loading" class="btn-spinner"></span>
           {{ loading ? 'Lädt...' : 'Aktualisieren' }}
         </button>
       </div>
@@ -780,5 +781,25 @@ onMounted(() => {
   background: #3498db !important;
   border-color: #3498db !important;
   color: white !important;
+}
+
+.btn-spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  margin-right: 0.5rem;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 </style>
