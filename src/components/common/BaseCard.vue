@@ -81,14 +81,6 @@
           <template v-else>&nbsp;</template>
         </span>
         <div class="footer-actions">
-          <button
-            type="button"
-            @click="$emit('refresh')"
-            class="ct-btn ct-btn-primary ct-btn-sm"
-            :disabled="isLoading"
-          >
-            {{ isLoading ? refreshingText : refreshText }}
-          </button>
           <slot name="actions">
             <button
               type="button"
@@ -98,6 +90,15 @@
               {{ detailsText }}
             </button>
           </slot>
+          <button
+            type="button"
+            @click="$emit('refresh')"
+            class="ct-btn ct-btn-primary ct-btn-sm"
+            :disabled="isLoading"
+          >
+            <span v-if="isLoading" class="btn-spinner"></span>
+            {{ isLoading ? refreshingText : refreshText }}
+          </button>
         </div>
       </div>
     </div>
@@ -413,6 +414,17 @@ const getStatusClass = (type?: string) => {
 .ct-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.btn-spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  margin-right: 0.5rem;
 }
 
 .ct-btn-icon {

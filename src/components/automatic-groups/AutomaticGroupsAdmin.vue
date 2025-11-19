@@ -23,6 +23,7 @@
         Suche zurücksetzen
       </button>
       <button @click="refreshGroups" class="ct-btn ct-btn-primary refresh-btn" :disabled="loading">
+        <span v-if="loading" class="btn-spinner"></span>
         {{ loading ? 'Lädt...' : 'Aktualisieren' }}
       </button>
     </template>
@@ -75,7 +76,8 @@ defineProps<{
 }>()
 
 // Use TanStack Query composable for data management
-const { data: groups, isLoading: loading, error, refetch } = useAutomaticGroups()
+const { data: groups, isLoading, isFetching, error, refetch } = useAutomaticGroups()
+const loading = computed(() => isLoading.value || isFetching.value)
 
 // AdminTable reference
 const adminTableRef = ref()
@@ -193,8 +195,8 @@ const formatDate = (dateString: string | null) => {
 // URL generation is now handled by the churchtools service
 
 // Data loading
-const refreshGroups = () => {
-  refetch()
+const refreshGroups = async () => {
+  await refetch()
 }
 
 const clearSearch = () => {
@@ -303,5 +305,25 @@ const clearSearch = () => {
 .ct-btn-sm {
   padding: 0.5rem 1rem;
   font-size: 0.85rem;
+}
+
+.btn-spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  margin-right: 0.5rem;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 </style>
