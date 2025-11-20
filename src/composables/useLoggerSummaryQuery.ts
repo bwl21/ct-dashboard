@@ -208,7 +208,9 @@ function calculateStatistics(logs: ChurchToolsLogEntry[]): LogStatistics {
 /**
  * Fetch logs from ChurchTools API for the last N days
  */
-async function fetchLogStatistics(days: number = 3): Promise<LogStatistics> {
+async function fetchLogStatistics(
+  days: number = 3
+): Promise<LogStatistics & { wasLimited: boolean }> {
   const after = new Date()
   after.setDate(after.getDate() - days)
 
@@ -216,7 +218,7 @@ async function fetchLogStatistics(days: number = 3): Promise<LogStatistics> {
   let currentPage = 1
   let hasMorePages = true
   const maxLogsPerRequest = 100
-  const maxTotalLogs = 1000 // Safety limit
+  const maxTotalLogs = 1500 // Safety limit increased to 1500
 
   while (hasMorePages && allLogs.length < maxTotalLogs) {
     const params = new URLSearchParams()
@@ -242,7 +244,11 @@ async function fetchLogStatistics(days: number = 3): Promise<LogStatistics> {
     }
   }
 
-  return calculateStatistics(allLogs)
+  const stats = calculateStatistics(allLogs)
+  return {
+    ...stats,
+    wasLimited: allLogs.length >= maxTotalLogs && hasMorePages,
+  }
 }
 
 export function useLoggerSummary(days: number = 3) {
