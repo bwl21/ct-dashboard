@@ -81,24 +81,24 @@
           <template v-else>&nbsp;</template>
         </span>
         <div class="footer-actions">
-          <slot name="actions">
-            <button
-              type="button"
-              @click="$emit('navigate')"
-              class="ct-btn ct-btn-sm ct-btn-outline"
-            >
-              {{ detailsText }}
-            </button>
-          </slot>
           <button
             type="button"
             @click="$emit('refresh')"
-            class="ct-btn ct-btn-primary ct-btn-sm"
+            class="ct-btn ct-btn-secondary ct-btn-sm"
             :disabled="isLoading"
           >
             <span v-if="isLoading" class="btn-spinner"></span>
             {{ isLoading ? refreshingText : refreshText }}
           </button>
+          <slot name="actions">
+            <button
+              type="button"
+              @click="$emit('navigate')"
+              class="ct-btn ct-btn-primary ct-btn-sm"
+            >
+              {{ detailsText }}
+            </button>
+          </slot>
         </div>
       </div>
     </div>
