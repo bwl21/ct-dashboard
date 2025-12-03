@@ -437,7 +437,8 @@ defineExpose({
 .table-container {
   width: 100%;
   max-width: 100%;
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: auto;
   border-radius: 8px;
   background: var(--ct-bg-primary, #ffffff);
   margin-bottom: 0;
@@ -485,10 +486,19 @@ defineExpose({
 .admin-data-table td {
   padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--ct-border-color, #f0f2f5);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   vertical-align: middle;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  max-width: 300px; /* Default max-width for all cells */
+}
+
+/* Specific style for description cells */
+.admin-data-table td.description-cell {
+  white-space: normal;
+  min-width: 200px;
+  max-width: 400px;
+  word-break: break-word;
 }
 
 .admin-data-table th.sortable {
