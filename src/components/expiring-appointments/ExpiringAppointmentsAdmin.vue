@@ -25,13 +25,12 @@
           <select v-model="daysInAdvance" @change="refreshData" class="ct-select">
             <option value="alle">alle</option>
             <option value="1">1</option>
-            <option value="7">7</option>
-            <option value="14">14</option>
-            <option value="30">30</option>
-            <option value="60">60</option>
-            <option value="90">90</option>
-            <option value="180">180</option>
-            <option value="365">365</option>
+            <option value="14">14 Tage</option>
+            <option value="60">60 Tage</option>
+            <option value="180">6 Monate</option>
+            <option value="365">12 Monate</option>
+            <option value="450">15 Monate</option>
+            <option value="550">18 Monate</option>
           </select>
           <span v-if="daysInAdvance !== 'alle'">Tagen enden</span>
           <span v-else>Termine anzeigen</span>
