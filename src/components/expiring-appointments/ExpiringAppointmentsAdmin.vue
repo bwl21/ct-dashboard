@@ -50,23 +50,11 @@
       </div>
       
       <div class="filter-container">
-        <select 
-          v-model="selectedTagIds" 
-          multiple 
-          class="ct-select filter-select"
-          style="min-height: 42px;"
-          @change="refreshData"
-        >
-          <option value="">Alle Tags</option>
-          <option 
-            v-for="tag in appointmentTags" 
-            :key="tag.id" 
-            :value="tag.id"
-            :style="{ backgroundColor: tag.color || 'transparent' }"
-          >
-            {{ tag.name }}
-          </option>
-        </select>
+        <TagMultiSelect 
+          v-model="selectedTagIds"
+          :tags="appointmentTags"
+          @update:modelValue="refreshData"
+        />
       </div>
       <div class="filter-container">
         <select v-model="statusFilter" class="ct-select filter-select">
@@ -166,6 +154,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import type { DashboardModule } from '@/types/modules'
+import TagMultiSelect from '@/components/common/TagMultiSelect.vue'
 import type { TableColumn } from '@/types/table'
 import { findExpiringSeries, getAppointmentUrl, type Appointment } from '@/services/churchtools'
 import { useExpiringAppointments } from '@/composables/useExpiringAppointments'
