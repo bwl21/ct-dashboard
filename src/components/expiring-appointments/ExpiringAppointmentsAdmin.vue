@@ -48,9 +48,9 @@
           </option>
         </select>
       </div>
-      
+
       <div class="filter-container">
-        <TagMultiSelect 
+        <TagMultiSelect
           v-model="selectedTagIds"
           :tags="appointmentTags"
           @update:modelValue="refreshData"
@@ -117,11 +117,11 @@
       <div class="appointment-tags">
         <template v-if="item.tags && item.tags.length > 0">
           <div class="tags-container">
-            <div 
-              v-for="tag in [...item.tags].sort((a, b) => a.name.localeCompare(b.name))" 
+            <div
+              v-for="tag in [...item.tags].sort((a, b) => a.name.localeCompare(b.name))"
               :key="tag.id"
               class="tag-badge"
-              :style="{ 
+              :style="{
                 '--tag-bg': getTagColor(tag.color),
                 '--tag-text': getContrastColor(getTagColor(tag.color))
               }"
@@ -132,6 +132,17 @@
           </div>
         </template>
         <span v-else class="no-tags">-</span>
+      </div>
+    </template>
+
+    <template #cell-checkbox="{ item }">
+      <div @click.stop>
+        <input
+          type="checkbox"
+          :checked="isAppointmentSelected(item.id)"
+          @click="toggleAppointmentSelection(item.id)"
+          class="ct-checkbox"
+        />
       </div>
     </template>
 
@@ -177,6 +188,66 @@ const statusFilter = ref('')
 const daysInAdvance = ref('alle') // Default to "alle"
 const selectedTagIds = ref<number[]>([])
 
+// Selection state
+const selectedAppointments = ref<number[]>([])
+const adminTableRef = ref()
+
+// Selection methods
+const toggleAppointmentSelection = (appointmentId: number) => (e: Event) => {
+  // Prevent the default behavior and stop propagation
+  e.preventDefault()
+  e.stopPropagation()
+  
+  // Create a new array to ensure reactivity
+  const newSelection = [...selectedAppointments.value]
+  const index = newSelection.indexOf(appointmentId)
+  
+  if (index > -1) {
+    newSelection.splice(index, 1)
+  } else {
+    newSelection.push(appointmentId)
+  }
+  
+  // Update the selection
+  selectedAppointments.value = newSelection
+}
+
+const isAppointmentSelected = (appointmentId: number) => {
+  return selectedAppointments.value.includes(appointmentId)
+}
+
+const toggleSelectAll = () => {
+  const availableAppointments = filteredAppointments.value
+  const availableIds = availableAppointments.map(a => a.id)
+  const allSelected = availableIds.every(id => selectedAppointments.value.includes(id))
+
+  if (allSelected) {
+    selectedAppointments.value = selectedAppointments.value.filter(id => !availableIds.includes(id))
+  } else {
+    const newSelections = availableIds.filter(id => !selectedAppointments.value.includes(id))
+    selectedAppointments.value = [...selectedAppointments.value, ...newSelections]
+  }
+}
+
+const clearSelection = () => {
+  selectedAppointments.value = []
+}
+
+// Computed property for filtered appointments (for select all functionality)
+const filteredAppointments = computed(() => {
+  // This should match your existing filtering logic
+  return appointments.value.filter(appointment => {
+    const matchesCalendar = !calendarFilter.value || 
+      (appointment.base?.calendar?.id?.toString() === calendarFilter.value)
+    // Add other filters as needed
+    return matchesCalendar
+  })
+})
+
+const clearAppointmentSelections = () => {
+  selectedAppointments.value = []
+}
+
 // Fetch tags for filtering
 const { data: allTags } = useTags()
 
@@ -196,8 +267,7 @@ const {
   selectedTagIds.value
 )
 
-// AdminTable reference
-const adminTableRef = ref()
+// AdminTable reference is already declared in the selection state
 
 // Data - prefer cached data
 const appointments = ref<Appointment[]>([])
@@ -217,7 +287,24 @@ watch(
 
 // Table configuration
 const tableColumns: TableColumn[] = [
-  { key: 'id', label: 'ID', sortable: true, resizable: true, width: 55, cellSlot: 'cell-id' },
+  {
+    key: 'checkbox',
+    label: '',
+    sortable: false,
+    resizable: false,
+    width: 30,
+    cellSlot: 'cell-checkbox',
+    headerClass: 'select-column',
+    cellClass: 'select-cell'
+  },
+  { 
+    key: 'id', 
+    label: 'ID', 
+    sortable: true, 
+    resizable: true, 
+    width: 55, 
+    cellSlot: 'cell-id' 
+  },
   {
     key: 'base.title',
     label: 'Titel',
@@ -469,7 +556,7 @@ const applyFilters = () => {
     if (selectedTagIds.value.length > 0) {
       filtered = filtered.filter((appointment) => {
         const appointmentTags = appointment.base.tags || []
-        return selectedTagIds.value.some((tagId) => 
+        return selectedTagIds.value.some((tagId) =>
           appointmentTags.some((tag: any) => tag.id === tagId)
         )
       })
@@ -740,6 +827,135 @@ select[multiple] option {
   opacity: 1;
   visibility: visible;
   transform: translateX(-50%) translateY(0);
+}
+
+/* Selection styles */
+.select-column {
+  width: 40px;
+  text-align: center;
+  vertical-align: middle;
+  padding: 0 !important;
+  position: relative;
+  background-color: var(--ct-bg-secondary, #f8f9fa);
+  border-bottom: 2px solid var(--ct-border-color, #e0e0e0);
+}
+
+.select-cell {
+  text-align: center;
+  vertical-align: middle;
+  padding: 0.5rem 0.5rem !important;
+}
+
+.checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+  height: 100%;
+  width: 100%;
+  user-select: none;
+}
+
+.checkbox-wrapper input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkmark {
+  position: relative;
+  height: 16px;
+  width: 16px;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  transition: all 0.2s;
+}
+
+.checkbox-wrapper:hover input ~ .checkmark {
+  border-color: #999;
+}
+
+.checkbox-wrapper input:checked ~ .checkmark {
+  background-color: var(--ct-primary, #3498db);
+  border-color: var(--ct-primary, #3498db);
+}
+
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+  left: 5px;
+  top: 2px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.checkbox-wrapper input:checked ~ .checkmark:after {
+  display: block;
+}
+
+.data-row {
+  transition: background-color 0.2s ease;
+}
+
+.data-row:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.data-row.row-selected {
+  background-color: rgba(52, 152, 219, 0.1);
+}
+
+.data-row.row-selected:hover {
+  background-color: rgba(52, 152, 219, 0.15);
+}
+
+/* Selection styles */
+.select-column {
+  width: 40px;
+  text-align: center;
+  vertical-align: middle;
+  padding: 0 !important;
+  position: relative;
+  background-color: var(--ct-bg-secondary, #f8f9fa);
+  border-bottom: 2px solid var(--ct-border-color, #e0e0e0);
+}
+
+.select-cell {
+  text-align: center;
+  vertical-align: middle;
+  padding: 0.5rem 0.5rem !important;
+}
+
+.row-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  margin: 0;
+  vertical-align: middle;
+}
+
+.data-row {
+  transition: background-color 0.2s ease;
+}
+
+.data-row:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.data-row.row-selected {
+  background-color: rgba(52, 152, 219, 0.1);
+}
+
+.data-row.row-selected:hover {
+  background-color: rgba(52, 152, 219, 0.15);
 }
 
 .no-tags {
