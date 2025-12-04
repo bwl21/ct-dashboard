@@ -416,18 +416,15 @@ const clearFilters = () => {
 }
 
 // Filter functions
-const fetchData = async () => {
+const applyFilters = () => {
   localLoading.value = true
   localError.value = null
 
   try {
-    const expiringSeries = await findExpiringSeries(300000)
-    if (expiringSeries.length > 0) {
-      // First appointment structure available
-    }
+    if (!cachedAppointments.value) return
 
     // Apply filters
-    let filtered = expiringSeries
+    let filtered = [...cachedAppointments.value]
 
     // Filter by days in advance
     const now = new Date()
@@ -491,6 +488,20 @@ const fetchData = async () => {
 
     appointments.value = filtered
   } catch (err) {
+    console.error('Error filtering appointments:', err)
+    localError.value = 'Fehler beim Filtern der Termine.'
+  } finally {
+    localLoading.value = false
+  }
+}
+
+// Fetch data using the composable
+const fetchData = async () => {
+  localLoading.value = true
+  try {
+    await refetch()
+    applyFilters()
+  } catch (err) {
     console.error('Error fetching appointments:', err)
     localError.value = 'Fehler beim Laden der Termine. Bitte versuchen Sie es erneut.'
   } finally {
@@ -503,16 +514,17 @@ const refreshData = () => {
   refetch()
 }
 
-// Watch for changes to daysInAdvance and refetch data
-watch(daysInAdvance, () => {
-  refreshData()
-})
+// Watch for changes to filters and apply them
+watch([daysInAdvance, calendarFilter, statusFilter, selectedTagIds], () => {
+  applyFilters()
+}, { immediate: true })
 
 // Initialize component
 onMounted(() => {
-  // Only fetch if no cached data available
   if (!cachedAppointments.value || cachedAppointments.value.length === 0) {
     fetchData()
+  } else {
+    applyFilters()
   }
 })
 </script>
