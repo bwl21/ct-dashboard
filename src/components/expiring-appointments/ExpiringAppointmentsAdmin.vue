@@ -3,107 +3,102 @@
   <div v-if="selectedAppointment" class="modal-overlay">
     <div class="modal-content" @click.stop>
       <div class="modal-header">
-        <h3>{{ selectedAppointment.base.title }}</h3>
+        <h3>{{ selectedAppointment.base?.title || 'Termin' }}</h3>
         <button class="close-btn" @click="selectedAppointment = null">&times;</button>
       </div>
       <div class="modal-body">
         <div class="appointment-details">
-          <!-- Titel -->
+          <!-- Basic Info Section -->
           <div class="detail-section">
-            <h4>Titel</h4>
-            <p>{{ selectedAppointment.base.title }}</p>
-          </div>
-
-          <!-- Startzeit und Endzeit -->
-          <div class="detail-section">
-            <h4>Zeitraum</h4>
+            <h4>Termindetails</h4>
             <div class="detail-grid">
               <div class="detail-row">
-                <span class="detail-label">Start:</span>
-                <span>{{ formatDateTime(selectedAppointment.base.startDate) }}</span>
+                <span class="detail-label">Titel:</span>
+                <span>{{ selectedAppointment.base?.title || '-' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Beginn:</span>
+                <span>{{ formatDateTime(selectedAppointment.calculated?.startDate) }}</span>
               </div>
               <div class="detail-row">
                 <span class="detail-label">Ende:</span>
-                <span>{{ formatDateTime(selectedAppointment.base.endDate) }}</span>
+                <span>{{ formatDateTime(selectedAppointment.calculated?.endDate) }}</span>
               </div>
-            </div>
-          </div>
-
-          <!-- Wiederholung -->
-          <div class="detail-section" v-if="selectedAppointment.base.repetition">
-            <h4>Wiederholung</h4>
-            <div class="detail-grid">
-              <div class="detail-row">
-                <span class="detail-label">Typ:</span>
-                <span>{{ formatRepetitionType(selectedAppointment.base.repetition.type) }}</span>
-              </div>
-              <div class="detail-row" v-if="selectedAppointment.base.repetition.interval">
-                <span class="detail-label">Intervall:</span>
-                <span>Alle {{ selectedAppointment.base.repetition.interval }} Tage/Wochen/Monate</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">Serienbeginn:</span>
-                <span>{{ formatDate(selectedAppointment.base.startDate) }}</span>
-              </div>
-              <div class="detail-row" v-if="selectedAppointment.base.repeatUntil">
-                <span class="detail-label">Serienende:</span>
-                <span>{{ formatDate(selectedAppointment.base.repeatUntil) }}</span>
+              
+              <!-- Series Information -->
+              <template v-if="selectedAppointment.base?.repeatId">
+                <div class="detail-row">
+                  <span class="detail-label">Serie:</span>
+                  <span>
+                    <template v-if="selectedAppointment.base.repeatFrequency === 0 || selectedAppointment.base.repeatOption">
+                      Manuell
+                    </template>
+                    <template v-else>
+                      {{ getRepetitionType(selectedAppointment.base.repeatFrequency) }}
+                      <template v-if="selectedAppointment.base.repeatFrequency > 1">
+                        , alle {{ selectedAppointment.base.repeatFrequency }}
+                        {{ getIntervalUnit(selectedAppointment.base.repeatFrequency) }}
+                      </template>
+                    </template>
+                    <template v-if="selectedAppointment.base.repeatUntil">
+                      , bis {{ formatDate(selectedAppointment.base.repeatUntil) }}
+                    </template>
+                    <template v-else-if="!selectedAppointment.base.repeatOption">
+                      , ohne Enddatum
+                    </template>
+                  </span>
+                </div>
+                
+                <!-- Exceptions -->
+                <div class="detail-row" v-if="selectedAppointment.base.exceptions?.length">
+                  <span class="detail-label">Ausnahmen:</span>
+                  <span>
+                    <template v-for="(exception, index) in selectedAppointment.base.exceptions" :key="exception.id || index">
+                      {{ formatDate(exception.date) }}<template v-if="index < selectedAppointment.base.exceptions.length - 1">, </template>
+                    </template>
+                  </span>
+                </div>
+                
+                <!-- Additional Dates -->
+                <div class="detail-row" v-if="selectedAppointment.base.additionals?.length">
+                  <span class="detail-label">Zusätzliche Termine:</span>
+                  <span>
+                    <template v-for="(date, index) in selectedAppointment.base.additionals" :key="index">
+                      {{ formatDate(date) }}<template v-if="index < selectedAppointment.base.additionals.length - 1">, </template>
+                    </template>
+                  </span>
+                </div>
+              </template>
+              
+              <!-- Tags -->
+              <div class="detail-row" v-if="selectedAppointment.tags?.length">
+                <span class="detail-label">Tags:</span>
+                <span class="tags-container">
+                  <template v-for="(tag, index) in [...selectedAppointment.tags].sort((a, b) => a.name.localeCompare(b.name))" :key="tag.id">
+                    <span 
+                      class="tag-badge"
+                      :style="{
+                        backgroundColor: tag.color,
+                        color: getContrastColor(tag.color)
+                      }"
+                    >
+                      {{ tag.name }}
+                    </span>
+                    <template v-if="index < selectedAppointment.tags.length - 1">, </template>
+                  </template>
+                </span>
               </div>
               <div class="detail-row" v-else>
-                <span class="detail-label">Serienende:</span>
-                <span>Kein Enddatum</span>
+                <span class="detail-label">Tags:</span>
+                <span>-</span>
+              </div>
+              
+              <!-- Notes -->
+              <div class="detail-row" v-if="selectedAppointment.base?.note">
+                <span class="detail-label">Notizen:</span>
+                <span class="note">{{ selectedAppointment.base.note }}</span>
               </div>
             </div>
-          </div>
-
-          <!-- Ausnahmen -->
-          <div class="detail-section" v-if="selectedAppointment.base.exceptions?.length">
-            <h4>Ausnahmen</h4>
-            <ul class="exception-list">
-              <li v-for="(exception, index) in selectedAppointment.base.exceptions" :key="index">
-                {{ formatDate(exception.date) }}: {{ exception.type }}
-              </li>
-            </ul>
-          </div>
-
-          <!-- Extra Termine -->
-          <div class="detail-section" v-if="selectedAppointment.base.additionals?.length">
-            <h4>Zusätzliche Termine</h4>
-            <ul class="additional-dates">
-              <li v-for="(date, index) in selectedAppointment.base.additionals" :key="index">
-                {{ formatDateTime(date) }}
-              </li>
-            </ul>
-          </div>
-
-          <!-- Tags -->
-          <div class="detail-section" v-if="selectedAppointment.base.tags?.length">
-            <h4>Tags</h4>
-            <div class="appointment-tags">
-              <div class="tags-container">
-                <div
-                  v-for="tag in [...selectedAppointment.base.tags].sort((a, b) => a.name.localeCompare(b.name))"
-                  :key="tag.id"
-                  class="tag-badge"
-                  :style="{
-                    backgroundColor: tag.color,
-                    color: getContrastColor(tag.color)
-                  }"
-                >
-                  {{ tag.name }}
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="detail-section" v-else>
-            <h4>Tags</h4>
-            <span class="no-tags">-</span>
-          </div>
-
-          <!-- Notizen -->
-          <div class="detail-section" v-if="selectedAppointment.base.note">
-            <h4>Notizen</h4>
-            <p class="note">{{ selectedAppointment.base.note }}</p>
           </div>
         </div>
       </div>
@@ -326,22 +321,47 @@ const selectedAppointment = ref<any>(null)
 
 // Show appointment details in modal
 const showAppointmentDetails = (appointment: any) => {
+  console.log('Selected appointment data:', JSON.parse(JSON.stringify(appointment)))
   selectedAppointment.value = appointment
 }
 
 // Format date for display (date only)
-const formatDate = (dateString: string | null | undefined) => {
-  if (!dateString) return 'Nicht angegeben'
+const formatDate = (dateInput: string | Date | null | undefined | { date: string }) => {
+  if (!dateInput) return 'Nicht angegeben'
   
   try {
-    const date = new Date(dateString)
+    let date: Date
+    let dateString: string | Date = dateInput
+    
+    // Handle Proxy objects by converting to plain object
+    if (dateInput && typeof dateInput === 'object' && 'date' in dateInput) {
+      dateString = (dateInput as { date: string }).date
+    }
+    
+    if (dateString instanceof Date) {
+      date = dateString
+    } else {
+      // Handle YYYY-MM-DD format (which is what we get from the API)
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateString as string)) {
+        date = new Date(dateString + 'T00:00:00')
+      } else {
+        date = new Date(dateString as string)
+      }
+    }
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      console.error('Invalid date:', dateInput)
+      return 'Ungültiges Datum'
+    }
+    
     return date.toLocaleDateString('de-DE', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
     })
   } catch (e) {
-    console.error('Error formatting date:', e)
+    console.error('Error formatting date:', e, 'Input was:', dateInput)
     return 'Ungültiges Datum'
   }
 }
@@ -365,7 +385,25 @@ const formatDateTime = (dateString: string | null | undefined) => {
   }
 }
 
-// Format repetition type for display
+// Get repetition type based on frequency
+const getRepetitionType = (frequency: number) => {
+  if (frequency === 1) return 'Täglich'
+  if (frequency % 7 === 0) return 'Wöchentlich'
+  if (frequency % 30 === 0) return 'Monatlich'
+  if (frequency % 365 === 0) return 'Jährlich'
+  return 'Benutzerdefiniert'
+}
+
+// Get interval unit based on frequency
+const getIntervalUnit = (frequency: number) => {
+  if (frequency === 1) return 'Tag'
+  if (frequency % 365 === 0) return ' Jahre'
+  if (frequency % 30 === 0) return ' Monate'
+  if (frequency % 7 === 0) return ' Wochen'
+  return ' Tage'
+}
+
+// Format repetition type for display (kept for backward compatibility)
 const formatRepetitionType = (type: string | undefined) => {
   if (!type) return 'Keine'
   
