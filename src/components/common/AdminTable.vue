@@ -90,10 +90,22 @@
                   :style="{ width: columnWidths[index] + 'px' }"
                   @click="column.sortable && sortBy(column.key)"
                 >
-                  {{ column.label }}
-                  <span v-if="column.sortable && sortField === column.key" class="sort-indicator">
-                    {{ sortDirection === 'asc' ? '↑' : '↓' }}
-                  </span>
+                  <!-- Custom Header Slot -->
+                  <slot
+                    v-if="column.headerSlot"
+                    :name="column.headerSlot"
+                    :column="column"
+                  >
+                    {{ column.label }}
+                  </slot>
+                  <!-- Default Header Content -->
+                  <template v-else>
+                    {{ column.label }}
+                    <span v-if="column.sortable && sortField === column.key" class="sort-indicator">
+                      {{ sortDirection === 'asc' ? '↑' : '↓' }}
+                    </span>
+                  </template>
+                  
                   <div
                     v-if="column.resizable"
                     class="resize-handle"

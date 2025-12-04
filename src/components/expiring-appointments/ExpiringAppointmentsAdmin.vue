@@ -1,4 +1,126 @@
 <template>
+  <!-- Appointment Details Modal -->
+  <div v-if="selectedAppointment" class="modal-overlay">
+    <div class="modal-content" @click.stop>
+      <div class="modal-header">
+        <h3>{{ selectedAppointment.base.title }}</h3>
+        <button class="close-btn" @click="selectedAppointment = null">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="appointment-details">
+          <!-- Titel -->
+          <div class="detail-section">
+            <h4>Titel</h4>
+            <p>{{ selectedAppointment.base.title }}</p>
+          </div>
+
+          <!-- Startzeit und Endzeit -->
+          <div class="detail-section">
+            <h4>Zeitraum</h4>
+            <div class="detail-grid">
+              <div class="detail-row">
+                <span class="detail-label">Start:</span>
+                <span>{{ formatDateTime(selectedAppointment.base.startDate) }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Ende:</span>
+                <span>{{ formatDateTime(selectedAppointment.base.endDate) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Wiederholung -->
+          <div class="detail-section" v-if="selectedAppointment.base.repetition">
+            <h4>Wiederholung</h4>
+            <div class="detail-grid">
+              <div class="detail-row">
+                <span class="detail-label">Typ:</span>
+                <span>{{ formatRepetitionType(selectedAppointment.base.repetition.type) }}</span>
+              </div>
+              <div class="detail-row" v-if="selectedAppointment.base.repetition.interval">
+                <span class="detail-label">Intervall:</span>
+                <span>Alle {{ selectedAppointment.base.repetition.interval }} Tage/Wochen/Monate</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Serienbeginn:</span>
+                <span>{{ formatDate(selectedAppointment.base.startDate) }}</span>
+              </div>
+              <div class="detail-row" v-if="selectedAppointment.base.repeatUntil">
+                <span class="detail-label">Serienende:</span>
+                <span>{{ formatDate(selectedAppointment.base.repeatUntil) }}</span>
+              </div>
+              <div class="detail-row" v-else>
+                <span class="detail-label">Serienende:</span>
+                <span>Kein Enddatum</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ausnahmen -->
+          <div class="detail-section" v-if="selectedAppointment.base.exceptions?.length">
+            <h4>Ausnahmen</h4>
+            <ul class="exception-list">
+              <li v-for="(exception, index) in selectedAppointment.base.exceptions" :key="index">
+                {{ formatDate(exception.date) }}: {{ exception.type }}
+              </li>
+            </ul>
+          </div>
+
+          <!-- Extra Termine -->
+          <div class="detail-section" v-if="selectedAppointment.base.additionals?.length">
+            <h4>Zusätzliche Termine</h4>
+            <ul class="additional-dates">
+              <li v-for="(date, index) in selectedAppointment.base.additionals" :key="index">
+                {{ formatDateTime(date) }}
+              </li>
+            </ul>
+          </div>
+
+          <!-- Tags -->
+          <div class="detail-section" v-if="selectedAppointment.base.tags?.length">
+            <h4>Tags</h4>
+            <div class="appointment-tags">
+              <div class="tags-container">
+                <div
+                  v-for="tag in [...selectedAppointment.base.tags].sort((a, b) => a.name.localeCompare(b.name))"
+                  :key="tag.id"
+                  class="tag-badge"
+                  :style="{
+                    backgroundColor: tag.color,
+                    color: getContrastColor(tag.color)
+                  }"
+                >
+                  {{ tag.name }}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="detail-section" v-else>
+            <h4>Tags</h4>
+            <span class="no-tags">-</span>
+          </div>
+
+          <!-- Notizen -->
+          <div class="detail-section" v-if="selectedAppointment.base.note">
+            <h4>Notizen</h4>
+            <p class="note">{{ selectedAppointment.base.note }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <a
+          :href="getAppointmentUrl(selectedAppointment)"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="ct-btn ct-btn-primary"
+        >
+          In ChurchTools öffnen
+        </a>
+        <button class="ct-btn ct-btn-outline" @click="selectedAppointment = null">Schließen</button>
+      </div>
+    </div>
+  </div>
+
   <AdminTable
     ref="adminTableRef"
     :data="appointments"
@@ -135,6 +257,15 @@
       </div>
     </template>
 
+    <template #header-checkbox>
+      <input
+        type="checkbox"
+        :checked="areAllAppointmentsSelected"
+        @change="toggleSelectAll"
+        class="ct-checkbox"
+      />
+    </template>
+
     <template #cell-checkbox="{ item }">
       <div @click.stop>
         <input
@@ -148,15 +279,13 @@
 
     <template #cell-actions="{ item }">
       <div class="action-buttons">
-        <a
-          :href="getAppointmentUrl(item)"
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          @click="showAppointmentDetails(item)"
           class="ct-btn ct-btn-sm ct-btn-outline"
-          title="Termin in ChurchTools öffnen"
+          title="Details anzeigen"
         >
-          Öffnen
-        </a>
+          Details
+        </button>
       </div>
     </template>
   </AdminTable>
@@ -192,6 +321,66 @@ const selectedTagIds = ref<number[]>([])
 const selectedAppointments = ref<number[]>([])
 const adminTableRef = ref()
 
+// Modal state
+const selectedAppointment = ref<any>(null)
+
+// Show appointment details in modal
+const showAppointmentDetails = (appointment: any) => {
+  selectedAppointment.value = appointment
+}
+
+// Format date for display (date only)
+const formatDate = (dateString: string | null | undefined) => {
+  if (!dateString) return 'Nicht angegeben'
+  
+  try {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('de-DE', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    })
+  } catch (e) {
+    console.error('Error formatting date:', e)
+    return 'Ungültiges Datum'
+  }
+}
+
+// Format date and time for display
+const formatDateTime = (dateString: string | null | undefined) => {
+  if (!dateString) return 'Nicht angegeben'
+  
+  try {
+    const date = new Date(dateString)
+    return date.toLocaleString('de-DE', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch (e) {
+    console.error('Error formatting date:', e)
+    return 'Ungültiges Datum/Zeit'
+  }
+}
+
+// Format repetition type for display
+const formatRepetitionType = (type: string | undefined) => {
+  if (!type) return 'Keine'
+  
+  const types: Record<string, string> = {
+    'daily': 'Täglich',
+    'weekly': 'Wöchentlich',
+    'monthly': 'Monatlich',
+    'yearly': 'Jährlich',
+    'workday': 'Jeden Werktag',
+    'custom': 'Benutzerdefiniert'
+  }
+  
+  return types[type] || type
+}
+
 // Selection methods
 const toggleAppointmentSelection = (appointmentId: number) => (e: Event) => {
   // Prevent the default behavior and stop propagation
@@ -216,14 +405,26 @@ const isAppointmentSelected = (appointmentId: number) => {
   return selectedAppointments.value.includes(appointmentId)
 }
 
+// Computed property to check if all appointments are selected
+const areAllAppointmentsSelected = computed(() => {
+  const availableAppointments = filteredAppointments.value
+  if (availableAppointments.length === 0) return false
+  return availableAppointments.every(appointment => 
+    selectedAppointments.value.includes(appointment.id)
+  )
+})
+
 const toggleSelectAll = () => {
   const availableAppointments = filteredAppointments.value
   const availableIds = availableAppointments.map(a => a.id)
-  const allSelected = availableIds.every(id => selectedAppointments.value.includes(id))
-
-  if (allSelected) {
-    selectedAppointments.value = selectedAppointments.value.filter(id => !availableIds.includes(id))
+  
+  if (areAllAppointmentsSelected.value) {
+    // If all are selected, deselect all
+    selectedAppointments.value = selectedAppointments.value.filter(
+      id => !availableIds.includes(id)
+    )
   } else {
+    // If not all are selected, select all
     const newSelections = availableIds.filter(id => !selectedAppointments.value.includes(id))
     selectedAppointments.value = [...selectedAppointments.value, ...newSelections]
   }
@@ -294,6 +495,7 @@ const tableColumns: TableColumn[] = [
     resizable: false,
     width: 30,
     cellSlot: 'cell-checkbox',
+    headerSlot: 'header-checkbox',
     headerClass: 'select-column',
     cellClass: 'select-cell'
   },
@@ -435,23 +637,7 @@ const getContrastColor = (hexColor: string) => {
   return brightness > 128 ? '#000000' : '#ffffff'
 }
 
-// Helper functions
-const formatDate = (dateString: string | null) => {
-  if (!dateString) return 'Nie'
-
-  try {
-    const date = new Date(dateString)
-    return date.toLocaleString('de-DE', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  } catch {
-    return 'Ungültiges Datum'
-  }
-}
+// Helper functions - formatDate is defined above
 
 const getEffectiveEndDate = (appointment: Appointment) => {
   if (appointment.base.repeatUntil) {
@@ -745,6 +931,157 @@ select[multiple] option {
 
 .ct-btn-outline:hover:not(:disabled) {
   background-color: rgba(52, 152, 219, 0.1);
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  color: #333; /* Set default text color */
+}
+
+.modal-header {
+  padding: 20px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f9fafb;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 1.25rem;
+}
+
+.modal-body {
+  padding: 20px;
+  background: white;
+}
+
+.detail-section {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.detail-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+div.detail-section > h4 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #1f2937;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 0.75rem;
+}
+
+.detail-row {
+  display: flex;
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: #4b5563;
+  min-width: 120px;
+  flex-shrink: 0;
+}
+
+/* Lists styling */
+.exception-list,
+.additional-dates {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0 0;
+}
+
+.exception-list li,
+.additional-dates li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.exception-list li:last-child,
+.additional-dates li:last-child {
+  border-bottom: none;
+}
+
+/* Tags styling */
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.tag-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+/* Notes styling */
+.note {
+  margin: 0.5rem 0 0 0;
+  padding: 0.75rem;
+  background-color: #f9fafb;
+  border-radius: 0.375rem;
+  white-space: pre-wrap;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #4b5563;
+}
+
+.modal-footer {
+  padding: 16px 20px;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
 }
 
 /* Tag styles */
