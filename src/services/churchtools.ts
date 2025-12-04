@@ -36,16 +36,25 @@ export async function fetchCalendars(): Promise<Calendar[]> {
 export async function fetchAppointments(
   calendarIds: number[],
   startDate: Date,
-  endDate: Date
+  endDate: Date,
+  tagIds: number[] = []
 ): Promise<Appointment[]> {
   const start = startDate.toISOString().split('T')[0]
   const end = endDate.toISOString().split('T')[0]
 
-  const response = await churchtoolsClient.get<Appointment[]>('/calendars/appointments', {
+  const params: Record<string, any> = {
     from: start,
     to: end,
     'calendar_ids[]': calendarIds,
-  })
+    include: ['tags']
+  }
+
+  // Add tag filter if tags are provided
+  if (tagIds.length > 0) {
+    params['tag_ids[]'] = tagIds
+  }
+
+  const response = await churchtoolsClient.get<Appointment[]>('/calendars/appointments', params)
 
   // Ensure we always return an array of Appointment objects
   return Array.isArray(response) ? response : []
@@ -69,7 +78,7 @@ export async function identifyCalendars(): Promise<{
 /**
  * Finds all recurring appointment series that are about to end
  */
-export async function findExpiringSeries(daysInAdvance: number = 60): Promise<Appointment[]> {
+export async function findExpiringSeries(daysInAdvance: number = 60, tagIds: number[] = []): Promise<Appointment[]> {
   const now = new Date()
   const endDate = new Date()
   endDate.setDate(now.getDate() + daysInAdvance)
@@ -88,12 +97,31 @@ export async function findExpiringSeries(daysInAdvance: number = 60): Promise<Ap
     (v, i, a) => a.indexOf(v) === i
   ) // Remove duplicates
 
-  // Fetching appointments for calendar IDs
-  // Fetch appointments
-  const appointments = await fetchAppointments(allCalendarIds, now, endDate)
+  // Fetching appointments for calendar IDs with optional tag filtering and include tags
+  const appointments = await fetchAppointments(allCalendarIds, now, endDate, tagIds)
+  
+  // Log the first appointment to debug tags
+  if (appointments.length > 0) {
+    console.log('First appointment with tags:', JSON.parse(JSON.stringify(appointments[0])))
+  }
+
+  // Process appointments to ensure consistent structure with tags
+  const processedAppointments = appointments.map(appointment => {
+    // Get tags from the root level if they exist
+    const tags = 'tags' in appointment ? appointment.tags : [];
+    
+    // Return the appointment with tags properly set in base.tags
+    return {
+      ...appointment,
+      base: {
+        ...appointment.base,
+        tags: Array.isArray(tags) ? tags : []
+      }
+    };
+  });
 
   // Find recurring appointments that are ending soon
-  const expiringSeries = appointments.filter((appointment) => {
+  const expiringSeries = processedAppointments.filter((appointment) => {
     // Handle both AppointmentBase and AppointmentCalculated types
     const base = 'base' in appointment ? appointment.base : appointment
 

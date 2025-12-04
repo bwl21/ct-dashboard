@@ -48,6 +48,26 @@
           </option>
         </select>
       </div>
+      
+      <div class="filter-container">
+        <select 
+          v-model="selectedTagIds" 
+          multiple 
+          class="ct-select filter-select"
+          style="min-height: 42px;"
+          @change="refreshData"
+        >
+          <option value="">Alle Tags</option>
+          <option 
+            v-for="tag in appointmentTags" 
+            :key="tag.id" 
+            :value="tag.id"
+            :style="{ backgroundColor: tag.color || 'transparent' }"
+          >
+            {{ tag.name }}
+          </option>
+        </select>
+      </div>
       <div class="filter-container">
         <select v-model="statusFilter" class="ct-select filter-select">
           <option value="">Alle Status</option>
@@ -105,16 +125,40 @@
       {{ getEffectiveEndDate(item) }}
     </template>
 
+    <template #cell-tags="{ item }">
+      <div class="appointment-tags">
+        <template v-if="item.tags && item.tags.length > 0">
+          <div class="tags-container">
+            <div 
+              v-for="tag in [...item.tags].sort((a, b) => a.name.localeCompare(b.name))" 
+              :key="tag.id"
+              class="tag-badge"
+              :style="{ 
+                '--tag-bg': getTagColor(tag.color),
+                '--tag-text': getContrastColor(getTagColor(tag.color))
+              }"
+              :title="tag.description"
+            >
+              {{ tag.name }}
+            </div>
+          </div>
+        </template>
+        <span v-else class="no-tags">-</span>
+      </div>
+    </template>
+
     <template #cell-actions="{ item }">
-      <a
-        :href="getAppointmentUrl(item)"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="ct-btn ct-btn-sm ct-btn-outline"
-        title="Termin in ChurchTools öffnen"
-      >
-        Öffnen
-      </a>
+      <div class="action-buttons">
+        <a
+          :href="getAppointmentUrl(item)"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="ct-btn ct-btn-sm ct-btn-outline"
+          title="Termin in ChurchTools öffnen"
+        >
+          Öffnen
+        </a>
+      </div>
     </template>
   </AdminTable>
 </template>
@@ -125,7 +169,9 @@ import type { DashboardModule } from '@/types/modules'
 import type { TableColumn } from '@/types/table'
 import { findExpiringSeries, getAppointmentUrl, type Appointment } from '@/services/churchtools'
 import { useExpiringAppointments } from '@/composables/useExpiringAppointments'
+import { useTags } from '@/composables/useTags'
 import AdminTable from '@/components/common/AdminTable.vue'
+import { useToast } from '@/composables/useToast'
 
 defineProps<{
   module: DashboardModule
@@ -134,20 +180,32 @@ defineProps<{
 // Configuration
 const DAYS_TO_SHOW = 90
 
-// Use cached appointments data from TanStack Query
-const {
-  data: cachedAppointments,
-  isLoading: cacheLoading,
-  error: cacheError,
-  refetch,
-} = useExpiringAppointments()
-
 // Local state
 const localLoading = ref(false)
 const localError = ref<string | null>(null)
 const calendarFilter = ref('')
 const statusFilter = ref('')
 const daysInAdvance = ref('alle') // Default to "alle"
+const selectedTagIds = ref<number[]>([])
+
+// Fetch tags for filtering
+const { data: allTags } = useTags()
+
+// Filter tags to only show appointment tags
+const appointmentTags = computed(() => {
+  return allTags.value?.filter(tag => tag.domainType === 'appointment') || []
+})
+
+// Use cached appointments data from TanStack Query with tag filtering
+const {
+  data: cachedAppointments,
+  isLoading: cacheLoading,
+  error: cacheError,
+  refetch,
+} = useExpiringAppointments(
+  daysInAdvance.value === 'alle' ? 9999 : parseInt(daysInAdvance.value, 10),
+  selectedTagIds.value
+)
 
 // AdminTable reference
 const adminTableRef = ref()
@@ -202,6 +260,20 @@ const tableColumns: TableColumn[] = [
     resizable: true,
     width: 180,
     cellSlot: 'cell-endDate',
+  },
+  {
+    key: 'base.tags',
+    label: 'Tags',
+    sortable: true,
+    resizable: true,
+    width: 200,
+    cellSlot: 'cell-tags',
+    // Custom sort function to sort by tag names
+    sortFn: (a: any, b: any) => {
+      const tagsA = (a.base.tags || []).map((t: any) => t.name).join(', ')
+      const tagsB = (b.base.tags || []).map((t: any) => t.name).join(', ')
+      return tagsA.localeCompare(tagsB)
+    },
   },
   { key: 'actions', label: 'Aktionen', resizable: false, width: 120, cellSlot: 'cell-actions' },
 ]
@@ -258,6 +330,35 @@ const getAppointmentStatus = (appointment: Appointment): 'active' | 'expiring' |
   return 'active'
 }
 
+// Helper function to map color names to hex values
+const getTagColor = (colorName: string): string => {
+  const colorMap: Record<string, string> = {
+    'basic': '#e0e0e0',
+    'blue': '#2196F3',
+    'green': '#4CAF50',
+    'yellow': '#FFC107',
+    'red': '#F44336',
+    'purple': '#9C27B0',
+    'orange': '#FF9800',
+    'teal': '#009688',
+    'pink': '#E91E63',
+    'brown': '#795548',
+    'gray': '#9E9E9E',
+    'black': '#000000'
+  }
+  return colorMap[colorName] || '#e0e0e0'
+}
+
+// Helper function to get contrasting text color based on background color
+const getContrastColor = (hexColor: string) => {
+  // If the color is light, return dark text color, otherwise return light text
+  const r = parseInt(hexColor.slice(1, 3), 16)
+  const g = parseInt(hexColor.slice(3, 5), 16)
+  const b = parseInt(hexColor.slice(5, 7), 16)
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000
+  return brightness > 128 ? '#000000' : '#ffffff'
+}
+
 // Helper functions
 const formatDate = (dateString: string | null) => {
   if (!dateString) return 'Nie'
@@ -303,10 +404,10 @@ const getEffectiveEndDate = (appointment: Appointment) => {
 
 // Filter functions
 const clearFilters = () => {
-  // Reset own filters
   calendarFilter.value = ''
   statusFilter.value = ''
   daysInAdvance.value = 'alle'
+  selectedTagIds.value = []
 
   // Reset AdminTable search
   if (adminTableRef.value?.clearSearch) {
@@ -314,7 +415,7 @@ const clearFilters = () => {
   }
 }
 
-// Data loading
+// Filter functions
 const fetchData = async () => {
   localLoading.value = true
   localError.value = null
@@ -378,6 +479,16 @@ const fetchData = async () => {
       )
     }
 
+    // Filter by tags
+    if (selectedTagIds.value.length > 0) {
+      filtered = filtered.filter((appointment) => {
+        const appointmentTags = appointment.base.tags || []
+        return selectedTagIds.value.some((tagId) => 
+          appointmentTags.some((tag: any) => tag.id === tagId)
+        )
+      })
+    }
+
     appointments.value = filtered
   } catch (err) {
     console.error('Error fetching appointments:', err)
@@ -387,10 +498,15 @@ const fetchData = async () => {
   }
 }
 
+// Refresh data function
 const refreshData = () => {
-  refetch() // Refresh cached data
-  fetchData() // Also refresh local data if needed
+  refetch()
 }
+
+// Watch for changes to daysInAdvance and refetch data
+watch(daysInAdvance, () => {
+  refreshData()
+})
 
 // Initialize component
 onMounted(() => {
@@ -440,6 +556,19 @@ onMounted(() => {
 
 .filter-container {
   min-width: 180px;
+  margin-bottom: 0.5rem;
+}
+
+/* Style for multi-select dropdown */
+select[multiple] {
+  min-height: 38px;
+  padding: 0.25rem;
+}
+
+select[multiple] option {
+  padding: 0.25rem 0.5rem;
+  margin: 0.125rem 0;
+  border-radius: 3px;
 }
 
 .filter-select {
@@ -528,6 +657,96 @@ onMounted(() => {
 
 .ct-btn-outline:hover:not(:disabled) {
   background-color: rgba(52, 152, 219, 0.1);
+}
+
+/* Tag styles */
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+}
+
+.tag-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  background-color: var(--tag-bg, #e0e0e0);
+  color: var(--tag-text, #333);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  position: relative;
+  cursor: help;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.tag-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.tag-badge[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  max-width: 300px;
+  width: max-content;
+  transform: translateX(-50%) translateY(-8px);
+  background-color: #2d3748;
+  color: #fff;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  white-space: normal;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.15s ease-out;
+  pointer-events: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  word-wrap: break-word;
+  font-weight: 400;
+  text-align: left;
+}
+
+.tag-badge[title]:hover::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-3px);
+  border-width: 5px 5px 0 5px;
+  border-style: solid;
+  border-color: #2d3748 transparent transparent transparent;
+  z-index: 1001;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.15s ease-out;
+}
+
+.tag-badge[title]:hover::after,
+.tag-badge[title]:hover::before {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+.no-tags {
+  color: #9e9e9e;
+  font-style: italic;
+  font-size: 0.875rem;
+  padding: 0.5rem 0;
+  display: inline-block;
 }
 
 .ct-btn-sm {
