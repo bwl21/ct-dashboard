@@ -78,8 +78,8 @@
                     <span 
                       class="tag-badge"
                       :style="{
-                        backgroundColor: tag.color,
-                        color: getContrastColor(tag.color)
+                        '--tag-bg': getTagColor(tag.color),
+                        '--tag-text': getContrastColor(getTagColor(tag.color))
                       }"
                     >
                       {{ tag.name }}
@@ -1092,6 +1092,7 @@ div.detail-section > h4 {
   display: inline-flex;
   align-items: center;
   padding: 0.25rem 0.75rem;
+  background-color: var(--tag-bg) !important;
   border-radius: 1rem;
   font-size: 0.85rem;
   font-weight: 500;
@@ -1134,6 +1135,7 @@ div.detail-section > h4 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  background-color: var(--tag-bg) !important;
   height: 24px;
   padding: 0 10px;
   border-radius: 3px;
