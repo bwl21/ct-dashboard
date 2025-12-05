@@ -1,4 +1,33 @@
 <template>
+  <!-- Bulk Actions Widget -->
+  <BulkActionsWidget
+    :selected-ids="selectedAppointments"
+    singular-label="Termin"
+    plural-label="Termine"
+    @clear-selection="clearSelection"
+  >
+    <template #actions="{ selectedCount }">
+      <div class="extend-section">
+        <label for="extension-months">Verlängern um:</label>
+        <select id="extension-months" v-model="extensionMonths" class="ct-select">
+          <option value="3">3 Monate</option>
+          <option value="6">6 Monate</option>
+          <option value="12">12 Monate</option>
+          <option value="18">18 Monate</option>
+          <option value="24">24 Monate</option>
+        </select>
+      </div>
+      <button
+        @click="handleExtendAppointments"
+        :disabled="isProcessing"
+        class="bulk-action-btn success"
+      >
+        <span v-if="isProcessing" class="action-spinner"></span>
+        {{ isProcessing ? 'Verlängere...' : `${selectedCount} Termine verlängern` }}
+      </button>
+    </template>
+  </BulkActionsWidget>
+
   <!-- Appointment Details Modal -->
   <div v-if="selectedAppointment" class="modal-overlay">
     <div class="modal-content" @click.stop>
@@ -24,13 +53,18 @@
                 <span class="detail-label">Ende:</span>
                 <span>{{ formatDateTime(selectedAppointment.calculated?.endDate) }}</span>
               </div>
-              
+
               <!-- Series Information -->
               <template v-if="selectedAppointment.base?.repeatId">
                 <div class="detail-row">
                   <span class="detail-label">Serie:</span>
                   <span>
-                    <template v-if="selectedAppointment.base.repeatFrequency === 0 || selectedAppointment.base.repeatOption">
+                    <template
+                      v-if="
+                        selectedAppointment.base.repeatFrequency === 0 ||
+                        selectedAppointment.base.repeatOption
+                      "
+                    >
                       Manuell
                     </template>
                     <template v-else>
@@ -48,43 +82,60 @@
                     </template>
                   </span>
                 </div>
-                
+
                 <!-- Exceptions -->
                 <div class="detail-row" v-if="selectedAppointment.base.exceptions?.length">
                   <span class="detail-label">Ausnahmen:</span>
                   <span>
-                    <template v-for="(exception, index) in selectedAppointment.base.exceptions" :key="exception.id || index">
-                      {{ formatDate(exception.date) }}<template v-if="index < selectedAppointment.base.exceptions.length - 1">, </template>
+                    <template
+                      v-for="(exception, index) in selectedAppointment.base.exceptions"
+                      :key="exception.id || index"
+                    >
+                      {{ formatDate(exception.date) }}
+                      <template v-if="index < selectedAppointment.base.exceptions.length - 1">
+                        ,
+                      </template>
                     </template>
                   </span>
                 </div>
-                
+
                 <!-- Additional Dates -->
                 <div class="detail-row" v-if="selectedAppointment.base.additionals?.length">
                   <span class="detail-label">Zusätzliche Termine:</span>
                   <span>
-                    <template v-for="(date, index) in selectedAppointment.base.additionals" :key="index">
-                      {{ formatDate(date) }}<template v-if="index < selectedAppointment.base.additionals.length - 1">, </template>
+                    <template
+                      v-for="(date, index) in selectedAppointment.base.additionals"
+                      :key="index"
+                    >
+                      {{ formatDate(date) }}
+                      <template v-if="index < selectedAppointment.base.additionals.length - 1">
+                        ,
+                      </template>
                     </template>
                   </span>
                 </div>
               </template>
-              
+
               <!-- Tags -->
               <div class="detail-row" v-if="selectedAppointment.tags?.length">
                 <span class="detail-label">Tags:</span>
                 <span class="tags-container">
-                  <template v-for="(tag, index) in [...selectedAppointment.tags].sort((a, b) => a.name.localeCompare(b.name))" :key="tag.id">
-                    <span 
+                  <template
+                    v-for="(tag, index) in [...selectedAppointment.tags].sort((a, b) =>
+                      a.name.localeCompare(b.name)
+                    )"
+                    :key="tag.id"
+                  >
+                    <span
                       class="tag-badge"
                       :style="{
                         '--tag-bg': getTagColor(tag.color),
-                        '--tag-text': getContrastColor(getTagColor(tag.color))
+                        '--tag-text': getContrastColor(getTagColor(tag.color)),
                       }"
                     >
                       {{ tag.name }}
                     </span>
-                    <template v-if="index < selectedAppointment.tags.length - 1">, </template>
+                    <template v-if="index < selectedAppointment.tags.length - 1">,</template>
                   </template>
                 </span>
               </div>
@@ -92,7 +143,7 @@
                 <span class="detail-label">Tags:</span>
                 <span>-</span>
               </div>
-              
+
               <!-- Notes -->
               <div class="detail-row" v-if="selectedAppointment.base?.note">
                 <span class="detail-label">Notizen:</span>
@@ -122,17 +173,19 @@
     :loading="isLoading"
     :error="error"
     :columns="tableColumns"
-    row-key="id"
+    row-key="seriesId"
     title="auslaufende Terminserien - Admin Panel"
     description="Überwachung und Verwaltung aller auslaufenden Terminserien"
     searchable
     search-placeholder="Suche nach ID, Titel oder Kalender..."
-    :search-fields="['id', 'base.title', 'base.calendar.name']"
-    default-sort-field="id"
+    :search-fields="['seriesId', 'base.title', 'base.calendar.name']"
+    default-sort-field="seriesId"
     loading-text="Lade auslaufende Terminserien..."
     empty-text="Keine auslaufenden Termine gefunden."
+    selectable
     @retry="refreshData"
     @reload="refreshData"
+    @selection-change="handleSelectionChange"
   >
     <!-- Header Controls -->
     <template #header-controls>
@@ -201,7 +254,7 @@
 
     <!-- Custom Cell Rendering -->
     <template #cell-id="{ item }">
-      <span class="id-cell">{{ item.id || item.base?.id || 'NO_ID' }}</span>
+      <span class="id-cell">{{ item.seriesId || item.base?.id || 'NO_ID' }}</span>
     </template>
 
     <template #cell-title="{ item }">
@@ -240,7 +293,7 @@
               class="tag-badge"
               :style="{
                 '--tag-bg': getTagColor(tag.color),
-                '--tag-text': getContrastColor(getTagColor(tag.color))
+                '--tag-text': getContrastColor(getTagColor(tag.color)),
               }"
               :title="tag.description"
             >
@@ -249,26 +302,6 @@
           </div>
         </template>
         <span v-else class="no-tags">-</span>
-      </div>
-    </template>
-
-    <template #header-checkbox>
-      <input
-        type="checkbox"
-        :checked="areAllAppointmentsSelected"
-        @change="toggleSelectAll"
-        class="ct-checkbox"
-      />
-    </template>
-
-    <template #cell-checkbox="{ item }">
-      <div @click.stop>
-        <input
-          type="checkbox"
-          :checked="isAppointmentSelected(item.id)"
-          @click="toggleAppointmentSelection(item.id)"
-          class="ct-checkbox"
-        />
       </div>
     </template>
 
@@ -290,10 +323,12 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import type { DashboardModule } from '@/types/modules'
 import TagMultiSelect from '@/components/common/TagMultiSelect.vue'
+import BulkActionsWidget from '@/components/common/BulkActionsWidget.vue'
 import type { TableColumn } from '@/types/table'
 import { findExpiringSeries, getAppointmentUrl, type Appointment } from '@/services/churchtools'
 import { useExpiringAppointments } from '@/composables/useExpiringAppointments'
 import { useTags } from '@/composables/useTags'
+import { useBulkAppointmentActions } from '@/composables/useBulkAppointmentActions'
 import AdminTable from '@/components/common/AdminTable.vue'
 import { useToast } from '@/composables/useToast'
 
@@ -316,6 +351,15 @@ const selectedTagIds = ref<number[]>([])
 const selectedAppointments = ref<number[]>([])
 const adminTableRef = ref()
 
+// Bulk actions
+const { isProcessing, extendAppointments } = useBulkAppointmentActions()
+const extensionMonths = ref(12)
+
+// Handle selection changes from AdminTable
+const handleSelectionChange = (selectedIds: number[]) => {
+  selectedAppointments.value = selectedIds
+}
+
 // Modal state
 const selectedAppointment = ref<any>(null)
 
@@ -328,16 +372,16 @@ const showAppointmentDetails = (appointment: any) => {
 // Format date for display (date only)
 const formatDate = (dateInput: string | Date | null | undefined | { date: string }) => {
   if (!dateInput) return 'Nicht angegeben'
-  
+
   try {
     let date: Date
     let dateString: string | Date = dateInput
-    
+
     // Handle Proxy objects by converting to plain object
     if (dateInput && typeof dateInput === 'object' && 'date' in dateInput) {
       dateString = (dateInput as { date: string }).date
     }
-    
+
     if (dateString instanceof Date) {
       date = dateString
     } else {
@@ -348,13 +392,13 @@ const formatDate = (dateInput: string | Date | null | undefined | { date: string
         date = new Date(dateString as string)
       }
     }
-    
+
     // Check if date is valid
     if (isNaN(date.getTime())) {
       console.error('Invalid date:', dateInput)
       return 'Ungültiges Datum'
     }
-    
+
     return date.toLocaleDateString('de-DE', {
       year: 'numeric',
       month: '2-digit',
@@ -369,7 +413,7 @@ const formatDate = (dateInput: string | Date | null | undefined | { date: string
 // Format date and time for display
 const formatDateTime = (dateString: string | null | undefined) => {
   if (!dateString) return 'Nicht angegeben'
-  
+
   try {
     const date = new Date(dateString)
     return date.toLocaleString('de-DE', {
@@ -406,82 +450,37 @@ const getIntervalUnit = (frequency: number) => {
 // Format repetition type for display (kept for backward compatibility)
 const formatRepetitionType = (type: string | undefined) => {
   if (!type) return 'Keine'
-  
+
   const types: Record<string, string> = {
-    'daily': 'Täglich',
-    'weekly': 'Wöchentlich',
-    'monthly': 'Monatlich',
-    'yearly': 'Jährlich',
-    'workday': 'Jeden Werktag',
-    'custom': 'Benutzerdefiniert'
+    daily: 'Täglich',
+    weekly: 'Wöchentlich',
+    monthly: 'Monatlich',
+    yearly: 'Jährlich',
+    workday: 'Jeden Werktag',
+    custom: 'Benutzerdefiniert',
   }
-  
+
   return types[type] || type
 }
 
-// Selection methods
-const toggleAppointmentSelection = (appointmentId: number) => (e: Event) => {
-  // Prevent the default behavior and stop propagation
-  e.preventDefault()
-  e.stopPropagation()
-  
-  // Create a new array to ensure reactivity
-  const newSelection = [...selectedAppointments.value]
-  const index = newSelection.indexOf(appointmentId)
-  
-  if (index > -1) {
-    newSelection.splice(index, 1)
-  } else {
-    newSelection.push(appointmentId)
-  }
-  
-  // Update the selection
-  selectedAppointments.value = newSelection
-}
-
-const isAppointmentSelected = (appointmentId: number) => {
-  return selectedAppointments.value.includes(appointmentId)
-}
-
-// Computed property to check if all appointments are selected
-const areAllAppointmentsSelected = computed(() => {
-  const availableAppointments = filteredAppointments.value
-  if (availableAppointments.length === 0) return false
-  return availableAppointments.every(appointment => 
-    selectedAppointments.value.includes(appointment.id)
-  )
-})
-
-const toggleSelectAll = () => {
-  const availableAppointments = filteredAppointments.value
-  const availableIds = availableAppointments.map(a => a.id)
-  
-  if (areAllAppointmentsSelected.value) {
-    // If all are selected, deselect all
-    selectedAppointments.value = selectedAppointments.value.filter(
-      id => !availableIds.includes(id)
-    )
-  } else {
-    // If not all are selected, select all
-    const newSelections = availableIds.filter(id => !selectedAppointments.value.includes(id))
-    selectedAppointments.value = [...selectedAppointments.value, ...newSelections]
-  }
-}
-
 const clearSelection = () => {
-  selectedAppointments.value = []
+  if (adminTableRef.value?.clearSelection) {
+    adminTableRef.value.clearSelection()
+  }
 }
 
-// Computed property for filtered appointments (for select all functionality)
-const filteredAppointments = computed(() => {
-  // This should match your existing filtering logic
-  return appointments.value.filter(appointment => {
-    const matchesCalendar = !calendarFilter.value || 
-      (appointment.base?.calendar?.id?.toString() === calendarFilter.value)
-    // Add other filters as needed
-    return matchesCalendar
-  })
-})
+// Bulk action handlers
+const handleExtendAppointments = async () => {
+  if (selectedAppointments.value.length === 0) return
+
+  const result = await extendAppointments(selectedAppointments.value, extensionMonths.value)
+
+  if (result.success > 0) {
+    // Clear selection and refresh data
+    clearSelection()
+    await refreshData()
+  }
+}
 
 const clearAppointmentSelections = () => {
   selectedAppointments.value = []
@@ -492,7 +491,7 @@ const { data: allTags } = useTags()
 
 // Filter tags to only show appointment tags
 const appointmentTags = computed(() => {
-  return allTags.value?.filter(tag => tag.domainType === 'appointment') || []
+  return allTags.value?.filter((tag) => tag.domainType === 'appointment') || []
 })
 
 // Use cached appointments data from TanStack Query with tag filtering
@@ -518,7 +517,11 @@ watch(
   cachedAppointments,
   (newCachedAppointments) => {
     if (newCachedAppointments && newCachedAppointments.length > 0) {
-      appointments.value = newCachedAppointments
+      // Normalize appointments to ensure seriesId exists for row-key
+      appointments.value = newCachedAppointments.map((appointment) => ({
+        ...appointment,
+        seriesId: appointment.base?.id,
+      }))
     }
   },
   { immediate: true }
@@ -527,23 +530,12 @@ watch(
 // Table configuration
 const tableColumns: TableColumn[] = [
   {
-    key: 'checkbox',
-    label: '',
-    sortable: false,
-    resizable: false,
-    width: 30,
-    cellSlot: 'cell-checkbox',
-    headerSlot: 'header-checkbox',
-    headerClass: 'select-column',
-    cellClass: 'select-cell'
-  },
-  { 
-    key: 'id', 
-    label: 'ID', 
-    sortable: true, 
-    resizable: true, 
-    width: 55, 
-    cellSlot: 'cell-id' 
+    key: 'seriesId',
+    label: 'Serien-ID',
+    sortable: true,
+    resizable: true,
+    width: 80,
+    cellSlot: 'cell-id',
   },
   {
     key: 'base.title',
@@ -649,18 +641,18 @@ const getAppointmentStatus = (appointment: Appointment): 'active' | 'expiring' |
 // Helper function to map color names to hex values
 const getTagColor = (colorName: string): string => {
   const colorMap: Record<string, string> = {
-    'basic': '#e0e0e0',
-    'blue': '#2196F3',
-    'green': '#4CAF50',
-    'yellow': '#FFC107',
-    'red': '#F44336',
-    'purple': '#9C27B0',
-    'orange': '#FF9800',
-    'teal': '#009688',
-    'pink': '#E91E63',
-    'brown': '#795548',
-    'gray': '#9E9E9E',
-    'black': '#000000'
+    basic: '#e0e0e0',
+    blue: '#2196F3',
+    green: '#4CAF50',
+    yellow: '#FFC107',
+    red: '#F44336',
+    purple: '#9C27B0',
+    orange: '#FF9800',
+    teal: '#009688',
+    pink: '#E91E63',
+    brown: '#795548',
+    gray: '#9E9E9E',
+    black: '#000000',
   }
   return colorMap[colorName] || '#e0e0e0'
 }
@@ -786,7 +778,11 @@ const applyFilters = () => {
       })
     }
 
-    appointments.value = filtered
+    // Normalize appointments to ensure seriesId exists for row-key
+    appointments.value = filtered.map((appointment) => ({
+      ...appointment,
+      seriesId: appointment.base?.id,
+    }))
   } catch (err) {
     console.error('Error filtering appointments:', err)
     localError.value = 'Fehler beim Filtern der Termine.'
@@ -815,9 +811,13 @@ const refreshData = () => {
 }
 
 // Watch for changes to filters and apply them
-watch([daysInAdvance, calendarFilter, statusFilter, selectedTagIds], () => {
-  applyFilters()
-}, { immediate: true })
+watch(
+  [daysInAdvance, calendarFilter, statusFilter, selectedTagIds],
+  () => {
+    applyFilters()
+  },
+  { immediate: true }
+)
 
 // Initialize component
 onMounted(() => {
@@ -1206,123 +1206,6 @@ div.detail-section > h4 {
   transform: translateX(-50%) translateY(0);
 }
 
-/* Selection styles */
-.select-column {
-  width: 40px;
-  text-align: center;
-  vertical-align: middle;
-  padding: 0 !important;
-  position: relative;
-  background-color: var(--ct-bg-secondary, #f8f9fa);
-  border-bottom: 2px solid var(--ct-border-color, #e0e0e0);
-}
-
-.select-cell {
-  text-align: center;
-  vertical-align: middle;
-  padding: 0.5rem 0.5rem !important;
-}
-
-.checkbox-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  cursor: pointer;
-  height: 100%;
-  width: 100%;
-  user-select: none;
-}
-
-.checkbox-wrapper input {
-  position: absolute;
-  opacity: 0;
-  cursor: pointer;
-  height: 0;
-  width: 0;
-}
-
-.checkmark {
-  position: relative;
-  height: 16px;
-  width: 16px;
-  background-color: #fff;
-  border: 1px solid #ccc;
-  border-radius: 3px;
-  transition: all 0.2s;
-}
-
-.checkbox-wrapper:hover input ~ .checkmark {
-  border-color: #999;
-}
-
-.checkbox-wrapper input:checked ~ .checkmark {
-  background-color: var(--ct-primary, #3498db);
-  border-color: var(--ct-primary, #3498db);
-}
-
-.checkmark:after {
-  content: "";
-  position: absolute;
-  display: none;
-  left: 5px;
-  top: 2px;
-  width: 4px;
-  height: 8px;
-  border: solid white;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
-}
-
-.checkbox-wrapper input:checked ~ .checkmark:after {
-  display: block;
-}
-
-.data-row {
-  transition: background-color 0.2s ease;
-}
-
-.data-row:hover {
-  background-color: rgba(0, 0, 0, 0.02);
-}
-
-.data-row.row-selected {
-  background-color: rgba(52, 152, 219, 0.1);
-}
-
-.data-row.row-selected:hover {
-  background-color: rgba(52, 152, 219, 0.15);
-}
-
-/* Selection styles */
-.select-column {
-  width: 40px;
-  text-align: center;
-  vertical-align: middle;
-  padding: 0 !important;
-  position: relative;
-  background-color: var(--ct-bg-secondary, #f8f9fa);
-  border-bottom: 2px solid var(--ct-border-color, #e0e0e0);
-}
-
-.select-cell {
-  text-align: center;
-  vertical-align: middle;
-  padding: 0.5rem 0.5rem !important;
-}
-
-.row-checkbox {
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
-  margin: 0;
-  vertical-align: middle;
-}
-
-.data-row {
-  transition: background-color 0.2s ease;
-}
-
 .data-row:hover {
   background-color: rgba(0, 0, 0, 0.02);
 }
@@ -1380,5 +1263,34 @@ div.detail-section > h4 {
   100% {
     transform: rotate(360deg);
   }
+}
+
+/* Bulk actions widget customization */
+.extend-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.extend-section label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--ct-text-primary, #2c3e50);
+}
+
+.ct-select {
+  padding: 0.5rem;
+  border: 1px solid var(--ct-border-color, #e0e0e0);
+  border-radius: 4px;
+  font-size: 0.9rem;
+  background: white;
+  cursor: pointer;
+}
+
+.ct-select:focus {
+  outline: none;
+  border-color: var(--ct-primary, #3498db);
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
 }
 </style>

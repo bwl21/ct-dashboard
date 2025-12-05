@@ -4,7 +4,12 @@ import { findExpiringSeries, type Appointment } from '@/services/churchtools'
 export function useExpiringAppointments(daysInAdvance: number = 300000, tagIds: number[] = []) {
   // Only log once per unique query setup
   if (import.meta.env.DEV) {
-    console.log('📅 Setting up expiring appointments query for', daysInAdvance, 'days with tags:', tagIds)
+    console.log(
+      '📅 Setting up expiring appointments query for',
+      daysInAdvance,
+      'days with tags:',
+      tagIds
+    )
   }
   return useQuery({
     queryKey: ['expiring-appointments', daysInAdvance, ...tagIds],

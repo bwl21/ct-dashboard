@@ -365,7 +365,14 @@ const tableColumns: TableColumn[] = [
     width: 150,
     cellSlot: 'cell-color',
   },
-  { key: 'description', label: 'Beschreibung', sortable: true, resizable: true, width: 250, cellClass: 'description-cell' },
+  {
+    key: 'description',
+    label: 'Beschreibung',
+    sortable: true,
+    resizable: true,
+    width: 250,
+    cellClass: 'description-cell',
+  },
   {
     key: 'actions',
     label: 'Aktionen',

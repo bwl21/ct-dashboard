@@ -4,17 +4,17 @@
       <div class="selected-tags">
         <span v-if="selectedTags.length === 0" class="placeholder">Filter nach Tags</span>
         <div v-else class="chips-container">
-          <span 
-            v-for="tag in selectedTags" 
-            :key="tag.id" 
-            class="chip" 
+          <span
+            v-for="tag in selectedTags"
+            :key="tag.id"
+            class="chip"
             :style="{
               '--tag-bg': getTagColor(tag.color),
-              '--tag-text': getContrastColor(getTagColor(tag.color))
+              '--tag-text': getContrastColor(getTagColor(tag.color)),
             }"
           >
             <span class="chip-text">{{ tag.name }}</span>
-            <button 
+            <button
               class="chip-remove"
               @click.stop="removeTag(tag.id)"
               :style="{ color: getContrastColor(getTagColor(tag.color)) }"
@@ -25,9 +25,9 @@
           </span>
         </div>
       </div>
-      <span class="dropdown-icon" :class="{ 'open': isOpen }">▼</span>
+      <span class="dropdown-icon" :class="{ open: isOpen }">▼</span>
     </div>
-    
+
     <Teleport to="body">
       <div v-if="isOpen" class="dropdown-portal">
         <div ref="dropdownRef" class="dropdown-content">
@@ -41,36 +41,32 @@
               @click.stop
             />
           </div>
-          
+
           <div class="tags-list">
-            <div 
-              v-for="tag in filteredTags" 
-              :key="tag.id" 
-              class="tag-option" 
+            <div
+              v-for="tag in filteredTags"
+              :key="tag.id"
+              class="tag-option"
               @click="toggleTag(tag)"
             >
               <div class="tag-color" :style="{ backgroundColor: tag.color }"></div>
               <span class="tag-name">{{ tag.name }}</span>
               <span v-if="isSelected(tag.id)" class="checkmark">✓</span>
             </div>
-            
+
             <div v-if="filteredTags.length === 0" class="no-results">
               Keine passenden Tags gefunden
             </div>
           </div>
-          
+
           <div v-if="selectedTags.length > 0" class="dropdown-actions">
             <div class="action-buttons">
-              <button class="action-btn select-all" @click.stop="selectAll">
-                Alle auswählen
-              </button>
+              <button class="action-btn select-all" @click.stop="selectAll">Alle auswählen</button>
               <button class="action-btn select-none" @click.stop="clearSelection">
                 Keine auswählen
               </button>
             </div>
-            <button class="clear-btn" @click.stop="clearSelection">
-              Auswahl zurücksetzen
-            </button>
+            <button class="clear-btn" @click.stop="clearSelection">Auswahl zurücksetzen</button>
           </div>
         </div>
       </div>
@@ -84,13 +80,13 @@ import { onClickOutside } from '@vueuse/core'
 
 const props = defineProps({
   modelValue: {
-    type: Array as () => number[], 
-    default: () => []
+    type: Array as () => number[],
+    default: () => [],
   },
   tags: {
-    type: Array as () => Array<{id: number, name: string, color: string}>,
-    required: true
-  }
+    type: Array as () => Array<{ id: number; name: string; color: string }>,
+    required: true,
+  },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -103,34 +99,32 @@ const searchInput = ref<HTMLInputElement | null>(null)
 
 const filteredTags = computed(() => {
   const query = searchQuery.value.toLowerCase()
-  return props.tags.filter(tag => 
-    tag.name.toLowerCase().includes(query)
-  )
+  return props.tags.filter((tag) => tag.name.toLowerCase().includes(query))
 })
 
 const selectedTags = computed(() => {
-  return props.tags.filter(tag => props.modelValue.includes(tag.id))
+  return props.tags.filter((tag) => props.modelValue.includes(tag.id))
 })
 
 const isSelected = (tagId: number) => {
   return props.modelValue.includes(tagId)
 }
 
-const toggleTag = (tag: {id: number}) => {
+const toggleTag = (tag: { id: number }) => {
   const newValue = [...props.modelValue]
   const index = newValue.indexOf(tag.id)
-  
+
   if (index === -1) {
     newValue.push(tag.id)
   } else {
     newValue.splice(index, 1)
   }
-  
+
   emit('update:modelValue', newValue)
 }
 
 const removeTag = (tagId: number) => {
-  const newValue = props.modelValue.filter(id => id !== tagId)
+  const newValue = props.modelValue.filter((id) => id !== tagId)
   emit('update:modelValue', newValue)
 }
 
@@ -140,7 +134,7 @@ const clearSelection = () => {
 }
 
 const selectAll = () => {
-  const allTagIds = props.tags.map(tag => tag.id)
+  const allTagIds = props.tags.map((tag) => tag.id)
   emit('update:modelValue', [...allTagIds])
 }
 
@@ -158,21 +152,21 @@ const toggleDropdown = (event: Event) => {
 
 const positionDropdown = () => {
   if (!dropdownRef.value || !containerRef.value) return
-  
+
   const containerRect = containerRef.value.getBoundingClientRect()
   const dropdown = dropdownRef.value
-  
+
   // Set the width to match the container
   dropdown.style.width = `${containerRect.width}px`
-  
+
   // Position the dropdown directly below the container
   dropdown.style.left = `${containerRect.left + window.scrollX}px`
   dropdown.style.top = `${containerRect.bottom + window.scrollY + 4}px`
-  
+
   // Check if there's enough space below, if not, position above
   const spaceBelow = window.innerHeight - containerRect.bottom
   const spaceAbove = containerRect.top
-  
+
   if (spaceBelow < 300 && spaceAbove > spaceBelow) {
     // Position above if there's more space above
     dropdown.style.top = 'auto'
@@ -190,25 +184,25 @@ const handleClickOutside = (event: MouseEvent) => {
 const getTagColor = (colorName: string): string => {
   // Map of color names to hex values - matching the table's color scheme
   const colorMap: Record<string, string> = {
-    'basic': '#e0e0e0',
-    'blue': '#2196F3',
-    'green': '#4CAF50',
-    'yellow': '#FFC107',
-    'red': '#F44336',
-    'purple': '#9C27B0',
-    'orange': '#FF9800',
-    'teal': '#009688',
-    'pink': '#E91E63',
-    'brown': '#795548',
-    'gray': '#9E9E9E',
-    'black': '#000000'
+    basic: '#e0e0e0',
+    blue: '#2196F3',
+    green: '#4CAF50',
+    yellow: '#FFC107',
+    red: '#F44336',
+    purple: '#9C27B0',
+    orange: '#FF9800',
+    teal: '#009688',
+    pink: '#E91E63',
+    brown: '#795548',
+    gray: '#9E9E9E',
+    black: '#000000',
   }
-  
+
   // Return the hex color if it's already a hex value
   if (colorName.startsWith('#')) {
     return colorName
   }
-  
+
   // Return the mapped color or a default gray if not found
   return colorMap[colorName.toLowerCase()] || '#e0e0e0'
 }
@@ -224,9 +218,13 @@ const getContrastColor = (hexColor: string) => {
 }
 
 // Close dropdown when clicking outside
-onClickOutside(dropdownRef, () => {
-  isOpen.value = false
-}, { ignore: [containerRef] })
+onClickOutside(
+  dropdownRef,
+  () => {
+    isOpen.value = false
+  },
+  { ignore: [containerRef] }
+)
 
 // Close dropdown when window is scrolled or resized
 onMounted(() => {
@@ -276,7 +274,9 @@ const handleResize = () => {
   gap: 0.5rem;
   width: 100%;
   box-sizing: border-box;
-  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  transition:
+    border-color 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out;
   overflow: hidden; /* Ensure content doesn't overflow the rounded corners */
 }
 
@@ -340,7 +340,9 @@ const handleResize = () => {
   text-overflow: ellipsis;
   max-width: 100%;
   cursor: default;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .chip:hover {

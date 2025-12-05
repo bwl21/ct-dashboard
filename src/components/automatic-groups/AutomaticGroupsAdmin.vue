@@ -1,66 +1,80 @@
 <template>
-  <AdminTable
-    ref="adminTableRef"
-    :data="groups"
-    :loading="loading"
-    :error="error"
-    :columns="tableColumns"
-    row-key="id"
-    title="Automatische Gruppen - Admin Panel"
-    description="Überwachung und Verwaltung aller automatischen Gruppen"
-    searchable
-    search-placeholder="Gruppen durchsuchen..."
-    :search-fields="['name', 'groupTypeName']"
-    default-sort-field="id"
-    loading-text="Lade automatische Gruppen..."
-    empty-text="Keine automatischen Gruppen gefunden."
-    @retry="refreshGroups"
-    @reload="refreshGroups"
-  >
-    <!-- Custom Actions -->
-    <template #actions>
-      <button @click="clearSearch" class="ct-btn ct-btn-secondary" title="Suchfeld zurücksetzen">
-        Suche zurücksetzen
-      </button>
-      <button @click="refreshGroups" class="ct-btn ct-btn-primary refresh-btn" :disabled="loading">
-        <span v-if="loading" class="btn-spinner"></span>
-        {{ loading ? 'Lädt...' : 'Aktualisieren' }}
-      </button>
-    </template>
+  <div class="admin-container">
+    <!-- Selection Count Box - Always visible for testing -->
+    <div class="selection-count-box">
+      <strong>{{ selectedCount }}</strong>
+      {{ selectedCount === 1 ? 'Gruppe' : 'Gruppen' }} ausgewählt
+    </div>
 
-    <!-- Custom Cell Rendering -->
-    <template #cell-name="{ item }">
-      <strong>{{ item.name }}</strong>
-    </template>
+    <AdminTable
+      ref="adminTableRef"
+      :data="groups"
+      :loading="loading"
+      :error="error"
+      :columns="tableColumns"
+      row-key="id"
+      title="Automatische Gruppen - Admin Panel"
+      description="Überwachung und Verwaltung aller automatischen Gruppen"
+      searchable
+      search-placeholder="Gruppen durchsuchen..."
+      :search-fields="['name', 'groupTypeName']"
+      default-sort-field="id"
+      loading-text="Lade automatische Gruppen..."
+      empty-text="Keine automatischen Gruppen gefunden."
+      selectable
+      @retry="refreshGroups"
+      @reload="refreshGroups"
+      @selection-change="handleSelectionChange"
+    >
+      <!-- Custom Actions -->
+      <template #actions>
+        <button @click="clearSearch" class="ct-btn ct-btn-secondary" title="Suchfeld zurücksetzen">
+          Suche zurücksetzen
+        </button>
+        <button
+          @click="refreshGroups"
+          class="ct-btn ct-btn-primary refresh-btn"
+          :disabled="loading"
+        >
+          <span v-if="loading" class="btn-spinner"></span>
+          {{ loading ? 'Lädt...' : 'Aktualisieren' }}
+        </button>
+      </template>
 
-    <template #cell-config="{ item }">
-      <span class="status-badge" :class="getConfigStatusClass(item.dynamicGroupStatus)">
-        {{ getConfigStatusText(item.dynamicGroupStatus) }}
-      </span>
-    </template>
+      <!-- Custom Cell Rendering -->
+      <template #cell-name="{ item }">
+        <strong>{{ item.name }}</strong>
+      </template>
 
-    <template #cell-status="{ item }">
-      <span class="status-badge" :class="getExecutionStatusClass(item.executionStatus)">
-        {{ getExecutionStatusText(item.executionStatus) }}
-      </span>
-    </template>
+      <template #cell-config="{ item }">
+        <span class="status-badge" :class="getConfigStatusClass(item.dynamicGroupStatus)">
+          {{ getConfigStatusText(item.dynamicGroupStatus) }}
+        </span>
+      </template>
 
-    <template #cell-lastExecution="{ item }">
-      {{ formatDate(item.lastExecution) }}
-    </template>
+      <template #cell-status="{ item }">
+        <span class="status-badge" :class="getExecutionStatusClass(item.executionStatus)">
+          {{ getExecutionStatusText(item.executionStatus) }}
+        </span>
+      </template>
 
-    <template #cell-actions="{ item }">
-      <a
-        :href="getGroupUrl(item.id)"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="ct-btn ct-btn-sm ct-btn-outline"
-        title="Gruppe in ChurchTools öffnen"
-      >
-        Öffnen
-      </a>
-    </template>
-  </AdminTable>
+      <template #cell-lastExecution="{ item }">
+        {{ formatDate(item.lastExecution) }}
+      </template>
+
+      <template #cell-actions="{ item }">
+        <a
+          :href="getGroupUrl(item.id)"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="ct-btn ct-btn-sm ct-btn-outline"
+          title="Gruppe in ChurchTools öffnen"
+        >
+          Öffnen
+        </a>
+      </template>
+    </AdminTable>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -81,6 +95,13 @@ const loading = computed(() => isLoading.value || isFetching.value)
 
 // AdminTable reference
 const adminTableRef = ref()
+
+// Selection management
+const selectedCount = ref(0)
+
+const handleSelectionChange = (selectedIds: number[]) => {
+  selectedCount.value = selectedIds.length
+}
 
 // Table configuration
 const tableColumns: TableColumn[] = [
@@ -324,6 +345,46 @@ const clearSearch = () => {
   }
   100% {
     transform: rotate(360deg);
+  }
+}
+
+/* Admin container */
+.admin-container {
+  position: relative;
+}
+
+/* Selection count box */
+.selection-count-box {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: white;
+  border: 2px solid var(--ct-primary, #3498db);
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 9999;
+  font-size: 0.95rem;
+  color: var(--ct-text-primary, #2c3e50);
+  animation: slideIn 0.3s ease-out;
+  min-width: 200px;
+  text-align: center;
+}
+
+.selection-count-box strong {
+  color: var(--ct-primary, #3498db);
+  font-size: 1.2rem;
+  margin-right: 0.25rem;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 </style>

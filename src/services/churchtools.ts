@@ -46,7 +46,7 @@ export async function fetchAppointments(
     from: start,
     to: end,
     'calendar_ids[]': calendarIds,
-    include: ['tags']
+    include: ['tags'],
   }
 
   // Add tag filter if tags are provided
@@ -78,7 +78,10 @@ export async function identifyCalendars(): Promise<{
 /**
  * Finds all recurring appointment series that are about to end
  */
-export async function findExpiringSeries(daysInAdvance: number = 60, tagIds: number[] = []): Promise<Appointment[]> {
+export async function findExpiringSeries(
+  daysInAdvance: number = 60,
+  tagIds: number[] = []
+): Promise<Appointment[]> {
   const now = new Date()
   const endDate = new Date()
   endDate.setDate(now.getDate() + daysInAdvance)
@@ -99,26 +102,26 @@ export async function findExpiringSeries(daysInAdvance: number = 60, tagIds: num
 
   // Fetching appointments for calendar IDs with optional tag filtering and include tags
   const appointments = await fetchAppointments(allCalendarIds, now, endDate, tagIds)
-  
+
   // Log the first appointment to debug tags
   if (appointments.length > 0) {
     console.log('First appointment with tags:', JSON.parse(JSON.stringify(appointments[0])))
   }
 
   // Process appointments to ensure consistent structure with tags
-  const processedAppointments = appointments.map(appointment => {
+  const processedAppointments = appointments.map((appointment) => {
     // Get tags from the root level if they exist
-    const tags = 'tags' in appointment ? appointment.tags : [];
-    
+    const tags = 'tags' in appointment ? appointment.tags : []
+
     // Return the appointment with tags properly set in base.tags
     return {
       ...appointment,
       base: {
         ...appointment.base,
-        tags: Array.isArray(tags) ? tags : []
-      }
-    };
-  });
+        tags: Array.isArray(tags) ? tags : [],
+      },
+    }
+  })
 
   // Find recurring appointments that are ending soon
   const expiringSeries = processedAppointments.filter((appointment) => {
