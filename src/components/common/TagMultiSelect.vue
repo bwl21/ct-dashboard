@@ -75,7 +75,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { onClickOutside } from '@vueuse/core'
 
 const props = defineProps({
@@ -151,26 +151,56 @@ const toggleDropdown = (event: Event) => {
 }
 
 const positionDropdown = () => {
-  if (!dropdownRef.value || !containerRef.value) return
+  if (!dropdownRef.value || !containerRef.value) {
+    console.log('❌ positionDropdown: missing refs', {
+      dropdown: !!dropdownRef.value,
+      container: !!containerRef.value,
+    })
+    return
+  }
 
   const containerRect = containerRef.value.getBoundingClientRect()
   const dropdown = dropdownRef.value
+
+  console.log('📍 Positioning dropdown:', {
+    containerRect: {
+      left: containerRect.left,
+      top: containerRect.top,
+      bottom: containerRect.bottom,
+      width: containerRect.width,
+    },
+    scrollX: window.scrollX,
+    scrollY: window.scrollY,
+  })
 
   // Set the width to match the container
   dropdown.style.width = `${containerRect.width}px`
 
   // Position the dropdown directly below the container
-  dropdown.style.left = `${containerRect.left + window.scrollX}px`
-  dropdown.style.top = `${containerRect.bottom + window.scrollY + 4}px`
+  const left = containerRect.left + window.scrollX
+  const top = containerRect.bottom + window.scrollY + 4
+
+  dropdown.style.left = `${left}px`
+  dropdown.style.top = `${top}px`
+  dropdown.style.bottom = 'auto'
+
+  console.log('📍 Applied styles:', {
+    left: dropdown.style.left,
+    top: dropdown.style.top,
+    width: dropdown.style.width,
+  })
 
   // Check if there's enough space below, if not, position above
   const spaceBelow = window.innerHeight - containerRect.bottom
   const spaceAbove = containerRect.top
 
-  if (spaceBelow < 300 && spaceAbove > spaceBelow) {
+  // Only position above if there's very little space below (less than 200px)
+  // AND significantly more space above
+  if (spaceBelow < 200 && spaceAbove > spaceBelow + 100) {
     // Position above if there's more space above
     dropdown.style.top = 'auto'
     dropdown.style.bottom = `${window.innerHeight - containerRect.top + window.scrollY - 4}px`
+    console.log('📍 Positioned above (not enough space below)')
   }
 }
 
@@ -226,6 +256,15 @@ onClickOutside(
   { ignore: [containerRef] }
 )
 
+// Watch for dropdown open state and reposition
+watch(isOpen, (newValue) => {
+  if (newValue) {
+    nextTick(() => {
+      positionDropdown()
+    })
+  }
+})
+
 // Close dropdown when window is scrolled or resized
 onMounted(() => {
   window.addEventListener('scroll', handleScroll, { passive: true })
@@ -239,7 +278,7 @@ onBeforeUnmount(() => {
 
 const handleScroll = () => {
   if (isOpen.value) {
-    isOpen.value = false
+    positionDropdown()
   }
 }
 

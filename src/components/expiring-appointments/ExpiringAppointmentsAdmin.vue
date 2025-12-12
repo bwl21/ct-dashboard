@@ -618,16 +618,14 @@ const appointmentTags = computed(() => {
   return allTags.value?.filter((tag) => tag.domainType === 'appointment') || []
 })
 
-// Use cached appointments data from TanStack Query with tag filtering
+// Use cached appointments data from TanStack Query
+// Load all appointments - tag filtering happens client-side in applyFilters()
 const {
   data: cachedAppointments,
   isLoading: cacheLoading,
   error: cacheError,
   refetch,
-} = useExpiringAppointments(
-  daysInAdvance.value === 'alle' ? 9999 : parseInt(daysInAdvance.value, 10),
-  selectedTagIds.value
-)
+} = useExpiringAppointments(9999) // Load all appointments
 
 // AdminTable reference is already declared in the selection state
 
@@ -641,11 +639,8 @@ watch(
   cachedAppointments,
   (newCachedAppointments) => {
     if (newCachedAppointments && newCachedAppointments.length > 0) {
-      // Normalize appointments to ensure seriesId exists for row-key
-      appointments.value = newCachedAppointments.map((appointment) => ({
-        ...appointment,
-        seriesId: appointment.base?.id,
-      }))
+      // Apply filters when new data arrives
+      applyFilters()
     }
   },
   { immediate: true }
@@ -833,14 +828,26 @@ const clearFilters = () => {
 
 // Filter functions
 const applyFilters = () => {
+  console.log('🔍 applyFilters called with:', {
+    daysInAdvance: daysInAdvance.value,
+    calendarFilter: calendarFilter.value,
+    statusFilter: statusFilter.value,
+    selectedTagIds: selectedTagIds.value,
+    cachedAppointmentsCount: cachedAppointments.value?.length || 0,
+  })
+
   localLoading.value = true
   localError.value = null
 
   try {
-    if (!cachedAppointments.value) return
+    if (!cachedAppointments.value) {
+      console.log('⚠️ No cached appointments available')
+      return
+    }
 
     // Apply filters
     let filtered = [...cachedAppointments.value]
+    console.log('📊 Starting with', filtered.length, 'appointments')
 
     // Filter by days in advance
     const now = new Date()
@@ -894,12 +901,16 @@ const applyFilters = () => {
 
     // Filter by tags
     if (selectedTagIds.value.length > 0) {
+      console.log('🏷️ Filtering by tags:', selectedTagIds.value)
+      console.log('📊 Before tag filter:', filtered.length, 'appointments')
       filtered = filtered.filter((appointment) => {
         const appointmentTags = appointment.base.tags || []
-        return selectedTagIds.value.some((tagId) =>
+        const hasMatchingTag = selectedTagIds.value.some((tagId) =>
           appointmentTags.some((tag: any) => tag.id === tagId)
         )
+        return hasMatchingTag
       })
+      console.log('📊 After tag filter:', filtered.length, 'appointments')
     }
 
     // Normalize appointments to ensure seriesId exists for row-key
@@ -907,8 +918,9 @@ const applyFilters = () => {
       ...appointment,
       seriesId: appointment.base?.id,
     }))
+    console.log('✅ Applied filters, result:', appointments.value.length, 'appointments')
   } catch (err) {
-    console.error('Error filtering appointments:', err)
+    console.error('❌ Error filtering appointments:', err)
     localError.value = 'Fehler beim Filtern der Termine.'
   } finally {
     localLoading.value = false
@@ -935,13 +947,9 @@ const refreshData = () => {
 }
 
 // Watch for changes to filters and apply them
-watch(
-  [daysInAdvance, calendarFilter, statusFilter, selectedTagIds],
-  () => {
-    applyFilters()
-  },
-  { immediate: true }
-)
+watch([daysInAdvance, calendarFilter, statusFilter, selectedTagIds], () => {
+  applyFilters()
+})
 
 // Initialize component
 onMounted(() => {
