@@ -37,119 +37,135 @@
       </div>
       <div class="modal-body">
         <div class="appointment-details">
-          <!-- Basic Info Section -->
-          <div class="detail-section">
+          <!-- Basic Info Card -->
+          <div class="detail-card">
             <h4>Termindetails</h4>
-            <div class="detail-grid">
-              <div class="detail-row">
+            <div class="detail-grid-two-col">
+              <div class="detail-item">
                 <span class="detail-label">Titel:</span>
                 <span>{{ selectedAppointment.base?.title || '-' }}</span>
               </div>
-              <div class="detail-row">
-                <span class="detail-label">Beginn:</span>
-                <span>{{ formatDateTime(selectedAppointment.calculated?.startDate) }}</span>
+              <div class="detail-item" v-if="selectedAppointment.base?.subtitle">
+                <span class="detail-label">Untertitel:</span>
+                <span>{{ selectedAppointment.base.subtitle }}</span>
               </div>
-              <div class="detail-row">
-                <span class="detail-label">Ende:</span>
-                <span>{{ formatDateTime(selectedAppointment.calculated?.endDate) }}</span>
-              </div>
-
-              <!-- Series Information -->
-              <template v-if="selectedAppointment.base?.repeatId">
-                <div class="detail-row">
-                  <span class="detail-label">Serie:</span>
-                  <span>
-                    <template
-                      v-if="
-                        selectedAppointment.base.repeatFrequency === 0 ||
-                        selectedAppointment.base.repeatOption
-                      "
-                    >
-                      Manuell
-                    </template>
-                    <template v-else>
-                      {{ getRepetitionType(selectedAppointment.base.repeatFrequency) }}
-                      <template v-if="selectedAppointment.base.repeatFrequency > 1">
-                        , alle {{ selectedAppointment.base.repeatFrequency }}
-                        {{ getIntervalUnit(selectedAppointment.base.repeatFrequency) }}
-                      </template>
-                    </template>
-                    <template v-if="selectedAppointment.base.repeatUntil">
-                      , bis {{ formatDate(selectedAppointment.base.repeatUntil) }}
-                    </template>
-                    <template v-else-if="!selectedAppointment.base.repeatOption">
-                      , ohne Enddatum
-                    </template>
-                  </span>
+              <div class="detail-item">
+                <span class="detail-label">Kalender:</span>
+                <div class="calendar-badge">
+                  <span
+                    class="calendar-color"
+                    :style="{ backgroundColor: selectedAppointment.base?.calendar?.color }"
+                  ></span>
+                  <span>{{ selectedAppointment.base?.calendar?.name || '-' }}</span>
                 </div>
-
-                <!-- Exceptions -->
-                <div class="detail-row" v-if="selectedAppointment.base.exceptions?.length">
-                  <span class="detail-label">Ausnahmen:</span>
-                  <span>
-                    <template
-                      v-for="(exception, index) in selectedAppointment.base.exceptions"
-                      :key="exception.id || index"
-                    >
-                      {{ formatDate(exception.date) }}
-                      <template v-if="index < selectedAppointment.base.exceptions.length - 1">
-                        ,
-                      </template>
-                    </template>
-                  </span>
-                </div>
-
-                <!-- Additional Dates -->
-                <div class="detail-row" v-if="selectedAppointment.base.additionals?.length">
-                  <span class="detail-label">Zusätzliche Termine:</span>
-                  <span>
-                    <template
-                      v-for="(date, index) in selectedAppointment.base.additionals"
-                      :key="index"
-                    >
-                      {{ formatDate(date) }}
-                      <template v-if="index < selectedAppointment.base.additionals.length - 1">
-                        ,
-                      </template>
-                    </template>
-                  </span>
-                </div>
-              </template>
-
-              <!-- Tags -->
-              <div class="detail-row" v-if="selectedAppointment.tags?.length">
-                <span class="detail-label">Tags:</span>
-                <span class="tags-container">
-                  <template
-                    v-for="(tag, index) in [...selectedAppointment.tags].sort((a, b) =>
-                      a.name.localeCompare(b.name)
-                    )"
-                    :key="tag.id"
-                  >
-                    <span
-                      class="tag-badge"
-                      :style="{
-                        '--tag-bg': getTagColor(tag.color),
-                        '--tag-text': getContrastColor(getTagColor(tag.color)),
-                      }"
-                    >
-                      {{ tag.name }}
-                    </span>
-                    <template v-if="index < selectedAppointment.tags.length - 1">,</template>
-                  </template>
-                </span>
               </div>
-              <div class="detail-row" v-else>
-                <span class="detail-label">Tags:</span>
-                <span>-</span>
+              <div class="detail-item">
+                <span class="detail-label">Serienbeginn:</span>
+                <span>{{ formatDate(selectedAppointment.base?.startDate) }}</span>
               </div>
-
-              <!-- Notes -->
-              <div class="detail-row" v-if="selectedAppointment.base?.note">
-                <span class="detail-label">Notizen:</span>
-                <span class="note">{{ selectedAppointment.base.note }}</span>
+              <div class="detail-item">
+                <span class="detail-label">Serienende:</span>
+                <span>{{ getEffectiveEndDate(selectedAppointment) }}</span>
+              </div>
+              <div class="detail-item" v-if="selectedAppointment.base?.address">
+                <span class="detail-label">Adresse:</span>
+                <span>{{ formatAddress(selectedAppointment.base.address) }}</span>
+              </div>
+              <div class="detail-item" v-if="selectedAppointment.base?.link">
+                <span class="detail-label">Link:</span>
+                <a :href="selectedAppointment.base.link" target="_blank" class="appointment-link">
+                  {{ selectedAppointment.base.link }}
+                </a>
               </div>
             </div>
+          </div>
+
+          <!-- Series Information Card -->
+          <div class="detail-card" v-if="selectedAppointment.base?.repeatId">
+            <h4>Serientermin</h4>
+            <div class="detail-grid-two-col">
+              <div class="detail-item">
+                <span class="detail-label">Serie:</span>
+                <span>
+                  {{ getRepetitionText(selectedAppointment.base) }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Exceptions -->
+            <div class="detail-list" v-if="selectedAppointment.base.exceptions?.length">
+              <div class="detail-list-header">
+                <span class="detail-label">
+                  Ausnahmen ({{ selectedAppointment.base.exceptions.length }}):
+                </span>
+                <button
+                  v-if="selectedAppointment.base.exceptions.length > 10"
+                  @click="showAllExceptions = !showAllExceptions"
+                  class="toggle-btn"
+                >
+                  {{ showAllExceptions ? 'Weniger anzeigen' : 'Alle anzeigen' }}
+                </button>
+              </div>
+              <div class="date-chips">
+                <span
+                  v-for="(exception, index) in displayedExceptions"
+                  :key="exception.id || index"
+                  class="date-chip"
+                >
+                  {{ formatDate(exception.date) }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Additional Dates -->
+            <div class="detail-list" v-if="selectedAppointment.base.additionals?.length">
+              <span class="detail-label">Weitere Termine:</span>
+              <div class="date-chips">
+                <span
+                  v-for="additional in selectedAppointment.base.additionals"
+                  :key="additional.id"
+                  class="date-chip"
+                >
+                  {{ formatDate(additional.date) }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tags Card -->
+          <div class="detail-card" v-if="selectedAppointment.tags?.length">
+            <h4>Tags</h4>
+            <div class="tags-container">
+              <span
+                v-for="tag in [...selectedAppointment.tags].sort((a, b) =>
+                  a.name.localeCompare(b.name)
+                )"
+                :key="tag.id"
+                class="tag-badge"
+                :style="{
+                  '--tag-bg': getTagColor(tag.color),
+                  '--tag-text': getContrastColor(getTagColor(tag.color)),
+                }"
+              >
+                {{ tag.name }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Description Card -->
+          <div class="detail-card" v-if="selectedAppointment.base?.description">
+            <h4>Beschreibung</h4>
+            <div class="description-content" v-html="selectedAppointment.base.description"></div>
+          </div>
+
+          <!-- Image Card -->
+          <div class="detail-card" v-if="selectedAppointment.base?.image?.imageUrl">
+            <h4>Bild</h4>
+            <img
+              :src="selectedAppointment.base.image.imageUrl"
+              :alt="selectedAppointment.base?.title"
+              class="appointment-image"
+            />
           </div>
         </div>
       </div>
@@ -325,7 +341,12 @@ import type { DashboardModule } from '@/types/modules'
 import TagMultiSelect from '@/components/common/TagMultiSelect.vue'
 import BulkActionsWidget from '@/components/common/BulkActionsWidget.vue'
 import type { TableColumn } from '@/types/table'
-import { findExpiringSeries, getAppointmentUrl, type Appointment } from '@/services/churchtools'
+import {
+  findExpiringSeries,
+  getAppointmentUrl,
+  fetchAppointmentSeries,
+  type Appointment,
+} from '@/services/churchtools'
 import { useExpiringAppointments } from '@/composables/useExpiringAppointments'
 import { useTags } from '@/composables/useTags'
 import { useBulkAppointmentActions } from '@/composables/useBulkAppointmentActions'
@@ -362,11 +383,83 @@ const handleSelectionChange = (selectedIds: number[]) => {
 
 // Modal state
 const selectedAppointment = ref<any>(null)
+const showAllExceptions = ref(false)
 
 // Show appointment details in modal
-const showAppointmentDetails = (appointment: any) => {
-  console.log('Selected appointment data:', JSON.parse(JSON.stringify(appointment)))
+const showAppointmentDetails = async (appointment: any) => {
+  const startTime = performance.now()
+  console.log('🔍 Opening appointment details...')
+
+  // Show modal immediately with preview data
   selectedAppointment.value = appointment
+  showAllExceptions.value = false
+
+  try {
+    // Fetch full appointment series data
+    const appointmentId = appointment.base?.id || appointment.seriesId
+    const startDate = appointment.base?.startDate?.split('T')[0] || appointment.base?.startDate
+
+    console.log(`📡 Fetching series ${appointmentId} with startDate ${startDate}`)
+    const fetchStart = performance.now()
+
+    if (appointmentId && startDate) {
+      const fullData = await fetchAppointmentSeries(appointmentId, startDate)
+      const fetchEnd = performance.now()
+      console.log(`✅ API call took ${(fetchEnd - fetchStart).toFixed(0)}ms`)
+      console.log('📦 Full data structure:', fullData)
+      console.log('📦 Has base?', !!fullData.base)
+      console.log('📦 Has calculated?', !!fullData.calculated)
+      console.log('📦 Has tags?', !!fullData.tags)
+
+      // Update with full data
+      const updateStart = performance.now()
+
+      // The API returns { appointment: { base, calculated } }
+      const appointmentData = fullData.appointment || fullData
+      selectedAppointment.value = {
+        base: appointmentData.base,
+        calculated: appointmentData.calculated,
+        tags: appointmentData.base?.tags || appointment.tags,
+        seriesId: appointmentData.base?.id,
+      }
+
+      const updateEnd = performance.now()
+      console.log(`✅ Data update took ${(updateEnd - updateStart).toFixed(0)}ms`)
+      console.log('📦 Updated appointment:', selectedAppointment.value)
+    }
+
+    const totalTime = performance.now() - startTime
+    console.log(`✅ Total time: ${totalTime.toFixed(0)}ms`)
+  } catch (error) {
+    console.error('❌ Error loading appointment details:', error)
+    // Keep showing preview data if loading fails
+  }
+}
+
+// Computed property for displayed exceptions
+const displayedExceptions = computed(() => {
+  if (!selectedAppointment.value?.base?.exceptions) return []
+  const exceptions = selectedAppointment.value.base.exceptions
+  if (showAllExceptions.value || exceptions.length <= 10) {
+    return exceptions
+  }
+  return exceptions.slice(0, 10)
+})
+
+// Format address
+const formatAddress = (address: any) => {
+  if (!address) return '-'
+  if (typeof address === 'string') return address
+
+  const parts = []
+  if (address.street) parts.push(address.street)
+  if (address.addition) parts.push(address.addition)
+  if (address.zip || address.city) {
+    const cityPart = [address.zip, address.city].filter(Boolean).join(' ')
+    parts.push(cityPart)
+  }
+
+  return parts.join(', ') || '-'
 }
 
 // Format date for display (date only)
@@ -429,22 +522,53 @@ const formatDateTime = (dateString: string | null | undefined) => {
   }
 }
 
-// Get repetition type based on frequency
-const getRepetitionType = (frequency: number) => {
-  if (frequency === 1) return 'Täglich'
-  if (frequency % 7 === 0) return 'Wöchentlich'
-  if (frequency % 30 === 0) return 'Monatlich'
-  if (frequency % 365 === 0) return 'Jährlich'
-  return 'Benutzerdefiniert'
-}
+// Get full repetition text based on repeatId and repeatFrequency
+const getRepetitionText = (base: any) => {
+  if (!base.repeatId || base.repeatId === 0) {
+    return 'Keine Wiederholung'
+  }
 
-// Get interval unit based on frequency
-const getIntervalUnit = (frequency: number) => {
-  if (frequency === 1) return 'Tag'
-  if (frequency % 365 === 0) return ' Jahre'
-  if (frequency % 30 === 0) return ' Monate'
-  if (frequency % 7 === 0) return ' Wochen'
-  return ' Tage'
+  if (base.repeatId === 999) {
+    return 'Manuell'
+  }
+
+  const frequency = base.repeatFrequency || 1
+  let typeText = ''
+  let intervalText = ''
+
+  // Determine type based on repeatId
+  switch (base.repeatId) {
+    case 1: // DAILY
+      typeText = frequency === 1 ? 'Täglich' : 'Alle ' + frequency + ' Tage'
+      break
+    case 7: // WEEKLY
+      typeText = frequency === 1 ? 'Wöchentlich' : 'Alle ' + frequency + ' Wochen'
+      break
+    case 31: // MONTHLY_BY_DATE
+      typeText =
+        frequency === 1
+          ? 'Monatlich (am gleichen Tag)'
+          : 'Alle ' + frequency + ' Monate (am gleichen Tag)'
+      break
+    case 32: // MONTHLY_BY_WEEKDAY
+      typeText =
+        frequency === 1
+          ? 'Monatlich (am gleichen Wochentag)'
+          : 'Alle ' + frequency + ' Monate (am gleichen Wochentag)'
+      break
+    case 365: // YEARLY
+      typeText = frequency === 1 ? 'Jährlich' : 'Alle ' + frequency + ' Jahre'
+      break
+    default:
+      typeText = 'Benutzerdefiniert'
+  }
+
+  // Add end date info
+  if (base.repeatUntil) {
+    return typeText + ', bis ' + formatDate(base.repeatUntil)
+  } else {
+    return typeText + ', ohne Enddatum'
+  }
 }
 
 // Format repetition type for display (kept for backward compatibility)
@@ -1017,67 +1141,142 @@ select[multiple] option {
 }
 
 .modal-body {
-  padding: 20px;
-  background: white;
+  padding: 1.5rem;
+  background: #f9fafb;
+  max-height: 70vh;
+  overflow-y: auto;
 }
 
-.detail-section {
-  margin-bottom: 1.5rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.detail-section:last-child {
-  border-bottom: none;
-  margin-bottom: 0;
-  padding-bottom: 0;
-}
-
-div.detail-section > h4 {
-  margin-top: 0;
-  margin-bottom: 1rem;
-  color: #1f2937;
-  font-size: 1.1rem;
-  font-weight: 600;
-}
-
-.detail-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 0.75rem;
-}
-
-.detail-row {
+.appointment-details {
   display: flex;
-  margin-bottom: 0.5rem;
-  line-height: 1.5;
-  font-size: 0.95rem;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Detail Cards */
+.detail-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1.25rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.detail-card h4 {
+  margin: 0 0 1rem 0;
+  color: #1f2937;
+  font-size: 1rem;
+  font-weight: 600;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 0.5rem;
+}
+
+/* Two-column grid for details */
+.detail-grid-two-col {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .detail-grid-two-col {
+    grid-template-columns: 1fr;
+  }
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .detail-label {
   font-weight: 600;
-  color: #4b5563;
-  min-width: 120px;
+  color: #6b7280;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.detail-item > span:not(.detail-label) {
+  color: #1f2937;
+  font-size: 0.95rem;
+}
+
+/* List items */
+.detail-list {
+  margin-top: 1rem;
+}
+
+.detail-list .detail-label {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+/* Date chips */
+.date-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.date-chip {
+  display: inline-block;
+  padding: 0.375rem 0.75rem;
+  background: #f3f4f6;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+}
+
+/* Detail list header */
+.detail-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.toggle-btn {
+  padding: 0.25rem 0.75rem;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.toggle-btn:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+/* Calendar badge */
+.calendar-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.calendar-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
   flex-shrink: 0;
 }
 
-/* Lists styling */
-.exception-list,
-.additional-dates {
-  list-style: none;
-  padding: 0;
-  margin: 0.5rem 0 0 0;
+/* Appointment link */
+.appointment-link {
+  color: var(--ct-primary, #3498db);
+  text-decoration: none;
+  word-break: break-all;
 }
 
-.exception-list li,
-.additional-dates li {
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #f3f4f6;
-}
-
-.exception-list li:last-child,
-.additional-dates li:last-child {
-  border-bottom: none;
+.appointment-link:hover {
+  text-decoration: underline;
 }
 
 /* Tags styling */
@@ -1085,13 +1284,12 @@ div.detail-section > h4 {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-top: 0.5rem;
 }
 
 .tag-badge {
   display: inline-flex;
   align-items: center;
-  padding: 0.25rem 0.75rem;
+  padding: 0.375rem 0.875rem;
   background-color: var(--tag-bg) !important;
   border-radius: 1rem;
   font-size: 0.85rem;
@@ -1100,16 +1298,29 @@ div.detail-section > h4 {
   white-space: nowrap;
 }
 
-/* Notes styling */
-.note {
-  margin: 0.5rem 0 0 0;
-  padding: 0.75rem;
-  background-color: #f9fafb;
-  border-radius: 0.375rem;
-  white-space: pre-wrap;
+/* Description styling */
+.description-content {
+  color: #374151;
   font-size: 0.95rem;
-  line-height: 1.5;
-  color: #4b5563;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.description-content :deep(p) {
+  margin: 0 0 0.75rem 0;
+}
+
+.description-content :deep(p:last-child) {
+  margin-bottom: 0;
+}
+
+/* Image styling */
+.appointment-image {
+  width: 100%;
+  max-width: 600px;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .modal-footer {

@@ -31,6 +31,19 @@ export async function fetchCalendars(): Promise<Calendar[]> {
 }
 
 /**
+ * Fetches a single appointment series with all details
+ */
+export async function fetchAppointmentSeries(
+  appointmentId: number,
+  startDate: string
+): Promise<any> {
+  const response = await churchtoolsClient.get(
+    `/calendars/appointments/${appointmentId}/${startDate}`
+  )
+  return response
+}
+
+/**
  * Fetches appointments for a specific calendar within a date range
  */
 export async function fetchAppointments(
