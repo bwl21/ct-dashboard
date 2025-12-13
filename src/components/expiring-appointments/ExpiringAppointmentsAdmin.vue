@@ -597,7 +597,18 @@ const clearSelection = () => {
 const handleExtendAppointments = async () => {
   if (selectedAppointments.value.length === 0) return
 
-  const result = await extendAppointments(selectedAppointments.value, extensionMonths.value)
+  // Get the actual appointment objects for the selected series IDs
+  const selectedAppointmentObjects = appointments.value.filter((apt) =>
+    selectedAppointments.value.includes(apt.seriesId)
+  )
+
+  // Prepare data with seriesId and startDate for API call
+  const appointmentsData = selectedAppointmentObjects.map((apt) => ({
+    seriesId: apt.base?.id,
+    startDate: apt.base?.startDate?.split('T')[0] || apt.base?.startDate,
+  }))
+
+  const result = await extendAppointments(appointmentsData, extensionMonths.value)
 
   if (result.success > 0) {
     // Clear selection and refresh data

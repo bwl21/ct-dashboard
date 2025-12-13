@@ -14,7 +14,7 @@ export function useBulkAppointmentActions() {
    * Skips appointments that would be shortened
    */
   const extendAppointments = async (
-    appointmentIds: number[],
+    appointments: Array<{ seriesId: number; startDate: string }>,
     extensionMonths: number
   ): Promise<{ success: number; failed: number; skipped: number }> => {
     isProcessing.value = true
@@ -33,27 +33,30 @@ export function useBulkAppointmentActions() {
     newEndDate.setMonth(today.getMonth() + extensionMonths)
     const newRepeatUntil = newEndDate.toISOString().split('T')[0]
 
-    for (const appointmentId of appointmentIds) {
+    for (const appointment of appointments) {
       try {
-        // Fetch current appointment data
-        const response: any = await churchtoolsClient.get(`/appointments/${appointmentId}`)
-        const appointment = response.appointment || response
+        // Fetch current appointment data using seriesId and startDate
+        const response: any = await churchtoolsClient.get(
+          `/calendars/appointments/${appointment.seriesId}/${appointment.startDate}`
+        )
+        const appointmentData = response.appointment || response
 
-        if (!appointment || !appointment.base) {
-          console.error(`Appointment ${appointmentId} not found or has no base data`)
+        if (!appointmentData || !appointmentData.base) {
+          console.error(`Appointment series ${appointment.seriesId} not found or has no base data`)
           results.failed++
           errorCount.value++
           continue
         }
 
-        const base = appointment.base
+        const base = appointmentData.base
+        const seriesId = base.id
 
         // Check if series would be shortened
         if (base.repeatUntil) {
           const currentEndDate = new Date(base.repeatUntil)
           if (newEndDate < currentEndDate) {
             console.warn(
-              `Skipping appointment ${appointmentId} (${base.title}): would be shortened from ${base.repeatUntil} to ${newRepeatUntil}`
+              `Skipping appointment ${seriesId} (${base.title}): would be shortened from ${base.repeatUntil} to ${newRepeatUntil}`
             )
             results.skipped++
             continue
@@ -61,14 +64,14 @@ export function useBulkAppointmentActions() {
         }
 
         // Update appointment with absolute end date
-        await churchtoolsClient.patch(`/appointments/${appointmentId}`, {
+        await churchtoolsClient.patch(`/appointments/${seriesId}`, {
           repeatUntil: newRepeatUntil,
         })
 
         results.success++
         processedCount.value++
       } catch (error) {
-        console.error(`Failed to extend appointment ${appointmentId}:`, error)
+        console.error(`Failed to extend appointment ${appointment.seriesId}:`, error)
         results.failed++
         errorCount.value++
       }
