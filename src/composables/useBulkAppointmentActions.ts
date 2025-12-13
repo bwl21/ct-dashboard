@@ -3,7 +3,7 @@ import { churchtoolsClient } from '@churchtools/churchtools-client'
 import { useToast } from './useToast'
 
 export function useBulkAppointmentActions() {
-  const { showToast } = useToast()
+  const { showSuccess, showError, showWarning } = useToast()
   const isProcessing = ref(false)
   const processedCount = ref(0)
   const errorCount = ref(0)
@@ -27,7 +27,8 @@ export function useBulkAppointmentActions() {
     for (const appointmentId of appointmentIds) {
       try {
         // Fetch current appointment data
-        const appointment = await churchtoolsClient.get(`/appointments/${appointmentId}`)
+        const response: any = await churchtoolsClient.get(`/appointments/${appointmentId}`)
+        const appointment = response.appointment || response
 
         if (!appointment || !appointment.base) {
           console.error(`Appointment ${appointmentId} not found or has no base data`)
@@ -71,17 +72,15 @@ export function useBulkAppointmentActions() {
 
     // Show result toast
     if (results.success > 0 && results.failed === 0) {
-      showToast(
-        `${results.success} ${results.success === 1 ? 'Termin' : 'Termine'} erfolgreich verlängert`,
-        'success'
+      showSuccess(
+        `${results.success} ${results.success === 1 ? 'Termin' : 'Termine'} erfolgreich verlängert`
       )
     } else if (results.success > 0 && results.failed > 0) {
-      showToast(
-        `${results.success} ${results.success === 1 ? 'Termin' : 'Termine'} verlängert, ${results.failed} fehlgeschlagen`,
-        'warning'
+      showWarning(
+        `${results.success} ${results.success === 1 ? 'Termin' : 'Termine'} verlängert, ${results.failed} fehlgeschlagen`
       )
     } else {
-      showToast(`Fehler beim Verlängern der Termine`, 'error')
+      showError(`Fehler beim Verlängern der Termine`)
     }
 
     return results

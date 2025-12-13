@@ -127,19 +127,28 @@ export async function findExpiringSeries(
     const tags = 'tags' in appointment ? appointment.tags : []
 
     // Return the appointment with tags properly set in base.tags
-    return {
-      ...appointment,
-      base: {
-        ...appointment.base,
+    // Handle both AppointmentBase and AppointmentCalculated
+    if ('base' in appointment) {
+      return {
+        ...appointment,
+        base: {
+          ...(appointment as any).base,
+          tags: Array.isArray(tags) ? tags : [],
+        },
+      }
+    } else {
+      // For AppointmentBase, add tags directly
+      return {
+        ...appointment,
         tags: Array.isArray(tags) ? tags : [],
-      },
+      }
     }
   })
 
   // Find recurring appointments that are ending soon
   const expiringSeries = processedAppointments.filter((appointment) => {
     // Handle both AppointmentBase and AppointmentCalculated types
-    const base = 'base' in appointment ? appointment.base : appointment
+    const base = 'base' in appointment ? (appointment as any).base : appointment
 
     // Only consider recurring appointments (must have repeatId)
     if (!base.repeatId) return false
@@ -152,9 +161,9 @@ export async function findExpiringSeries(
     } else if (base.additionals && Array.isArray(base.additionals) && base.additionals.length > 0) {
       // Find the latest date in additionals
       const latestAdditional = base.additionals
-        .map((additional) => new Date(additional.date || additional.date))
-        .filter((date) => !isNaN(date.getTime()))
-        .sort((a, b) => b.getTime() - a.getTime())[0]
+        .map((additional: any) => new Date(additional.date || additional.startDate))
+        .filter((date: Date) => !isNaN(date.getTime()))
+        .sort((a: Date, b: Date) => b.getTime() - a.getTime())[0]
 
       if (latestAdditional) {
         effectiveEndDate = latestAdditional

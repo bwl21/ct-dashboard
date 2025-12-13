@@ -20,6 +20,7 @@
   - Integrated bulk widget into `ExpiringAppointmentsAdmin.vue`
 
 **Key Features**:
+
 - Checkbox selection in AdminTable (selectable prop)
 - Selection count display in floating widget
 - Bulk appointment extension (3-24 months)
@@ -36,6 +37,7 @@
   - Fixed data structure issues (image, description, additionals, exceptions)
 
 **Key Improvements**:
+
 - **Card-based Layout**: Separate cards for details, series info, tags, description, image
 - **Two-column Grid**: Responsive layout for appointment details
 - **Series Information**: Proper display using `repeatId` (DAILY=1, WEEKLY=7, etc.)
@@ -57,6 +59,7 @@
   - Fixed watch initialization order
 
 **Key Fixes**:
+
 - Tag filtering now client-side only (no API reload)
 - Dropdown appears directly under widget
 - Dropdown follows widget on scroll (instead of closing)
@@ -72,6 +75,7 @@
 **Impact**: Can be reused in all admin panels with custom actions
 
 **Pattern**:
+
 ```vue
 <BulkActionsWidget
   :selected-ids="selectedIds"
@@ -92,12 +96,17 @@
 **Impact**: Modal shows complete appointment series with all details
 
 **Response Structure**:
+
 ```json
 {
   "data": {
     "appointment": {
-      "base": { /* all series data */ },
-      "calculated": { /* computed data */ }
+      "base": {
+        /* all series data */
+      },
+      "calculated": {
+        /* computed data */
+      }
     }
   }
 }
@@ -110,6 +119,7 @@
 **Impact**: Instant filtering, no network requests, better UX
 
 **Implementation**:
+
 - Load 9999 days of appointments once
 - Apply tag filter in `applyFilters()` function
 - Watch for tag changes, re-filter locally
@@ -127,6 +137,7 @@
 **Problem**: Checkbox state not updating when using `Set.add()` and `Set.delete()`  
 **Solution**: Create new Set instance on each change for Vue reactivity  
 **Code**:
+
 ```javascript
 // Before (not reactive)
 selectedItems.value.add(itemId)
@@ -142,6 +153,7 @@ selectedItems.value = newSet
 **Problem**: Multiple issues with nested data (image, description, additionals)  
 **Solution**: Understand API response structure and access correct fields  
 **Fixes**:
+
 - Image: `appointment.base.image.imageUrl` (not `image` directly)
 - Description: `appointment.base.description` (not deprecated `note`)
 - Additionals: Array of `{id, date}` objects (not date strings)
@@ -158,6 +170,7 @@ selectedItems.value = newSet
 **Problem**: Changing tags triggered API requests, causing data reload  
 **Solution**: Load all data once, filter client-side  
 **Implementation**:
+
 - Remove tag parameter from `useExpiringAppointments`
 - Filter in `applyFilters()` based on `selectedTagIds`
 - Watch only triggers local filtering
