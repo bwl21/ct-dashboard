@@ -79,6 +79,14 @@
           <table class="admin-data-table" ref="tableRef">
             <thead>
               <tr>
+                <th v-if="selectable" class="checkbox-column">
+                  <input
+                    type="checkbox"
+                    :checked="isAllSelected"
+                    @change="toggleSelectAll"
+                    class="ct-checkbox"
+                  />
+                </th>
                 <th
                   v-for="(column, index) in columns"
                   :key="column.key"
@@ -90,10 +98,18 @@
                   :style="{ width: columnWidths[index] + 'px' }"
                   @click="column.sortable && sortBy(column.key)"
                 >
-                  {{ column.label }}
-                  <span v-if="column.sortable && sortField === column.key" class="sort-indicator">
-                    {{ sortDirection === 'asc' ? '↑' : '↓' }}
-                  </span>
+                  <!-- Custom Header Slot -->
+                  <slot v-if="column.headerSlot" :name="column.headerSlot" :column="column">
+                    {{ column.label }}
+                  </slot>
+                  <!-- Default Header Content -->
+                  <template v-else>
+                    {{ column.label }}
+                    <span v-if="column.sortable && sortField === column.key" class="sort-indicator">
+                      {{ sortDirection === 'asc' ? '↑' : '↓' }}
+                    </span>
+                  </template>
+
                   <div
                     v-if="column.resizable"
                     class="resize-handle"
@@ -104,6 +120,14 @@
             </thead>
             <tbody>
               <tr v-for="item in filteredData" :key="item[rowKey]" class="data-row">
+                <td v-if="selectable" class="checkbox-column">
+                  <input
+                    type="checkbox"
+                    :checked="selectedItems.has(item[rowKey])"
+                    @change="toggleSelectItem(item[rowKey])"
+                    class="ct-checkbox"
+                  />
+                </td>
                 <td v-for="column in columns" :key="column.key">
                   <!-- Custom Cell Rendering via Slots -->
                   <slot
@@ -155,6 +179,9 @@ interface Props {
   defaultSortField?: string
   defaultSortDirection?: SortDirection
 
+  // Selection
+  selectable?: boolean
+
   // Text customization
   loadingText?: string
   retryText?: string
@@ -167,6 +194,7 @@ const props = withDefaults(defineProps<Props>(), {
   searchPlaceholder: 'Suchen...',
   searchFields: () => [],
   defaultSortDirection: 'asc',
+  selectable: false,
   loadingText: 'Lädt...',
   retryText: 'Erneut versuchen',
   reloadText: 'Erneut laden',
@@ -176,6 +204,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   retry: []
   reload: []
+  'selection-change': [selectedIds: any[]]
 }>()
 
 // Development mode detection
@@ -211,6 +240,38 @@ const hasActiveFilters = computed(() => {
   return searchTerm.value !== ''
 })
 
+// Selection management
+const selectedItems = ref<Set<any>>(new Set())
+
+const isAllSelected = computed(() => {
+  return filteredData.value.length > 0 && selectedItems.value.size === filteredData.value.length
+})
+
+const toggleSelectAll = () => {
+  if (isAllSelected.value) {
+    selectedItems.value = new Set()
+  } else {
+    selectedItems.value = new Set(filteredData.value.map((item) => item[props.rowKey]))
+  }
+  emit('selection-change', Array.from(selectedItems.value))
+}
+
+const toggleSelectItem = (itemId: any) => {
+  const newSet = new Set(selectedItems.value)
+  if (newSet.has(itemId)) {
+    newSet.delete(itemId)
+  } else {
+    newSet.add(itemId)
+  }
+  selectedItems.value = newSet
+  emit('selection-change', Array.from(selectedItems.value))
+}
+
+const clearSelection = () => {
+  selectedItems.value = new Set()
+  emit('selection-change', [])
+}
+
 // Clear search function for parent components
 const clearSearch = () => {
   searchTerm.value = ''
@@ -220,7 +281,9 @@ const clearSearch = () => {
 defineExpose({
   searchTerm: readonly(searchTerm),
   filteredData: readonly(filteredData),
+  selectedItems: readonly(selectedItems),
   clearSearch,
+  clearSelection,
 })
 </script>
 
@@ -437,7 +500,8 @@ defineExpose({
 .table-container {
   width: 100%;
   max-width: 100%;
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: auto;
   border-radius: 8px;
   background: var(--ct-bg-primary, #ffffff);
   margin-bottom: 0;
@@ -485,10 +549,19 @@ defineExpose({
 .admin-data-table td {
   padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--ct-border-color, #f0f2f5);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   vertical-align: middle;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  max-width: 300px; /* Default max-width for all cells */
+}
+
+/* Specific style for description cells */
+.admin-data-table td.description-cell {
+  white-space: normal;
+  min-width: 200px;
+  max-width: 400px;
+  word-break: break-word;
 }
 
 .admin-data-table th.sortable {
@@ -534,6 +607,20 @@ defineExpose({
 
 .data-row:hover {
   background-color: var(--ct-bg-secondary, #f8f9fa);
+}
+
+/* Checkbox column */
+.checkbox-column {
+  width: 40px;
+  text-align: center;
+  padding: 0.75rem 0.5rem;
+}
+
+.ct-checkbox {
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--ct-primary, #3498db);
 }
 
 /* Buttons */

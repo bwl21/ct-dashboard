@@ -6,9 +6,11 @@ export function useExpiringAppointments(daysInAdvance: number = 300000) {
   if (import.meta.env.DEV) {
     console.log('📅 Setting up expiring appointments query for', daysInAdvance, 'days')
   }
+
+  // Load ALL appointments without tag filtering - filtering happens client-side
   return useQuery({
     queryKey: ['expiring-appointments', daysInAdvance],
-    queryFn: () => findExpiringSeries(daysInAdvance),
+    queryFn: () => findExpiringSeries(daysInAdvance, []),
     staleTime: 30 * 60 * 1000, // 30 minutes - appointments don't change often
     gcTime: 60 * 60 * 1000, // 1 hour cache time
     refetchInterval: 15 * 60 * 1000, // Background update every 15 minutes

@@ -1,7 +1,7 @@
 {
   "name": "churchtools-dashboard",
   "private": true,
-  "version": "1.0.9",
+  "version": "1.0.10",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -40,6 +40,7 @@
     "@tanstack/query-sync-storage-persister": "^5.90.2",
     "@tanstack/vue-query": "^5.90.2",
     "@vitejs/plugin-vue": "^6.0.1",
+    "@vueuse/core": "^14.1.0",
     "vue": "^3.5.21",
     "vue-i18n": "^9.14.5"
   }
