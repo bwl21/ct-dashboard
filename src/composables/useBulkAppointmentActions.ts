@@ -10,11 +10,13 @@ export function useBulkAppointmentActions() {
 
   /**
    * Extend the repeat-until date for multiple appointments
+   * Sets absolute end date: today + extensionMonths
+   * Skips appointments that would be shortened
    */
   const extendAppointments = async (
     appointmentIds: number[],
     extensionMonths: number
-  ): Promise<{ success: number; failed: number }> => {
+  ): Promise<{ success: number; failed: number; skipped: number }> => {
     isProcessing.value = true
     processedCount.value = 0
     errorCount.value = 0
@@ -22,7 +24,14 @@ export function useBulkAppointmentActions() {
     const results = {
       success: 0,
       failed: 0,
+      skipped: 0,
     }
+
+    // Calculate new absolute end date: today + X months
+    const today = new Date()
+    const newEndDate = new Date(today)
+    newEndDate.setMonth(today.getMonth() + extensionMonths)
+    const newRepeatUntil = newEndDate.toISOString().split('T')[0]
 
     for (const appointmentId of appointmentIds) {
       try {
@@ -39,22 +48,19 @@ export function useBulkAppointmentActions() {
 
         const base = appointment.base
 
-        // Calculate new repeat-until date
-        let newRepeatUntil: string
-
+        // Check if series would be shortened
         if (base.repeatUntil) {
-          // Extend existing repeatUntil
-          const currentDate = new Date(base.repeatUntil)
-          currentDate.setMonth(currentDate.getMonth() + extensionMonths)
-          newRepeatUntil = currentDate.toISOString().split('T')[0]
-        } else {
-          // No repeatUntil set, extend from start date
-          const startDate = new Date(base.startDate)
-          startDate.setMonth(startDate.getMonth() + extensionMonths)
-          newRepeatUntil = startDate.toISOString().split('T')[0]
+          const currentEndDate = new Date(base.repeatUntil)
+          if (newEndDate < currentEndDate) {
+            console.warn(
+              `Skipping appointment ${appointmentId} (${base.title}): would be shortened from ${base.repeatUntil} to ${newRepeatUntil}`
+            )
+            results.skipped++
+            continue
+          }
         }
 
-        // Update appointment
+        // Update appointment with absolute end date
         await churchtoolsClient.patch(`/appointments/${appointmentId}`, {
           repeatUntil: newRepeatUntil,
         })
@@ -71,16 +77,26 @@ export function useBulkAppointmentActions() {
     isProcessing.value = false
 
     // Show result toast
-    if (results.success > 0 && results.failed === 0) {
+    if (results.success > 0 && results.failed === 0 && results.skipped === 0) {
+      // All successful
       showSuccess(
         `${results.success} ${results.success === 1 ? 'Termin' : 'Termine'} erfolgreich verlängert`
       )
-    } else if (results.success > 0 && results.failed > 0) {
+    } else if (results.success > 0 && results.skipped > 0) {
+      // Some successful, some skipped
       showWarning(
-        `${results.success} ${results.success === 1 ? 'Termin' : 'Termine'} verlängert, ${results.failed} fehlgeschlagen`
+        `${results.success} ${results.success === 1 ? 'Termin' : 'Termine'} verlängert, ${results.skipped} übersprungen (würden verkürzt)`
       )
-    } else {
-      showError(`Fehler beim Verlängern der Termine`)
+    } else if (results.skipped > 0 && results.success === 0) {
+      // All skipped
+      showWarning(
+        `Keine Termine verlängert. ${results.skipped} ${results.skipped === 1 ? 'Termin würde' : 'Termine würden'} verkürzt werden.`
+      )
+    } else if (results.failed > 0) {
+      // Some or all failed
+      showError(
+        `${results.failed} ${results.failed === 1 ? 'Termin' : 'Termine'} konnten nicht verlängert werden`
+      )
     }
 
     return results
