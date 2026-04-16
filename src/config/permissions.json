@@ -21,7 +21,7 @@
       "description": "Zugriff auf Logger-System"
     },
     "room-bookings": {
-      "module": "resources",
+      "module": "churchresource",
       "permission": "administer bookings",
       "description": "Zugriff auf Raumbuchungsanfragen - benötigt Ressourcen-Administration"
     }
