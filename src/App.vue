@@ -56,6 +56,8 @@ import BeispielCard from './components/beispiel/BeispielCard.vue'
 import ColorPickerExample from './components/common/ColorPickerExample.vue'
 import LoggerSummaryCard from './components/loggerSummary/LoggerSummaryCard.vue'
 import LoggerSummaryAdmin from './components/loggerSummary/LoggerSummaryAdmin.vue'
+import RoomBookingsCard from './components/room-bookings/RoomBookingsCard.vue'
+import RoomBookingsAdmin from './components/room-bookings/RoomBookingsAdmin.vue'
 import Toast from './components/common/Toast.vue'
 
 import { useToast } from './composables/useToast'
@@ -93,6 +95,14 @@ const modules: DashboardModule[] = [
     description: 'Überwachung und Verwaltung von Log-Einträgen',
     cardComponent: LoggerSummaryCard,
     adminComponent: LoggerSummaryAdmin,
+  },
+  {
+    id: 'room-bookings',
+    title: 'Raumbuchungsanfragen',
+    icon: '🛏️',
+    description: 'Verwaltung von Raumbuchungsanfragen',
+    cardComponent: RoomBookingsCard,
+    adminComponent: RoomBookingsAdmin,
   },
 ]
 
