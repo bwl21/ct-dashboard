@@ -208,27 +208,59 @@ Needed zusätzlich:
 | **Person-Daten** | Mit `involvedPersonsDomainObjects` enthalten (createdBy, onBehalfOf) ✅ |
 | **Konflikt-Daten** | Mit `include[]=conflicts` in Booking enthalten ✅ |
 
+## ✅ E-Mail API (Legacy Ajax Endpoint)
+
+ChurchTools hat einen **Legacy Ajax Endpoint** zum Versenden von E-Mails:
+
+```typescript
+POST /index.php?q=churchdb/ajax
+Content-Type: application/x-www-form-urlencoded
+
+Parameter:
+- ids: string                    // Komma-getrennte Person-IDs (545,892)
+- betreff: string               // Subject (URL-encoded)
+- inhalt: string                // HTML-Body (URL-encoded)
+- template_id: number           // Template-ID (z.B. 11)
+- func: "sendEMailToPersonIds"  // Funktions-Identifier
+- attachments?: string          // Optional: Datei-Hashes
+- domain_id?: number            // Optional
+- group_id?: number             // Optional
+- browsertabId?: string         // Session-Info
+
+Beispiel:
+ids=545%2C892&betreff=%5BBG+Korntal%5D+&inhalt=...&template_id=11&func=sendEMailToPersonIds
+```
+
+**Wichtig:**
+- Dieser Endpoint ist **NICHT** REST API, sondern Legacy AJAX
+- Funktioniert nur mit aktiver Session (Cookie + CSRF-Token)
+- IDs müssen komma-getrennt sein
+- HTML-Content wird direkt versendet
+- Mehrere Personen in einer Request (Batch)
+
 ## ⚠️ Noch zu klären
 
-1. **E-Mail API in ChurchTools**:
-   - Gibt es einen Endpoint zum Mailen?
-   - Oder externe Mail-Service (nodemailer, SendGrid)?
-   - SMTP-Konfiguration in ChurchTools?
+1. **Person-E-Mail in DomainObjectPerson**:
+   - Enthalten die `createdBy` und `onBehalfOf` Objekte `id` und `name`?
+   - Wir verwenden die `id` zum Versenden via `/index.php?q=churchdb/ajax`
+   - **→ Mit Test-API prüfen**
 
-2. **Person-E-Mail in DomainObjectPerson**:
-   - Enthalten die `createdBy` und `onBehalfOf` Objekte direkt eine `email` Property?
-   - Oder ist nur `id` und `name` vorhanden → separat `/persons/{id}` aufrufen?
-
-3. **Konflikt-Creator auflösen**:
-   - Konflikt enthält nur `bookingId`, `title`, `startDate`, `endDate`
+2. **Konflikt-Creator auflösen**:
+   - Konflikt enthält nur `bookingId`, `title`, `startDate`, `endDate` - **KEINE Person-Daten**
    - Um E-Mail des Konflikt-Creators zu bekommen:
-     - Option A: `GET /bookings/{conflictBookingId}` mit `include[]=involvedPersonsDomainObjects`
-     - Option B: Ist Creator schon im Konflikt-Objekt enthalten?
-   - **→ Müssen wir mit Test-API prüfen**
+     - `GET /bookings/{conflictBookingId}` mit `include[]=involvedPersonsDomainObjects`
+     - Dann `id` der createdBy Person extrahieren
+   - **→ Implementation wird mehrere nested Calls benötigen**
 
-4. **Bulk Email-Versand**:
-   - Mehrere Personen in Ablehnungs-Mail (createdBy + onBehalfOf + conflictCreators)
-   - Alle in einer Mail? Separate Mails? (Mit E-Mail-Template TBD)
+3. **Template-Verwaltung**:
+   - Wo sind die Templates definiert? (Template-ID `11` in Beispiel)
+   - Können wir Templates dynamisch laden?
+   - Oder müssen wir HTML manuell zusammenstellen?
+
+4. **Bulk Email-Versand Design**:
+   - Mehrere Personen (createdBy + onBehalfOf + conflictCreators) in einer Mail versenden
+   - Ein API-Call mit all den IDs (optimal)
+   - ODER separate Calls pro Person (einfacher zu implementieren)
 
 ## 🎯 Nächste Schritte
 
