@@ -19,6 +19,11 @@
       "module": "churchcore",
       "permission": "view logfile",
       "description": "Zugriff auf Logger-System"
+    },
+    "room-bookings": {
+      "module": "resources",
+      "permission": "administer bookings",
+      "description": "Zugriff auf Raumbuchungsanfragen - benötigt Ressourcen-Administration"
     }
   }
 }
