@@ -8,6 +8,9 @@
       :error="error"
       :columns="tableColumns"
       row-key="id"
+      :selectable="true"
+      :selected-items="selectedBookingIds"
+      @selection-change="selectedBookingIds = $event"
       title="Raumbuchungsanfragen"
       description="Verwalte alle offenen Raumbuchungsanfragen"
       searchable
@@ -97,7 +100,7 @@
       </template>
 
       <!-- Row Actions Column -->
-      <template #cell-actions="{ row }">
+      <template #actions="{ item: row }">
         <div class="row-actions">
           <button
             type="button"
@@ -119,7 +122,7 @@
       </template>
 
       <!-- Conflict Indicator Cell -->
-      <template #cell-conflicts="{ row }">
+      <template #conflicts="{ item: row }">
         <div v-if="row.conflicts && row.conflicts.length > 0" class="conflict-indicator">
           <span class="conflict-badge" :title="`${row.conflicts.length} Konflikt(e)`">
             ⚠️ {{ row.conflicts.length }}
@@ -129,7 +132,7 @@
       </template>
 
       <!-- Person Column (created by / on behalf of) -->
-      <template #cell-person="{ row }">
+      <template #person="{ item: row }">
         <div class="person-info">
           <div>{{ row.onBehalfOf?.name || row.createdBy?.name || 'Unbekannt' }}</div>
           <div v-if="row.onBehalfOf" class="secondary-person">
@@ -139,7 +142,7 @@
       </template>
 
       <!-- Date/Time Column -->
-      <template #cell-startDate="{ row }">
+      <template #startDate="{ item: row }">
         <div class="datetime-info">
           <div>{{ formatDate(row.startDate) }}</div>
           <div class="time">{{ formatTime(row.startDate) }} - {{ formatTime(row.endDate) }}</div>
@@ -293,12 +296,12 @@ const isBulkProcessing = ref(false)
 
 // Table columns
 const tableColumns = [
-  { key: 'conflicts', label: '⚠️', width: '60px', sortable: false },
+  { key: 'conflicts', label: '⚠️', width: '60px', sortable: false, cellSlot: 'conflicts' },
   { key: 'resourceName', label: 'Raum', width: '150px', sortable: true },
-  { key: 'startDate', label: 'Termin', width: '200px', sortable: true },
-  { key: 'person', label: 'Person', width: '200px', sortable: false },
+  { key: 'startDate', label: 'Termin', width: '200px', sortable: true, cellSlot: 'startDate' },
+  { key: 'person', label: 'Person', width: '200px', sortable: false, cellSlot: 'person' },
   { key: 'title', label: 'Titel', width: '200px', sortable: true },
-  { key: 'actions', label: 'Aktionen', width: '120px', sortable: false },
+  { key: 'actions', label: 'Aktionen', width: '120px', sortable: false, cellSlot: 'actions' },
 ]
 
 // Initialize
