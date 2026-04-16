@@ -101,7 +101,7 @@
         <div class="row-actions">
           <button
             type="button"
-            @click="approveBooking(row.id)"
+            @click="approveSingleBooking(row.id)"
             class="ct-btn ct-btn-sm ct-btn-success"
             title="Genehmigen"
           >
@@ -260,8 +260,8 @@ const {
   filter,
   fetchResources,
   fetchBookings,
-  approveBooking,
-  rejectBooking,
+  approveBooking: approveBookingApi,
+  rejectBooking: rejectBookingApi,
   sendRejectionEmail,
   resolveConflictCreator,
   updateFilter,
@@ -358,9 +358,9 @@ const clearSelection = () => {
 }
 
 // Single approve
-const approveBooking = async (bookingId: number) => {
+const approveSingleBooking = async (bookingId: number) => {
   try {
-    await approveBooking(bookingId)
+    await approveBookingApi(bookingId)
     showToast('Raumbuchung genehmigt', 'success')
     await refreshData()
   } catch (err: any) {
@@ -385,7 +385,7 @@ const confirmReject = async () => {
   if (!rejectingBooking.value) return
 
   try {
-    await rejectBooking(rejectingBooking.value.id, rejectReason.value)
+    await rejectBookingApi(rejectingBooking.value.id, rejectReason.value)
 
     // Send rejection email
     const emailIds: number[] = []
