@@ -4,6 +4,44 @@
 
 Neue Dashboard-Sektion zur Verwaltung von Raumbuchungsanfragen mit Konflikt-Erkennung und Genehmigungsworkflow.
 
+## 🎯 Motivation & Probleme im bisherigen Prozess
+
+### Problem 1: Unzureichende Kommunikation bei Ablehnung
+**Aktuell**: Bemerkungen bei Ablehnung einer Ressourcenbuchung werden nicht in der Ablehnungsmail übermittelt  
+**Folge**: Admin muss zusätzlich noch manuell kommunizieren, warum eine Buchung abgelehnt wurde  
+**Lösung**: 
+- Bemerkungen direkt in die Ablehnungsmail übernehmen
+- Hinweis in Mail: "Weitere Details zur Ablehnung finden Sie in der Ressourcen-Buchung"
+- Direktlink zur Buchung in der Mail (wenn technisch möglich)
+
+### Problem 2: Manuelle Konflikt-Erkennung ist fehleranfällig
+**Aktuell**: Admin sieht auf der Startseite eine Liste mit 100+ offenen Einträgen und muss jeden einzeln öffnen, um Konflikte zu erkennen  
+**Folge**: Zeitaufwendig, fehleranfällig, Konflikte werden leicht übersehen  
+**Lösung**: Dediziertes Dashboard mit Konflikt-Highlighting auf Listenlevel
+
+### Problem 3: Filter sind zu breit
+**Aktuell**: 
+- Filter "offene Bestätigungen" zeigt ALLE Räume, nicht nur die mit offenen Anfragen
+- Konflikte sind in der Filteransicht nicht sichtbar
+**Folge**: Admin muss trotzdem weitere Filterung und Klicks machen, um relevante Buchungen zu finden  
+**Lösung**: 
+- Nur Räume/Ressourcen anzeigen, für die offene Anfragen existieren
+- Konflikte direkt in der Listenansicht sichtbar
+- Filterung nach Konflikten (mit/ohne)
+
+### Problem 4: Batch-Processing nicht möglich
+**Aktuell**: Jede Raumbuchung muss einzeln bestätigt werden, keine Bulk-Aktion  
+**Folge**: Viele Zeit für repetitive Aktionen (z.B. eine Woche mit unkritischen Buchungen bestätigen)  
+**Lösung**: Zeilen-Auswahl und Bulk-Operationen (Bestätigen/Ablehnen mehrerer Buchungen gleichzeitig)
+
+### Problem 5: Unklare Termine für Bucher
+**Aktuell**: Nutzer sehen manchmal nur "unbekannter Termin" im Kalender, weil sie die Berechtigung zum Einsehen haben  
+**Folge**: Nutzer verstehen nicht, warum ihre Buchung abgelehnt wurde; Konfusion beim Buchen  
+**Lösung**: 
+- Klare Fehlermedlung/Hinweis beim Buchen, wenn Termin nicht sichtbar ist
+- Evtl. in Ablehnungsmail erwähnen: "Der geplante Termin war für Sie nicht einsehbar"
+- (Ggfs. im Rahmen separater Verbesserung an Buchungsoberfläche)
+
 ## 🎯 Funktionale Anforderungen
 
 ### 1. Raumbuchungsanfragen Übersicht (Dashboard Card)
