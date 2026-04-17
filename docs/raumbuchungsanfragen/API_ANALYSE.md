@@ -194,7 +194,7 @@ body: {
 PUT /bookings/{bookingId}
   body: {
     statusId: REJECTED_STATUS_ID,
-    description: "Admin-Bemerkung"  // Optional - müsste übergeben werden
+    description: "Admin-Bemerkung"
   }
 
 // Dann: Trigger E-Mail an createdBy + onBehalfOf + conflictPersons
@@ -202,9 +202,9 @@ PUT /bookings/{bookingId}
 
 ### 5. **E-Mail bei Ablehnung**
 
-Needed zusätzlich:
+Benötigte Zusatz-Integration:
 
-- E-Mail API-Endpoint (existiert wahrscheinlich in ChurchTools)
+- E-Mail API-Endpoint (existiert in ChurchTools)
 - Template für Ablehnungsmail
 - Person-Daten auflösen (aus Booking: createdBy, onBehalfOf, Konflikt-Creator)
 
@@ -253,7 +253,6 @@ ids=545%2C892&betreff=%5BBG+Korntal%5D+&inhalt=...&template_id=11&func=sendEMail
 1. **Person-E-Mail in DomainObjectPerson**:
    - Enthalten die `createdBy` und `onBehalfOf` Objekte `id` und `name`?
    - Wir verwenden die `id` zum Versenden via `/index.php?q=churchdb/ajax`
-   - **→ Mit Test-API prüfen**
 
 2. **Konflikt-Creator auflösen**:
    - Konflikt enthält nur `bookingId`, `title`, `startDate`, `endDate` - **KEINE Person-Daten**
@@ -271,28 +270,6 @@ ids=545%2C892&betreff=%5BBG+Korntal%5D+&inhalt=...&template_id=11&func=sendEMail
    - Mehrere Personen (createdBy + onBehalfOf + conflictCreators) in einer Mail versenden
    - Ein API-Call mit all den IDs (optimal)
    - ODER separate Calls pro Person (einfacher zu implementieren)
-
-## 🎯 Nächste Schritte
-
-1. **API-Endpoints testen/validieren**:
-   - Doku der ChurchTools API checken
-   - Oder in Live-Instanz mit DevTools testen
-   - Status-IDs herausfinden
-
-2. **E-Mail-Integration klären**:
-   - Welcher Endpunkt? Welche Template-Sprache?
-   - Lokale Lösung (nodemailer) vs. ChurchTools-API?
-
-3. **Composable implementieren** (`useRoomBookings.ts`):
-   - `fetchBookings(filter, sort)`
-   - `approveBooking(id)`
-   - `rejectBooking(id, reason)`
-   - `sendRejectionEmail(booking, reason, conflictPersons)`
-
-4. **AdminTable Pattern studieren**:
-   - `/src/components/tags/TagsAdmin.vue`
-   - `/src/components/automatic-groups/AutomaticGroupsAdmin.vue`
-   - Checkboxes, Bulk-Buttons, Actions Spalte
 
 ## 📝 API Pattern in diesem Projekt
 

@@ -28,8 +28,10 @@ Neue Dashboard-Sektion zur Verwaltung von Raumbuchungsanfragen mit Konflikt-Erke
 
 - Filter "offene Bestätigungen" zeigt ALLE Räume, nicht nur die mit offenen Anfragen
 - Konflikte sind in der Filteransicht nicht sichtbar
-  **Folge**: Admin muss trotzdem weitere Filterung und Klicks machen, um relevante Buchungen zu finden  
-  **Lösung**:
+
+**Folge**: Admin muss trotzdem weitere Filterung und Klicks machen, um relevante Buchungen zu finden  
+**Lösung**:
+
 - Nur Räume/Ressourcen anzeigen, für die offene Anfragen existieren
 - Konflikte direkt in der Listenansicht sichtbar
 - Filterung nach Konflikten (mit/ohne)
@@ -253,6 +255,6 @@ src/components/room-bookings/
 
 ---
 
-**Status**: Entwurf  
+**Status**: In Implementierung  
 **Erstellt**: 2026-04-16  
 **Letzte Änderung**: 2026-04-16

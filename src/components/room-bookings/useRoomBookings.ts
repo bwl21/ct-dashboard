@@ -31,6 +31,12 @@ export interface RoomBooking {
   createdBy?: RoomBookingPerson
   onBehalfOf?: RoomBookingPerson
   conflicts?: RoomBookingConflict[]
+  // Series fields
+  repeatId: number
+  repeatFrequency: number | null
+  repeatOption: number | null
+  repeatUntil: string | null
+  isRecurring: boolean
 }
 
 export interface RoomBookingsFilter {
@@ -38,6 +44,8 @@ export interface RoomBookingsFilter {
   resourceIds: number[]
   conflictStatus?: 'all' | 'with' | 'without'
   searchQuery?: string
+  dateFrom?: string // ISO date string (YYYY-MM-DD)
+  dateTo?: string // ISO date string (YYYY-MM-DD)
 }
 
 export interface RoomBookingsSort {
@@ -119,10 +127,30 @@ export function useRoomBookings() {
 
       const data = Array.isArray(response) ? response : []
 
+      // Helper function to check if conflicts actually overlap in time
+      const isActualConflict = (booking: any, conflict: any): boolean => {
+        const bookingStart = new Date(booking.startDate).getTime()
+        const bookingEnd = new Date(booking.endDate).getTime()
+        const conflictStart = new Date(conflict.startDate).getTime()
+        const conflictEnd = new Date(conflict.endDate).getTime()
+
+        // Check if time ranges overlap
+        return bookingStart < conflictEnd && bookingEnd > conflictStart
+      }
+
       // Transform API response to RoomBooking format
       const transformed = data.map((item: any) => {
         const booking = item.booking || item
         const base = booking.base || booking
+
+        // For recurring bookings: don't filter conflicts because API returns conflicts for all occurrences
+        // For single bookings: filter to only actual time overlaps
+        let validConflicts = item.conflicts || []
+        if (!base.repeatId || base.repeatId === 0) {
+          validConflicts = validConflicts.filter((conflict: any) =>
+            isActualConflict(base, conflict)
+          )
+        }
 
         return {
           id: base.id,
@@ -147,7 +175,13 @@ export function useRoomBookings() {
                 email: item.involvedPersonsDomainObjects.onBehalfOf.email,
               }
             : undefined,
-          conflicts: item.conflicts || [],
+          conflicts: validConflicts,
+          // Series information
+          repeatId: base.repeatId || 0,
+          repeatFrequency: base.repeatFrequency || null,
+          repeatOption: base.repeatOption || null,
+          repeatUntil: base.repeatUntil || null,
+          isRecurring: (base.repeatId || 0) > 0,
         }
       })
 
@@ -262,6 +296,25 @@ export function useRoomBookings() {
   }
 
   /**
+   * Delete booking (soft delete: set status to DELETED)
+   */
+  const deleteBooking = async (bookingId: number) => {
+    try {
+      const response = await churchtoolsClient.put(`/bookings/${bookingId}`, {
+        statusId: BOOKING_STATUS.DELETED,
+      })
+      // Refresh list
+      if (filter.resourceIds.length > 0) {
+        await fetchBookings(filter.resourceIds, filter.statusIds)
+      }
+      return response
+    } catch (err: any) {
+      console.error(`Error deleting booking ${bookingId}:`, err)
+      throw new Error('Fehler beim Löschen der Buchung')
+    }
+  }
+
+  /**
    * Resolve conflict creator details
    * Fetches the creator of a conflicting booking
    */
@@ -321,6 +374,33 @@ export function useRoomBookings() {
           b.description?.toLowerCase().includes(query)
       )
     }
+
+    // Filter by date range
+    if (filter.dateFrom || filter.dateTo) {
+      result = result.filter((b) => {
+        const bookingDate = new Date(b.startDate).toISOString().split('T')[0]
+        if (filter.dateFrom && bookingDate < filter.dateFrom) return false
+        if (filter.dateTo && bookingDate > filter.dateTo) return false
+        return true
+      })
+    }
+
+    // Filter by resource IDs
+    if (filter.resourceIds.length > 0) {
+      result = result.filter((b) => filter.resourceIds.includes(b.resourceId))
+    }
+
+    // Group recurring bookings: only show first occurrence per series
+    const seenSeriesIds = new Set<number>()
+    result = result.filter((b) => {
+      if (b.isRecurring) {
+        if (seenSeriesIds.has(b.repeatId)) {
+          return false // Skip subsequent occurrences
+        }
+        seenSeriesIds.add(b.repeatId)
+      }
+      return true
+    })
 
     // Sort
     result.sort((a, b) => {
@@ -426,6 +506,29 @@ export function useRoomBookings() {
     return { successCount, errorCount }
   }
 
+  const bulkDelete = async (bookingIds: number[]) => {
+    let successCount = 0
+    let errorCount = 0
+    const errors: string[] = []
+
+    for (const bookingId of bookingIds) {
+      try {
+        await deleteBooking(bookingId)
+        successCount++
+      } catch (err: any) {
+        errorCount++
+        errors.push(`Booking ${bookingId}: ${err.message}`)
+      }
+    }
+
+    if (errorCount > 0) {
+      const message = `${successCount} gelöscht, ${errorCount} Fehler: ${errors.join('; ')}`
+      throw new Error(message)
+    }
+
+    return { successCount, errorCount }
+  }
+
   // ========================================================================
   // RETURN
   // ========================================================================
@@ -450,6 +553,7 @@ export function useRoomBookings() {
     fetchBookingDetails,
     approveBooking,
     rejectBooking,
+    deleteBooking,
     sendRejectionEmail,
     resolveConflictCreator,
 
@@ -458,5 +562,6 @@ export function useRoomBookings() {
     updateFilter,
     bulkApprove,
     bulkReject,
+    bulkDelete,
   }
 }

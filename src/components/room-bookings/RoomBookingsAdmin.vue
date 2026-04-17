@@ -71,6 +71,38 @@
       <!-- Filters -->
       <template #filters>
         <div class="filter-container">
+          <!-- Room Filter -->
+          <label for="roomFilter" class="filter-label">Raum:</label>
+          <select
+            id="roomFilter"
+            v-model.number="selectedRoomId"
+            @change="updateRoomFilter"
+            class="ct-select filter-select"
+          >
+            <option :value="0">Alle Räume</option>
+            <option v-for="room in resourcesWithBookings" :key="room.id" :value="room.id">
+              {{ room.name }}
+            </option>
+          </select>
+
+          <!-- Date From Filter -->
+          <label for="dateFromFilter" class="filter-label">Datum von:</label>
+          <input
+            id="dateFromFilter"
+            v-model="filter.dateFrom"
+            type="date"
+            class="ct-input filter-select"
+          />
+
+          <!-- Date To Filter -->
+          <label for="dateToFilter" class="filter-label">Datum bis:</label>
+          <input
+            id="dateToFilter"
+            v-model="filter.dateTo"
+            type="date"
+            class="ct-input filter-select"
+          />
+
           <!-- Conflict Filter -->
           <label for="conflictFilter" class="filter-label">Konflikte:</label>
           <select
@@ -104,6 +136,14 @@
         <div class="row-actions">
           <button
             type="button"
+            @click="showDetailsModal(row)"
+            class="ct-btn ct-btn-sm ct-btn-info"
+            title="Details anzeigen"
+          >
+            ℹ️
+          </button>
+          <button
+            type="button"
             @click="approveSingleBooking(row.id)"
             class="ct-btn ct-btn-sm ct-btn-success"
             title="Genehmigen"
@@ -117,6 +157,15 @@
             title="Ablehnen"
           >
             ❌
+          </button>
+          <button
+            v-if="row && row.statusId !== BOOKING_STATUS.PENDING"
+            type="button"
+            @click="showDeleteConfirm(row)"
+            class="ct-btn ct-btn-sm ct-btn-delete"
+            title="Löschen"
+          >
+            🗑️
           </button>
         </div>
       </template>
@@ -144,7 +193,16 @@
       <!-- Date/Time Column -->
       <template #startDate="{ item: row }">
         <div class="datetime-info">
-          <div>{{ formatDate(row.startDate) }}</div>
+          <div>
+            {{ formatDate(row.startDate) }}
+            <span
+              v-if="row.isRecurring"
+              class="series-badge"
+              :title="`Serie bis ${row.repeatUntil || 'unbegrenzt'}`"
+            >
+              🔄
+            </span>
+          </div>
           <div class="time">{{ formatTime(row.startDate) }} - {{ formatTime(row.endDate) }}</div>
         </div>
       </template>
@@ -243,12 +301,32 @@
         </div>
       </div>
     </div>
+
+    <!-- Delete Confirmation Dialog -->
+    <div v-if="showDeleteDialogFlag" class="modal-overlay" @click.self="closeDeleteDialog">
+      <div class="modal-content modal-small">
+        <h3>Raumbuchung löschen?</h3>
+        <p class="booking-title">{{ deletingBooking?.title }}</p>
+        <p>Diese Aktion kann nicht rückgängig gemacht werden.</p>
+
+        <div class="modal-actions">
+          <button type="button" @click="closeDeleteDialog" class="ct-btn ct-btn-outline">
+            Abbrechen
+          </button>
+          <button type="button" @click="confirmDelete" class="ct-btn ct-btn-danger">Löschen</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Details Modal -->
+    <RoomBookingDetailsModal :booking="selectedBookingForDetails" @close="closeDetailsModal" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import AdminTable from '../common/AdminTable.vue'
+import RoomBookingDetailsModal from './RoomBookingDetailsModal.vue'
 import { useRoomBookings, BOOKING_STATUS, type RoomBooking } from './useRoomBookings'
 import { useToast } from '@/composables/useToast'
 
@@ -258,6 +336,7 @@ const {
   bookings,
   resources,
   filteredBookings,
+  resourcesWithBookings,
   loading,
   error,
   filter,
@@ -265,16 +344,22 @@ const {
   fetchBookings,
   approveBooking: approveBookingApi,
   rejectBooking: rejectBookingApi,
+  deleteBooking: deleteBookingApi,
   sendRejectionEmail,
   resolveConflictCreator,
   updateFilter,
   setSort,
   bulkApprove,
   bulkReject,
+  bulkDelete,
 } = useRoomBookings()
 
 // Selection state
 const selectedBookingIds = ref(new Set<number>())
+
+// Details modal
+const showDetailsModalFlag = ref(false)
+const selectedBookingForDetails = ref<RoomBooking | null>(null)
 
 // Reject dialog
 const showRejectDialogFlag = ref(false)
@@ -290,6 +375,13 @@ const showBulkApproveConfirmFlag = ref(false)
 
 // Status filter
 const selectedStatus = ref(BOOKING_STATUS.PENDING)
+
+// Room filter
+const selectedRoomId = ref(0)
+
+// Delete dialog
+const showDeleteDialogFlag = ref(false)
+const deletingBooking = ref<RoomBooking | null>(null)
 
 // Processing flag
 const isBulkProcessing = ref(false)
@@ -345,6 +437,14 @@ const updateStatusFilter = () => {
   refreshData()
 }
 
+const updateRoomFilter = () => {
+  if (selectedRoomId.value === 0) {
+    filter.resourceIds = []
+  } else {
+    filter.resourceIds = [selectedRoomId.value]
+  }
+}
+
 // Selection handlers
 const toggleSelectAll = () => {
   if (selectedBookingIds.value.size === filteredBookings.value.length) {
@@ -358,6 +458,17 @@ const toggleSelectAll = () => {
 
 const clearSelection = () => {
   selectedBookingIds.value.clear()
+}
+
+// Details modal
+const showDetailsModal = (booking: RoomBooking) => {
+  selectedBookingForDetails.value = booking
+  showDetailsModalFlag.value = true
+}
+
+const closeDetailsModal = () => {
+  showDetailsModalFlag.value = false
+  selectedBookingForDetails.value = null
 }
 
 // Single approve
@@ -425,6 +536,30 @@ const confirmReject = async () => {
 
     showToast('Raumbuchung abgelehnt und E-Mail versendet', 'success')
     closeRejectDialog()
+    await refreshData()
+  } catch (err: any) {
+    showToast(`Fehler: ${err.message}`, 'error')
+  }
+}
+
+// Delete dialog
+const showDeleteConfirm = (booking: RoomBooking) => {
+  deletingBooking.value = booking
+  showDeleteDialogFlag.value = true
+}
+
+const closeDeleteDialog = () => {
+  showDeleteDialogFlag.value = false
+  deletingBooking.value = null
+}
+
+const confirmDelete = async () => {
+  if (!deletingBooking.value) return
+
+  try {
+    await deleteBookingApi(deletingBooking.value.id)
+    showToast('Raumbuchung gelöscht', 'success')
+    closeDeleteDialog()
     await refreshData()
   } catch (err: any) {
     showToast(`Fehler: ${err.message}`, 'error')
@@ -567,16 +702,26 @@ const confirmBulkReject = async () => {
 .filter-container {
   display: flex;
   gap: 16px;
-  align-items: center;
+  align-items: flex-end;
   margin-bottom: 16px;
+  flex-wrap: wrap;
 }
 
 .filter-label {
   font-weight: 500;
   font-size: 0.9em;
+  display: block;
+  margin-bottom: 4px;
 }
 
 .filter-select {
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.ct-input {
   padding: 6px 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
@@ -622,6 +767,13 @@ const confirmBulkReject = async () => {
   font-size: 0.85em;
   color: #666;
   margin-top: 2px;
+}
+
+.series-badge {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 0.9em;
+  cursor: help;
 }
 
 /* Modal Styles */
@@ -726,10 +878,28 @@ const confirmBulkReject = async () => {
   color: #333;
 }
 
+.ct-btn-success {
+  background: #4caf50;
+  color: white;
+  border-color: #4caf50;
+}
+
 .ct-btn-danger {
   background: #f44336;
   color: white;
   border-color: #f44336;
+}
+
+.ct-btn-info {
+  background: #2196f3;
+  color: white;
+  border-color: #2196f3;
+}
+
+.ct-btn-delete {
+  background: #9c27b0;
+  color: white;
+  border-color: #9c27b0;
 }
 
 .ct-btn:disabled {
