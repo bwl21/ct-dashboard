@@ -173,9 +173,14 @@
       <!-- Conflict Indicator Cell -->
       <template #conflicts="{ item: row }">
         <div v-if="row.conflicts && row.conflicts.length > 0" class="conflict-indicator">
-          <span class="conflict-badge" :title="`${row.conflicts.length} Konflikt(e)`">
+          <button
+            type="button"
+            @click="showConflictDetails(row)"
+            class="conflict-badge"
+            :title="`${row.conflicts.length} Konflikt(e) - Klick für Details`"
+          >
             ⚠️ {{ row.conflicts.length }}
-          </span>
+          </button>
         </div>
         <div v-else class="no-conflict">-</div>
       </template>
@@ -320,6 +325,13 @@
 
     <!-- Details Modal -->
     <RoomBookingDetailsModal :booking="selectedBookingForDetails" @close="closeDetailsModal" />
+
+    <!-- Conflict Details Modal -->
+    <ConflictDetailsModal
+      :is-open="showConflictDetailsFlag"
+      :booking="conflictBooking"
+      @close="showConflictDetailsFlag = false"
+    />
   </div>
 </template>
 
@@ -327,6 +339,7 @@
 import { ref, computed, onMounted } from 'vue'
 import AdminTable from '../common/AdminTable.vue'
 import RoomBookingDetailsModal from './RoomBookingDetailsModal.vue'
+import ConflictDetailsModal from './ConflictDetailsModal.vue'
 import { useRoomBookings, BOOKING_STATUS, type RoomBooking } from './useRoomBookings'
 import { useToast } from '@/composables/useToast'
 
@@ -382,6 +395,10 @@ const selectedRoomId = ref(0)
 // Delete dialog
 const showDeleteDialogFlag = ref(false)
 const deletingBooking = ref<RoomBooking | null>(null)
+
+// Conflict details modal
+const showConflictDetailsFlag = ref(false)
+const conflictBooking = ref<RoomBooking | null>(null)
 
 // Processing flag
 const isBulkProcessing = ref(false)
@@ -540,6 +557,12 @@ const confirmReject = async () => {
   } catch (err: any) {
     showToast(`Fehler: ${err.message}`, 'error')
   }
+}
+
+// Conflict details modal
+const showConflictDetails = (booking: RoomBooking) => {
+  conflictBooking.value = booking
+  showConflictDetailsFlag.value = true
 }
 
 // Delete dialog
@@ -743,6 +766,18 @@ const confirmBulkReject = async () => {
 .conflict-badge {
   color: #856404;
   font-weight: 500;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-size: inherit;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  transition: text-decoration-color 0.2s;
+}
+
+.conflict-badge:hover {
+  text-decoration-color: #856404;
 }
 
 .no-conflict {

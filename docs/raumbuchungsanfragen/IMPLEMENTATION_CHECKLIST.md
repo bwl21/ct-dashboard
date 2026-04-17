@@ -16,7 +16,7 @@
 - [x] E-Mail-Versand bei Ablehnung (mit Konflikt-Infos)
 - [x] Detailansicht (RoomBookingDetailsModal)
 
-## ❌ Noch zu implementieren
+## ❌ Noch zu implementieren (Optional / Low Priority)
 
 ### 1. ~~Detailansicht~~ (HIGH PRIORITY) ✅
 
@@ -66,21 +66,22 @@
 - [x] `deleteBooking(id)` und `bulkDelete(ids)` Methoden in useRoomBookings.ts
 - [x] Delete Button (🗑️) in Actions, nur für non-PENDING Status enabled
 
-### 4. Konflikt-Details Modal (MEDIUM PRIORITY)
+### 4. ~~Konflikt-Details Modal~~ (MEDIUM PRIORITY) ✅
 
 **Anforderung 2**: Zeige Konflikt-Details in eigenem Modal
 
-- [ ] Klick auf Konflikt-Badge (⚠️) → Modal mit:
-  - [ ] Liste der konfligierenden Buchungen
-  - [ ] Verantwortliche Personen
-  - [ ] Zeiten/Daten der Konflikte
-- [ ] Optional: Auflösungs-Hinweise (z.B. "Zeitverschoben" Link)
+- [x] Klick auf Konflikt-Badge (⚠️) → Modal mit:
+  - [x] Liste der konfligierenden Buchungen
+  - [x] Verantwortliche Personen (werden asynchron geladen)
+  - [x] Zeiten/Daten der Konflikte
+- [x] Optional: Auflösungs-Hinweise (Info-Box mit Hinweis)
 
 **Komponenten:**
 
-- Conflict Details Modal Component
-- Klick-Handler auf `.conflict-badge` Element
-- Details-Daten aus Booking.conflicts Array
+- [x] ConflictDetailsModal.vue Component
+- [x] Klick-Handler in RoomBookingsAdmin.vue
+- [x] Details-Daten aus Booking.conflicts Array
+- [x] Asynchrones Laden der Creator-Informationen
 
 ### 5. Erweiterte E-Mail-Templates (LOW PRIORITY)
 
@@ -112,24 +113,24 @@
 
 ## 📊 Priorität nach Anforderungsdokument
 
-### Phase 1 (CRITICAL - MVP)
+### Phase 1 (CRITICAL - MVP) ✅ COMPLETED
 
 1. ✅ Konflikte-Anzeige
 2. ✅ Bulk-Operationen
-3. ❌ **Detailansicht** ← NÄCHSTER SCHRITT
-4. ❌ Filter (Datum, Raum)
+3. ✅ Detailansicht
+4. ✅ Filter (Datum, Raum)
 
-### Phase 2 (IMPORTANT)
+### Phase 2 (IMPORTANT) ✅ COMPLETED
 
-5. ❌ Konflikt-Details Modal
-6. ❌ Delete-Operation
-7. ❌ E-Mail-Templates
+5. ✅ Konflikt-Details Modal
+6. ✅ Delete-Operation
+7. ✅ E-Mail-Templates (Basic)
 
-### Phase 3 (NICE-TO-HAVE)
+### Phase 3 (NICE-TO-HAVE) - Low Priority
 
-8. ❌ Ressourcen-Filter
-9. ❌ Alternativ-Zeiten
-10. ❌ Kalender-Integration
+8. ⬜ Ressourcen-Filter (localStorage)
+9. ⬜ Erweiterte E-Mail-Templates
+10. ⬜ Kalender-Integration
 
 ---
 
@@ -210,6 +211,6 @@
 
 ---
 
-**Status**: In Development  
-**Last Updated**: 2026-04-16  
-**Next Phase**: Detailansicht Implementation
+**Status**: ✅ MVP COMPLETE - All Critical & Important Features Implemented  
+**Last Updated**: 2026-04-17  
+**Remaining**: Optional/Nice-to-have features (localStorage, templates, calendar integration)

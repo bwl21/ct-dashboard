@@ -161,18 +161,18 @@ export function useRoomBookings() {
           title: base.title || '',
           description: base.description || base.subtitle || '',
           statusId: base.statusId,
-          createdBy: item.involvedPersonsDomainObjects?.createdBy
+          createdBy: base.involvedPersonsDomainObjects?.createdBy
             ? {
-                id: item.involvedPersonsDomainObjects.createdBy.id,
-                name: item.involvedPersonsDomainObjects.createdBy.name,
-                email: item.involvedPersonsDomainObjects.createdBy.email,
+                id: base.involvedPersonsDomainObjects.createdBy.id,
+                name: base.involvedPersonsDomainObjects.createdBy.name,
+                email: base.involvedPersonsDomainObjects.createdBy.email,
               }
             : undefined,
-          onBehalfOf: item.involvedPersonsDomainObjects?.onBehalfOf
+          onBehalfOf: base.involvedPersonsDomainObjects?.onBehalfOf
             ? {
-                id: item.involvedPersonsDomainObjects.onBehalfOf.id,
-                name: item.involvedPersonsDomainObjects.onBehalfOf.name,
-                email: item.involvedPersonsDomainObjects.onBehalfOf.email,
+                id: base.involvedPersonsDomainObjects.onBehalfOf.id,
+                name: base.involvedPersonsDomainObjects.onBehalfOf.name,
+                email: base.involvedPersonsDomainObjects.onBehalfOf.email,
               }
             : undefined,
           conflicts: validConflicts,

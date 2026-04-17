@@ -7,6 +7,33 @@ und dieses Projekt folgt [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-04-17
+
+### ✨ Added
+
+- **Room Booking Requests Module** - Complete management interface for ChurchTools room bookings
+  - Dashboard card with booking statistics
+  - Admin panel with full CRUD operations
+  - Booking detail view modal
+  - Conflict details modal with creator information
+  - Advanced filtering (date range, room, conflict status, booking status)
+  - Full-text search across booking fields
+  - Sortable columns
+  - Bulk operations (approve, reject, delete)
+  - Automatic email notifications on rejection
+  - Soft-delete support (statusId 99)
+  - Recurring series handling with deduplication
+  - Conflict detection with time-overlap validation
+  - Type-safe TypeScript composable (`useRoomBookings.ts`)
+  - Permission integration (`churchresource.administer bookings`)
+
+### 📚 Documentation
+
+- `docs/raumbuchungsanfragen/ANFORDERUNG.md` - Requirements specification
+- `docs/raumbuchungsanfragen/API_ANALYSE.md` - API analysis and integration patterns
+- `docs/raumbuchungsanfragen/IMPLEMENTATION_CHECKLIST.md` - Feature checklist
+- `docs/raumbuchungsanfragen/COMPLETION_SUMMARY.md` - Implementation summary
+
 ## [1.0.5] - 2025-09-26
 
 ### 🐛 Fixed
