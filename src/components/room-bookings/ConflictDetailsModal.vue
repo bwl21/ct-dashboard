@@ -29,6 +29,10 @@
                 <strong>Anfragender:</strong>
                 {{ mainBooking.onBehalfOf?.name || mainBooking.createdBy?.name || 'Unbekannt' }}
               </div>
+              <div v-if="mainBooking.onBehalfOf && mainBooking.createdBy" class="requester-info">
+                <strong>Ersteller:</strong>
+                {{ mainBooking.createdBy.name }}
+              </div>
             </div>
           </div>
         </div>
@@ -445,6 +449,14 @@ const getStatusClass = (statusId: number): string => {
 
 .info-box p {
   margin: 0;
+}
+
+.requester-info {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid #e0e0e0;
+  font-size: 0.9rem;
+  color: #666;
 }
 
 .ct-btn {

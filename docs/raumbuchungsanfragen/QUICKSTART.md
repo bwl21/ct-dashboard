@@ -3,6 +3,7 @@
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - ChurchTools instance with room booking resources configured
 - User with `churchresource.administer bookings` permission
 - Active ChurchTools API session
@@ -47,11 +48,13 @@
 ### Approving a Booking
 
 #### Single Approval
+
 1. Click **✅** button in Actions column
 2. Confirmation required
 3. Booking status changes to "Genehmigt" (Approved)
 
 #### Bulk Approval
+
 1. **Check boxes** for multiple bookings
 2. Click **✅ Genehmigen** button in header
 3. Confirm approval
@@ -62,6 +65,7 @@
 ### Rejecting a Booking
 
 #### Single Rejection
+
 1. Click **❌** button in Actions column
 2. Modal opens for rejection
 3. **Enter rejection reason** (required)
@@ -69,6 +73,7 @@
 5. Email sent to requester with reason
 
 #### Bulk Rejection
+
 1. Check boxes for multiple bookings
 2. Click **❌ Ablehnen** button in header
 3. Enter shared rejection reason
@@ -89,26 +94,31 @@
 ### Filtering Bookings
 
 #### Date Range
+
 - **Datum von**: Select start date
 - **Datum bis**: Select end date
 - Only shows bookings within range
 
 #### Room/Resource
+
 - **Raum**: Select from dropdown
 - Shows only bookings for selected room
 - Default: "Alle Räume" (all rooms)
 
 #### Conflict Status
+
 - **Konflikte: Alle** - All bookings
 - **Konflikte: Mit Konflikten** - Only conflicting
 - **Konflikte: Ohne Konflikte** - Only non-conflicting
 
 #### Booking Status
+
 - **Status: Ausstehend** (Pending) - Default
 - **Status: Genehmigt** (Approved)
 - **Status: Abgelehnt** (Canceled)
 
 #### Search
+
 - **Search field** at top right
 - Searches: Title, Room, Person names, Description
 - Real-time filtering
@@ -181,26 +191,31 @@ Indicates booking is part of recurring series.
 ## 🔧 Troubleshooting
 
 ### Bookings Not Loading
+
 - Check your permission: `churchresource.administer bookings`
 - Verify ChurchTools API is accessible
 - Refresh page (F5)
 
 ### Can't See Conflicts
+
 - Zoom in (conflicts are small badge)
 - Check filter isn't hiding them
 - Filter by: Konflikte = Mit Konflikten
 
 ### Email Not Sent
+
 - Verify ChurchTools email service configured
 - Check person email addresses exist
 - Look for error toast in top right
 
 ### Can't Approve/Reject
+
 - Check permission again
 - Booking might be locked
 - Try refreshing
 
 ### Date Filter Not Working
+
 - Click outside field after selecting date
 - Or press Enter to confirm
 - Check start date ≤ end date
@@ -221,12 +236,12 @@ The interface is responsive:
 
 ## ⌨️ Keyboard Shortcuts
 
-| Key | Action |
-|-----|--------|
-| Escape | Close any open modal |
-| Enter | Submit form/dialog |
-| Tab | Navigate between fields |
-| Space | Toggle checkbox |
+| Key    | Action                  |
+| ------ | ----------------------- |
+| Escape | Close any open modal    |
+| Enter  | Submit form/dialog      |
+| Tab    | Navigate between fields |
+| Space  | Toggle checkbox         |
 
 ---
 
@@ -234,12 +249,12 @@ The interface is responsive:
 
 ### Common Issues
 
-| Issue | Solution |
-|-------|----------|
-| Permission denied | Contact admin, request `churchresource.administer bookings` |
-| Bookings stuck in pending | Refresh, check for API errors in console |
-| Email bouncing | Verify person email exists in ChurchTools |
-| Conflicts not showing | Clear browser cache, refresh page |
+| Issue                     | Solution                                                    |
+| ------------------------- | ----------------------------------------------------------- |
+| Permission denied         | Contact admin, request `churchresource.administer bookings` |
+| Bookings stuck in pending | Refresh, check for API errors in console                    |
+| Email bouncing            | Verify person email exists in ChurchTools                   |
+| Conflicts not showing     | Clear browser cache, refresh page                           |
 
 ### Where to Find Help
 
@@ -303,19 +318,19 @@ Contact your ChurchTools admin to grant access.
 
 ## ✨ Features at a Glance
 
-| Feature | What It Does |
-|---------|-------------|
-| Dashboard Card | Shows statistics overview |
-| Admin Table | Lists all bookings with filters |
-| Details Modal | Full booking information |
-| Conflict Modal | Details about conflicts |
-| Bulk Approve | Approve multiple at once |
-| Bulk Reject | Reject multiple with reason |
-| Bulk Delete | Delete multiple bookings |
-| Email Notify | Auto-send to affected parties |
-| Search | Full-text search |
-| Filters | 5 different filter criteria |
-| Sort | Clickable column headers |
+| Feature        | What It Does                    |
+| -------------- | ------------------------------- |
+| Dashboard Card | Shows statistics overview       |
+| Admin Table    | Lists all bookings with filters |
+| Details Modal  | Full booking information        |
+| Conflict Modal | Details about conflicts         |
+| Bulk Approve   | Approve multiple at once        |
+| Bulk Reject    | Reject multiple with reason     |
+| Bulk Delete    | Delete multiple bookings        |
+| Email Notify   | Auto-send to affected parties   |
+| Search         | Full-text search                |
+| Filters        | 5 different filter criteria     |
+| Sort           | Clickable column headers        |
 
 ---
 

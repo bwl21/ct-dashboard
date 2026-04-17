@@ -188,9 +188,9 @@
       <!-- Person Column (created by / on behalf of) -->
       <template #person="{ item: row }">
         <div class="person-info">
-          <div>{{ row.onBehalfOf?.name || row.createdBy?.name || 'Unbekannt' }}</div>
+          <div>{{ row.createdBy?.name || 'Unbekannt' }}</div>
           <div v-if="row.onBehalfOf" class="secondary-person">
-            (i.A. von {{ row.createdBy?.name }})
+            (i.A. von {{ row.onBehalfOf?.name }})
           </div>
         </div>
       </template>

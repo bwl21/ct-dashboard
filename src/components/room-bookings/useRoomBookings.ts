@@ -142,6 +142,9 @@ export function useRoomBookings() {
       const transformed = data.map((item: any) => {
         const booking = item.booking || item
         const base = booking.base || booking
+        // involvedPersonsDomainObjects is at item level, not base level
+        const involvedPersons =
+          item.involvedPersonsDomainObjects || base.involvedPersonsDomainObjects
 
         // For recurring bookings: don't filter conflicts because API returns conflicts for all occurrences
         // For single bookings: filter to only actual time overlaps
@@ -161,18 +164,18 @@ export function useRoomBookings() {
           title: base.title || '',
           description: base.description || base.subtitle || '',
           statusId: base.statusId,
-          createdBy: base.involvedPersonsDomainObjects?.createdBy
+          createdBy: involvedPersons?.createdBy
             ? {
-                id: base.involvedPersonsDomainObjects.createdBy.id,
-                name: base.involvedPersonsDomainObjects.createdBy.name,
-                email: base.involvedPersonsDomainObjects.createdBy.email,
+                id: parseInt(involvedPersons.createdBy.domainIdentifier),
+                name: involvedPersons.createdBy.title,
+                email: involvedPersons.createdBy.email,
               }
             : undefined,
-          onBehalfOf: base.involvedPersonsDomainObjects?.onBehalfOf
+          onBehalfOf: involvedPersons?.onBehalfOf
             ? {
-                id: base.involvedPersonsDomainObjects.onBehalfOf.id,
-                name: base.involvedPersonsDomainObjects.onBehalfOf.name,
-                email: base.involvedPersonsDomainObjects.onBehalfOf.email,
+                id: parseInt(involvedPersons.onBehalfOf.domainIdentifier),
+                name: involvedPersons.onBehalfOf.title,
+                email: involvedPersons.onBehalfOf.email,
               }
             : undefined,
           conflicts: validConflicts,
