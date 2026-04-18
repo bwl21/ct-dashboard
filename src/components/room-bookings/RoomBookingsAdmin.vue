@@ -15,7 +15,7 @@
       description="Verwalte alle offenen Raumbuchungsanfragen"
       searchable
       search-placeholder="Raum, Person, Titel durchsuchen..."
-      :search-fields="['title', 'resourceName', 'description']"
+      :search-fields="['title', 'resourceName', 'description', 'createdBy.name', 'onBehalfOf.name']"
       default-sort-field="startDate"
       loading-text="Lade Raumbuchungen..."
       empty-text="Keine Raumbuchungsanfragen gefunden."
@@ -405,12 +405,41 @@ const isBulkProcessing = ref(false)
 
 // Table columns
 const tableColumns = [
-  { key: 'conflicts', label: '⚠️', width: '60px', sortable: false, cellSlot: 'conflicts' },
-  { key: 'resourceName', label: 'Raum', width: '150px', sortable: true },
-  { key: 'startDate', label: 'Termin', width: '200px', sortable: true, cellSlot: 'startDate' },
-  { key: 'person', label: 'Person', width: '200px', sortable: false, cellSlot: 'person' },
-  { key: 'title', label: 'Titel', width: '200px', sortable: true },
-  { key: 'actions', label: 'Aktionen', width: '120px', sortable: false, cellSlot: 'actions' },
+  {
+    key: 'conflicts',
+    label: '⚠️',
+    width: 30,
+    sortable: true,
+    resizable: false,
+    cellSlot: 'conflicts',
+  },
+  { key: 'resourceName', label: 'Raum', width: 150, sortable: true, resizable: true },
+  {
+    key: 'startDate',
+    label: 'Termin',
+    width: 200,
+    sortable: true,
+    resizable: true,
+    cellSlot: 'startDate',
+  },
+  {
+    key: 'person',
+    label: 'Person',
+    width: 200,
+    sortable: true,
+    resizable: true,
+    cellSlot: 'person',
+    sortKey: 'onBehalfOf.name',
+  },
+  { key: 'title', label: 'Titel', width: 200, sortable: true, resizable: true },
+  {
+    key: 'actions',
+    label: 'Aktionen',
+    width: 120,
+    sortable: false,
+    resizable: false,
+    cellSlot: 'actions',
+  },
 ]
 
 // Initialize

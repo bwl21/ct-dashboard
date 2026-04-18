@@ -37,9 +37,9 @@
           <div class="detail-item">
             <label>Anfragender</label>
             <div class="detail-value">
-              {{ booking.onBehalfOf?.name || booking.createdBy?.name || 'Unbekannt' }}
+              {{ booking.createdBy?.name || 'Unbekannt' }}
               <span v-if="booking.onBehalfOf" class="secondary">
-                (i.A. von {{ booking.createdBy?.name }})
+                (i.A. von {{ booking.onBehalfOf?.name }})
               </span>
             </div>
           </div>
