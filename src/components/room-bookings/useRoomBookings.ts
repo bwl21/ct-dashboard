@@ -17,6 +17,12 @@ export interface RoomBookingConflict {
   startDate: string
   endDate: string
   statusId: number
+  // Series fields (optional, may not always be provided by API)
+  repeatId?: number
+  repeatFrequency?: number | null
+  repeatOption?: number | null
+  repeatUntil?: string | null
+  isRecurring?: boolean
 }
 
 export interface RoomBooking {
@@ -148,7 +154,20 @@ export function useRoomBookings() {
 
         // For recurring bookings: don't filter conflicts because API returns conflicts for all occurrences
         // For single bookings: filter to only actual time overlaps
-        let validConflicts = item.conflicts || []
+        let validConflicts = (item.conflicts || []).map((conflict: any) => ({
+          bookingId: conflict.bookingId,
+          title: conflict.title || '',
+          startDate: conflict.startDate,
+          endDate: conflict.endDate,
+          statusId: conflict.statusId,
+          // Include series info if available
+          repeatId: conflict.repeatId,
+          repeatFrequency: conflict.repeatFrequency,
+          repeatOption: conflict.repeatOption,
+          repeatUntil: conflict.repeatUntil,
+          isRecurring: (conflict.repeatId || 0) > 0,
+        }))
+
         if (!base.repeatId || base.repeatId === 0) {
           validConflicts = validConflicts.filter((conflict: any) =>
             isActualConflict(base, conflict)
@@ -323,14 +342,24 @@ export function useRoomBookings() {
    */
   const resolveConflictCreator = async (
     conflictBookingId: number
-  ): Promise<RoomBookingPerson | null> => {
+  ): Promise<{ createdBy: RoomBookingPerson | null; onBehalfOf: RoomBookingPerson | null } | null> => {
     try {
       const response = (await churchtoolsClient.get(`/bookings/${conflictBookingId}`, {
         'include[]': ['involvedPersonsDomainObjects'],
       })) as any
 
+      // Try different response structures
       const booking = response?.booking || response
-      const createdBy = booking?.involvedPersonsDomainObjects?.createdBy
+      const base = booking?.base || booking
+      
+      // Try to find persons at different levels
+      const involvedPersons =
+        booking?.involvedPersonsDomainObjects ||
+        base?.involvedPersonsDomainObjects ||
+        response?.involvedPersonsDomainObjects
+
+      const createdBy = involvedPersons?.createdBy
+      const onBehalfOf = involvedPersons?.onBehalfOf
 
       if (!createdBy) {
         console.warn(`No creator found for conflict booking ${conflictBookingId}`)
@@ -338,9 +367,16 @@ export function useRoomBookings() {
       }
 
       return {
-        id: createdBy.id,
-        name: createdBy.name,
-        email: createdBy.email,
+        createdBy: {
+          id: parseInt(createdBy.domainIdentifier),
+          name: createdBy.title,
+          email: createdBy.email,
+        },
+        onBehalfOf: onBehalfOf ? {
+          id: parseInt(onBehalfOf.domainIdentifier),
+          name: onBehalfOf.title,
+          email: onBehalfOf.email,
+        } : null,
       }
     } catch (err: any) {
       console.warn(`Error resolving conflict creator ${conflictBookingId}:`, err)

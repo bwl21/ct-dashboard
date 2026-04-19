@@ -324,13 +324,20 @@
     </div>
 
     <!-- Details Modal -->
-    <RoomBookingDetailsModal :booking="selectedBookingForDetails" @close="closeDetailsModal" />
+    <RoomBookingDetailsModal 
+      :booking="selectedBookingForDetails" 
+      @close="closeDetailsModal"
+      @navigate-calendar="handleNavigateToCalendar"
+      @navigate-details="handleNavigateToDetails"
+    />
 
     <!-- Conflict Details Modal -->
     <ConflictDetailsModal
       :is-open="showConflictDetailsFlag"
       :booking="conflictBooking"
       @close="showConflictDetailsFlag = false"
+      @navigate-calendar="handleNavigateToCalendar"
+      @navigate-details="handleNavigateToDetails"
     />
   </div>
 </template>
@@ -488,6 +495,32 @@ const updateRoomFilter = () => {
     filter.resourceIds = []
   } else {
     filter.resourceIds = [selectedRoomId.value]
+  }
+}
+
+// Navigation handlers
+const handleNavigateToCalendar = (bookingId: number) => {
+  console.log('RoomBookingsAdmin: Navigating to calendar for booking', bookingId)
+  // TODO: Navigate to calendar view or external calendar app
+  // For now, log the action
+  const booking = bookings.value.find(b => b.id === bookingId)
+  if (booking) {
+    console.log('Booking:', booking.title, booking.startDate, booking.resourceName)
+    console.log('TODO: Navigate to calendar view')
+    // Here you could:
+    // 1. Open the ChurchTools calendar
+    // 2. Pass the booking ID to the router
+    // 3. Trigger an external calendar app
+  }
+}
+
+const handleNavigateToDetails = (bookingId: number) => {
+  console.log('RoomBookingsAdmin: Navigating to details for booking', bookingId)
+  // Find and show the booking details
+  const booking = bookings.value.find(b => b.id === bookingId)
+  if (booking) {
+    console.log('Showing details for booking:', booking.id, booking.title)
+    selectedBookingForDetails.value = booking
   }
 }
 
