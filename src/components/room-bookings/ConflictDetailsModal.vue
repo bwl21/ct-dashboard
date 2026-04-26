@@ -34,7 +34,7 @@
               :index="`Konflikt ${index + 1}`"
               :show-action-buttons="true"
               :load-creator-info="true"
-              @navigate-calendar="handleNavigateCalendar(conflict.bookingId)"
+              @navigate-calendar="handleNavigateCalendar(conflict)"
               @navigate-details="handleNavigateDetails(conflict.bookingId)"
             />
           </div>
@@ -60,7 +60,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import type { RoomBooking, RoomBookingPerson } from './useRoomBookings'
+import type { RoomBooking, RoomBookingPerson, RoomBookingConflict } from './useRoomBookings'
 import { BOOKING_STATUS, useRoomBookings } from './useRoomBookings'
 import BookingDetails from './BookingDetails.vue'
 
@@ -81,14 +81,16 @@ const emit = defineEmits<{
 }>()
 
 const mainBooking = computed(() => props.booking!)
+const { navigateToEditBooking } = useRoomBookings()
 
 const closeModal = () => {
   emit('close')
 }
 
-const handleNavigateCalendar = (bookingId: number) => {
-  console.log('ConflictDetailsModal: navigate-calendar clicked, bookingId=', bookingId)
-  emit('navigate-calendar', bookingId)
+const handleNavigateCalendar = (conflict: RoomBookingConflict) => {
+  console.log('ConflictDetailsModal: navigate-calendar clicked, conflict=', conflict)
+  // Pass resourceId from mainBooking to navigateToEditBooking
+  navigateToEditBooking(conflict, mainBooking.value.resourceId)
 }
 
 const handleNavigateDetails = (bookingId: number) => {

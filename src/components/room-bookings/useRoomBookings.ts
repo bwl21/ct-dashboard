@@ -537,6 +537,77 @@ export function useRoomBookings() {
     window.open(url, '_blank')
   }
 
+  /**
+   * Navigate to edit a booking based on calendar integration
+   * - If booking references a calendar event (repeatId > 0): open calendar editor
+   *   (Works for both single events and recurring series)
+   * - If booking has no calendar reference (repeatId = 0): open booking resource page
+   *
+   * The `repeatId` field indicates if a booking is linked to a calendar event:
+   * - repeatId > 0: References calendar event (single or series)
+   * - repeatId = 0: Resource-only booking (no calendar integration)
+   *
+   * @param booking - The booking to navigate to (can be RoomBooking or RoomBookingConflict)
+   * @param resourceId - Optional resource ID, needed for conflicts that don't have resourceId
+   */
+  const navigateToEditBooking = (
+    booking: RoomBooking | RoomBookingConflict,
+    resourceId?: number
+  ) => {
+    const bookingId = (booking as any).id || (booking as any).bookingId
+    const rawRepeatId = (booking as any).repeatId
+    const repeatId = rawRepeatId || 0
+
+    console.log('navigateToEditBooking called:', {
+      booking,
+      rawRepeatId,
+      repeatId,
+      bookingId,
+      'typeof rawRepeatId': typeof rawRepeatId,
+      'rawRepeatId === null': rawRepeatId === null,
+      'rawRepeatId === undefined': rawRepeatId === undefined,
+      'hasCalendarEvent (repeatId > 0)': repeatId > 0,
+    })
+
+    // Check if booking references a calendar event
+    if (repeatId > 0) {
+      // Open calendar event editor
+      console.log('→ Opening calendar editor for booking', bookingId)
+      navigateToEditEvent(booking)
+    } else {
+      // Open resource booking view
+      console.log('→ Opening resource booking view for booking', bookingId)
+      const bookingResourceId = resourceId || (booking as any).resourceId
+      const startDate = (booking as any).startDate
+
+      if (!bookingResourceId) {
+        console.error(
+          '→ ERROR: Cannot navigate to resource booking - no resourceId provided or found in booking',
+          { bookingId, resourceId, bookingResourceId }
+        )
+        return
+      }
+
+      // Parse start date to get YYYY-MM-DD format
+      let dateStr = ''
+      try {
+        const date = new Date(startDate)
+        dateStr = date.toISOString().split('T')[0]
+      } catch {
+        dateStr = startDate.split('T')[0]
+      }
+
+      const baseUrl = getChurchtoolsBaseUrl()
+      const url = new URL(baseUrl)
+      url.searchParams.set('q', 'churchresource')
+      url.searchParams.set('curdate', dateStr)
+      url.searchParams.set('filterIds', bookingResourceId.toString())
+      url.hash = 'WeekView/'
+      console.log('→ Navigation URL:', url.toString())
+      window.location.href = url.toString()
+    }
+  }
+
   const setSort = (field: string, direction?: 'asc' | 'desc') => {
     if (sort.field === field && !direction) {
       sort.direction = sort.direction === 'asc' ? 'desc' : 'asc'
@@ -657,6 +728,7 @@ export function useRoomBookings() {
     buildEditEventUrl,
     navigateToEditEvent,
     navigateToEditEventNewTab,
+    navigateToEditBooking,
     bulkApprove,
     bulkReject,
     bulkDelete,

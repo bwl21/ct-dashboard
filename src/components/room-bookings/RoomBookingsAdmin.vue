@@ -501,16 +501,11 @@ const updateRoomFilter = () => {
 // Navigation handlers
 const handleNavigateToCalendar = (bookingId: number) => {
   console.log('RoomBookingsAdmin: Navigating to calendar for booking', bookingId)
-  // TODO: Navigate to calendar view or external calendar app
-  // For now, log the action
   const booking = bookings.value.find((b) => b.id === bookingId)
   if (booking) {
     console.log('Booking:', booking.title, booking.startDate, booking.resourceName)
-    console.log('TODO: Navigate to calendar view')
-    // Here you could:
-    // 1. Open the ChurchTools calendar
-    // 2. Pass the booking ID to the router
-    // 3. Trigger an external calendar app
+    // Call navigateToEditBooking with the booking and resourceId
+    navigateToEditBooking(booking, booking.resourceId)
   }
 }
 

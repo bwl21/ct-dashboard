@@ -117,7 +117,7 @@ const emit = defineEmits<{
   'navigate-details': []
 }>()
 
-const { resolveConflictCreator, navigateToEditEvent } = useRoomBookings()
+const { resolveConflictCreator, navigateToEditBooking } = useRoomBookings()
 
 // Creator info (async loading)
 const creatorInfo = ref<{
@@ -201,7 +201,7 @@ const formatTime = (dateString: string): string => {
 
 const handleNavigateCalendar = () => {
   console.log('BookingDetails: navigate-calendar clicked', bookingId.value)
-  navigateToEditEvent(props.booking)
+  navigateToEditBooking(props.booking)
   emit('navigate-calendar')
 }
 
