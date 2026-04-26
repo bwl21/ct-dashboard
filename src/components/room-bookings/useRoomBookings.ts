@@ -1,6 +1,6 @@
 import { ref, computed, reactive } from 'vue'
 import { churchtoolsClient } from '@churchtools/churchtools-client'
-import { getChurchtoolsBaseUrl } from '../../services/churchtools'
+import { getChurchtoolsBaseUrl, openDetailInTab } from '../../services/churchtools'
 
 // ============================================================================
 // TYPES
@@ -522,19 +522,21 @@ export function useRoomBookings() {
 
   /**
    * Navigate to calendar event editor in ChurchTools
-   * Opens the booking in the calendar UI for editing (same window)
+   * Opens the booking in a reusable calendar editor tab
+   * Clicking multiple times updates the same tab instead of opening new ones
    */
   const navigateToEditEvent = (booking: RoomBooking | RoomBookingConflict) => {
     const url = buildEditEventUrl(booking)
-    window.location.href = url
+    // Open in reusable tab - "ct-calendar-editor" tab is reused for all calendar edits
+    openDetailInTab(url, 'ct-calendar-editor')
   }
 
   /**
    * Navigate to calendar event editor in a new tab
    */
   const navigateToEditEventNewTab = (booking: RoomBooking | RoomBookingConflict) => {
-    const url = buildEditEventUrl(booking)
-    window.open(url, '_blank')
+    // Same as navigateToEditEvent
+    navigateToEditEvent(booking)
   }
 
   /**
@@ -604,7 +606,8 @@ export function useRoomBookings() {
       url.searchParams.set('filterIds', bookingResourceId.toString())
       url.hash = 'WeekView/'
       console.log('→ Navigation URL:', url.toString())
-      window.location.href = url.toString()
+      // Open in reusable resource view tab
+      openDetailInTab(url.toString(), 'ct-resource-view')
     }
   }
 

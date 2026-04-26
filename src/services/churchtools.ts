@@ -8,6 +8,78 @@ export function getChurchtoolsBaseUrl(): string {
   return import.meta.env.DEV ? import.meta.env.VITE_BASE_URL : window.location.origin
 }
 
+/**
+ * Tab reference storage for detail views
+ * Keeps track of open detail tabs by name
+ */
+const detailTabs = new Map<string, Window | null>()
+
+/**
+ * Open a URL in a reusable browser tab
+ * 
+ * If a tab with the given name already exists and is open:
+ * - Loads the new URL in that tab
+ * - Brings the tab to focus
+ * 
+ * If the tab doesn't exist or has been closed:
+ * - Opens a new tab with the given name
+ * 
+ * @param url - The URL to open
+ * @param tabName - The name of the tab (e.g., "detail-view", "calendar-editor")
+ * @returns The opened/reused window reference, or null if popup was blocked
+ * 
+ * @example
+ * // Open calendar editor - reuses existing "calendar" tab
+ * openDetailInTab('/calendar?id=123', 'calendar')
+ * 
+ * // Open another event - same "calendar" tab is updated
+ * openDetailInTab('/calendar?id=456', 'calendar')
+ */
+export function openDetailInTab(url: string, tabName: string): Window | null {
+  // Get existing tab reference
+  let tab = detailTabs.get(tabName)
+
+  // Check if tab exists and is still open
+  if (tab && !tab.closed) {
+    // Tab exists - reuse it
+    console.log(`[DetailTab] Reusing existing tab "${tabName}"`)
+    tab.location.href = url
+    tab.focus() // Bring tab to foreground
+    return tab
+  }
+
+  // Tab doesn't exist or was closed - open new one
+  console.log(`[DetailTab] Opening new tab "${tabName}" with URL: ${url}`)
+  const newTab = window.open(url, tabName)
+
+  if (newTab) {
+    // Store reference for future reuse
+    detailTabs.set(tabName, newTab)
+    console.log(`[DetailTab] Tab "${tabName}" stored for reuse`)
+    return newTab
+  } else {
+    // Popup was blocked
+    console.warn(`[DetailTab] Failed to open tab "${tabName}" - popup may be blocked`)
+    detailTabs.set(tabName, null)
+    return null
+  }
+}
+
+/**
+ * Close and forget a detail tab
+ * Useful for cleanup
+ * 
+ * @param tabName - The name of the tab to close
+ */
+export function closeDetailTab(tabName: string): void {
+  const tab = detailTabs.get(tabName)
+  if (tab && !tab.closed) {
+    tab.close()
+    console.log(`[DetailTab] Closed tab "${tabName}"`)
+  }
+  detailTabs.delete(tabName)
+}
+
 export interface Calendar {
   id: number
   name: string
