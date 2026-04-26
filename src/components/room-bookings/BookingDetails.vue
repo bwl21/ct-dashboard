@@ -36,7 +36,9 @@
           <span v-if="isLoadingCreator" class="loading">Lade...</span>
           <span v-else-if="creatorInfo">
             {{ creatorInfo.createdBy?.name || 'Unbekannt' }}
-            <span v-if="creatorInfo.createdBy?.email" class="email">({{ creatorInfo.createdBy.email }})</span>
+            <span v-if="creatorInfo.createdBy?.email" class="email">
+              ({{ creatorInfo.createdBy.email }})
+            </span>
             <span v-if="creatorInfo.onBehalfOf" class="secondary">
               (i.A. von {{ creatorInfo.onBehalfOf?.name }})
             </span>
@@ -71,17 +73,17 @@
         type="button"
         @click="handleNavigateCalendar"
         class="action-btn action-btn-small"
-        title="Im Kalender anzeigen"
+        title="Termin im Kalender bearbeiten"
       >
-        📅 Kalender
+        📅 Bearbeiten
       </button>
       <button
         type="button"
         @click="handleNavigateDetails"
         class="action-btn action-btn-small"
-        title="Details anzeigen"
+        title="Buchungsdetails anzeigen"
       >
-        → Details
+        ℹ️ Details
       </button>
     </div>
   </div>
@@ -115,10 +117,13 @@ const emit = defineEmits<{
   'navigate-details': []
 }>()
 
-const { resolveConflictCreator } = useRoomBookings()
+const { resolveConflictCreator, navigateToEditEvent } = useRoomBookings()
 
 // Creator info (async loading)
-const creatorInfo = ref<{ createdBy: RoomBookingPerson | null; onBehalfOf: RoomBookingPerson | null } | null>(null)
+const creatorInfo = ref<{
+  createdBy: RoomBookingPerson | null
+  onBehalfOf: RoomBookingPerson | null
+} | null>(null)
 const isLoadingCreator = ref(false)
 
 // Get booking ID - handle both RoomBooking (id) and RoomBookingConflict (bookingId)
@@ -196,6 +201,7 @@ const formatTime = (dateString: string): string => {
 
 const handleNavigateCalendar = () => {
   console.log('BookingDetails: navigate-calendar clicked', bookingId.value)
+  navigateToEditEvent(props.booking)
   emit('navigate-calendar')
 }
 

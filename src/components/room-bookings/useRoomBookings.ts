@@ -1,5 +1,6 @@
 import { ref, computed, reactive } from 'vue'
 import { churchtoolsClient } from '@churchtools/churchtools-client'
+import { getChurchtoolsBaseUrl } from '../../services/churchtools'
 
 // ============================================================================
 // TYPES
@@ -342,7 +343,10 @@ export function useRoomBookings() {
    */
   const resolveConflictCreator = async (
     conflictBookingId: number
-  ): Promise<{ createdBy: RoomBookingPerson | null; onBehalfOf: RoomBookingPerson | null } | null> => {
+  ): Promise<{
+    createdBy: RoomBookingPerson | null
+    onBehalfOf: RoomBookingPerson | null
+  } | null> => {
     try {
       const response = (await churchtoolsClient.get(`/bookings/${conflictBookingId}`, {
         'include[]': ['involvedPersonsDomainObjects'],
@@ -351,7 +355,7 @@ export function useRoomBookings() {
       // Try different response structures
       const booking = response?.booking || response
       const base = booking?.base || booking
-      
+
       // Try to find persons at different levels
       const involvedPersons =
         booking?.involvedPersonsDomainObjects ||
@@ -372,11 +376,13 @@ export function useRoomBookings() {
           name: createdBy.title,
           email: createdBy.email,
         },
-        onBehalfOf: onBehalfOf ? {
-          id: parseInt(onBehalfOf.domainIdentifier),
-          name: onBehalfOf.title,
-          email: onBehalfOf.email,
-        } : null,
+        onBehalfOf: onBehalfOf
+          ? {
+              id: parseInt(onBehalfOf.domainIdentifier),
+              name: onBehalfOf.title,
+              email: onBehalfOf.email,
+            }
+          : null,
       }
     } catch (err: any) {
       console.warn(`Error resolving conflict creator ${conflictBookingId}:`, err)
@@ -481,6 +487,55 @@ export function useRoomBookings() {
   // ========================================================================
   // HELPERS
   // ========================================================================
+
+  /**
+   * Build the calendar event editor URL in ChurchTools
+   * Pattern: ?q=churchcal&view=week&id=EVENT_ID&editScope=series&startdate=YYYY-MM-DD#CalView/
+   */
+  const buildEditEventUrl = (booking: RoomBooking | RoomBookingConflict): string => {
+    const bookingId = (booking as any).id || (booking as any).bookingId
+    const isRecurring = (booking as any).isRecurring || false
+    const repeatId = (booking as any).repeatId || bookingId
+    const startDate = (booking as any).startDate
+
+    // Parse start date to get YYYY-MM-DD format
+    let dateStr = ''
+    try {
+      const date = new Date(startDate)
+      dateStr = date.toISOString().split('T')[0]
+    } catch {
+      dateStr = startDate.split('T')[0]
+    }
+
+    // Get base URL and build calendar editor URL
+    const baseUrl = getChurchtoolsBaseUrl()
+    const url = new URL(baseUrl)
+    url.searchParams.set('q', 'churchcal')
+    url.searchParams.set('view', 'week')
+    url.searchParams.set('id', isRecurring ? repeatId.toString() : bookingId.toString())
+    url.searchParams.set('editScope', isRecurring ? 'series' : 'event')
+    url.searchParams.set('startdate', dateStr)
+    url.hash = 'CalView/'
+
+    return url.toString()
+  }
+
+  /**
+   * Navigate to calendar event editor in ChurchTools
+   * Opens the booking in the calendar UI for editing (same window)
+   */
+  const navigateToEditEvent = (booking: RoomBooking | RoomBookingConflict) => {
+    const url = buildEditEventUrl(booking)
+    window.location.href = url
+  }
+
+  /**
+   * Navigate to calendar event editor in a new tab
+   */
+  const navigateToEditEventNewTab = (booking: RoomBooking | RoomBookingConflict) => {
+    const url = buildEditEventUrl(booking)
+    window.open(url, '_blank')
+  }
 
   const setSort = (field: string, direction?: 'asc' | 'desc') => {
     if (sort.field === field && !direction) {
@@ -599,6 +654,9 @@ export function useRoomBookings() {
     // Helper Methods
     setSort,
     updateFilter,
+    buildEditEventUrl,
+    navigateToEditEvent,
+    navigateToEditEventNewTab,
     bulkApprove,
     bulkReject,
     bulkDelete,

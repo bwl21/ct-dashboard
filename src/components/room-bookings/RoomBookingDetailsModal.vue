@@ -36,7 +36,7 @@
               :index="`Konflikt ${index + 1}`"
               :show-action-buttons="true"
               :load-creator-info="true"
-              @navigate-calendar="() => {}"
+              @navigate-calendar="$emit('navigate-calendar', conflict.bookingId)"
               @navigate-details="handleNavigateDetails(conflict.bookingId)"
             />
           </div>
@@ -187,8 +187,6 @@ const handleNavigateDetails = (bookingId: number) => {
   flex-direction: column;
   gap: 12px;
 }
-
-
 
 .no-conflicts {
   color: #155724;

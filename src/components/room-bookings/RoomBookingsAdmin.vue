@@ -324,8 +324,8 @@
     </div>
 
     <!-- Details Modal -->
-    <RoomBookingDetailsModal 
-      :booking="selectedBookingForDetails" 
+    <RoomBookingDetailsModal
+      :booking="selectedBookingForDetails"
       @close="closeDetailsModal"
       @navigate-calendar="handleNavigateToCalendar"
       @navigate-details="handleNavigateToDetails"
@@ -503,7 +503,7 @@ const handleNavigateToCalendar = (bookingId: number) => {
   console.log('RoomBookingsAdmin: Navigating to calendar for booking', bookingId)
   // TODO: Navigate to calendar view or external calendar app
   // For now, log the action
-  const booking = bookings.value.find(b => b.id === bookingId)
+  const booking = bookings.value.find((b) => b.id === bookingId)
   if (booking) {
     console.log('Booking:', booking.title, booking.startDate, booking.resourceName)
     console.log('TODO: Navigate to calendar view')
@@ -517,7 +517,7 @@ const handleNavigateToCalendar = (bookingId: number) => {
 const handleNavigateToDetails = (bookingId: number) => {
   console.log('RoomBookingsAdmin: Navigating to details for booking', bookingId)
   // Find and show the booking details
-  const booking = bookings.value.find(b => b.id === bookingId)
+  const booking = bookings.value.find((b) => b.id === bookingId)
   if (booking) {
     console.log('Showing details for booking:', booking.id, booking.title)
     selectedBookingForDetails.value = booking

@@ -1,5 +1,13 @@
 import { churchtoolsClient } from '@churchtools/churchtools-client'
 
+/**
+ * Get the base URL for ChurchTools
+ * Uses VITE_BASE_URL in development, window.location.origin in production
+ */
+export function getChurchtoolsBaseUrl(): string {
+  return import.meta.env.DEV ? import.meta.env.VITE_BASE_URL : window.location.origin
+}
+
 export interface Calendar {
   id: number
   name: string
