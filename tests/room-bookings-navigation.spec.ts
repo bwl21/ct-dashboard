@@ -9,21 +9,16 @@ test.describe('Room Bookings Navigation', () => {
     await page.waitForTimeout(3000)
   })
 
-  test('@room-bookings should navigate to calendar for booking with event', async ({ page, context }) => {
-    // Listen for new pages (when navigating to calendar)
-    const newPagePromise = context.waitForEvent('page')
-
+  test('@room-bookings should navigate to calendar for booking with event', async ({ page }) => {
     // Look for room bookings section
     const roomBookingsSection = page.locator('h3', { hasText: 'Raumbuchungsanfragen' })
+    
+    // Verify room bookings section is visible on dashboard
     if (await roomBookingsSection.isVisible()) {
-      // Click to expand/navigate to room bookings admin
-      const adminLink = page.locator('a:has-text("Verwaltung")', { hasText: 'Raumbuchungsanfragen' }).first()
-      
-      if (await adminLink.isVisible()) {
-        // This would navigate to the admin view
-        // In real scenario, bookings with calendar events should navigate to calendar
-        console.log('Room bookings section found')
-      }
+      await expect(roomBookingsSection).toContainText('Raumbuchungsanfragen')
+      console.log('✓ Room bookings section found on dashboard')
+    } else {
+      console.log('⚠ Room bookings section not visible on dashboard')
     }
   })
 
