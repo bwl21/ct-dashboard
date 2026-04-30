@@ -350,7 +350,7 @@ import ConflictDetailsModal from './ConflictDetailsModal.vue'
 import { useRoomBookings, BOOKING_STATUS, type RoomBooking } from './useRoomBookings'
 import { useToast } from '@/composables/useToast'
 
-const { showToast } = useToast()
+const { showSuccess, showError } = useToast()
 
 const {
   bookings,
@@ -459,7 +459,7 @@ onMounted(async () => {
     }
   } catch (err) {
     console.error('Error initializing:', err)
-    showToast('Fehler beim Laden der Raumbuchungen', 'error')
+    showError('Fehler beim Laden der Raumbuchungen')
   }
 })
 
@@ -481,7 +481,7 @@ const refreshData = async () => {
       await fetchBookings(resourceIds, filter.statusIds)
     }
   } catch (err) {
-    showToast('Fehler beim Laden der Raumbuchungen', 'error')
+    showError('Fehler beim Laden der Raumbuchungen')
   }
 }
 
@@ -549,24 +549,59 @@ const closeDetailsModal = () => {
 const approveSingleBooking = async (bookingId: number) => {
   try {
     await approveBookingApi(bookingId)
-    showToast('Raumbuchung genehmigt', 'success')
+    showSuccess('Raumbuchung genehmigt')
     await refreshData()
   } catch (err: any) {
-    showToast(`Fehler: ${err.message}`, 'error')
+    showError(`Fehler: ${err.message}`)
   }
 }
 
 // Reject dialog
-const showRejectDialog = (booking: RoomBooking) => {
+// Cache resolved conflict-creators per booking id to avoid resolving twice
+// (once when opening the dialog to pre-fill the reason, once when sending the email).
+const conflictCreatorsCache = new Map<
+  number,
+  { createdBy: { id: number; name: string; email?: string } | null; onBehalfOf: { id: number; name: string; email?: string } | null } | null
+>()
+
+const formatPersonsSuffix = (persons: {
+  createdBy: { name: string } | null
+  onBehalfOf: { name: string } | null
+} | null): string => {
+  if (!persons) return ''
+  const parts: string[] = []
+  if (persons.onBehalfOf?.name) parts.push(persons.onBehalfOf.name)
+  if (persons.createdBy?.name && persons.createdBy.name !== persons.onBehalfOf?.name) {
+    parts.push(`erfasst von ${persons.createdBy.name}`)
+  }
+  return parts.length > 0 ? ` (${parts.join(', ')})` : ''
+}
+
+const showRejectDialog = async (booking: RoomBooking) => {
   rejectingBooking.value = booking
   rejectReason.value = ''
   showRejectDialogFlag.value = true
+
+  // Pre-fill the reason with a description of conflicting bookings, including involved persons
+  if (booking.conflicts && booking.conflicts.length > 0) {
+    const lines: string[] = ['Es bestehen folgende Konflikte:', '']
+    for (const conflict of booking.conflicts) {
+      const persons = await resolveConflictCreator(conflict.bookingId)
+      conflictCreatorsCache.set(conflict.bookingId, persons)
+      const dateRange = `${formatDate(conflict.startDate)} ${formatTime(conflict.startDate)}–${formatTime(conflict.endDate)}`
+      lines.push(`- "${conflict.title}" am ${dateRange}${formatPersonsSuffix(persons)}`)
+    }
+    lines.push('')
+    lines.push('Bitte stimme dich ggf. mit den genannten Personen ab.')
+    rejectReason.value = lines.join('\n')
+  }
 }
 
 const closeRejectDialog = () => {
   showRejectDialogFlag.value = false
   rejectingBooking.value = null
   rejectReason.value = ''
+  conflictCreatorsCache.clear()
 }
 
 const confirmReject = async () => {
@@ -585,12 +620,17 @@ const confirmReject = async () => {
       emailIds.push(rejectingBooking.value.createdBy.id)
     }
 
-    // Add conflict creators
+    // Add conflict creators (use cache populated when opening the dialog)
     if (rejectingBooking.value.conflicts && rejectingBooking.value.conflicts.length > 0) {
       for (const conflict of rejectingBooking.value.conflicts) {
-        const creator = await resolveConflictCreator(conflict.bookingId)
-        if (creator?.id && !emailIds.includes(creator.id)) {
-          emailIds.push(creator.id)
+        const persons =
+          conflictCreatorsCache.get(conflict.bookingId) ??
+          (await resolveConflictCreator(conflict.bookingId))
+        if (persons?.onBehalfOf?.id && !emailIds.includes(persons.onBehalfOf.id)) {
+          emailIds.push(persons.onBehalfOf.id)
+        }
+        if (persons?.createdBy?.id && !emailIds.includes(persons.createdBy.id)) {
+          emailIds.push(persons.createdBy.id)
         }
       }
     }
@@ -598,21 +638,23 @@ const confirmReject = async () => {
     // Send email if there are recipients
     if (emailIds.length > 0) {
       const subject = `[Raumbuchung] Ablehnung: ${rejectingBooking.value.title}`
+      // Convert plain-text newlines from the textarea to <br> for HTML rendering
+      const reasonHtml = rejectReason.value.replace(/\n/g, '<br>')
       const htmlContent = `
         <p>Ihre Raumbuchung wurde leider abgelehnt:</p>
         <p><strong>${rejectingBooking.value.title}</strong><br>
         ${formatDate(rejectingBooking.value.startDate)} ${formatTime(rejectingBooking.value.startDate)} - ${formatTime(rejectingBooking.value.endDate)}</p>
-        <p><strong>Begründung:</strong><br>${rejectReason.value}</p>
+        <p><strong>Begründung:</strong><br>${reasonHtml}</p>
         <p>Für weitere Informationen kontaktieren Sie bitte die Administation.</p>
       `
       await sendRejectionEmail(emailIds, subject, htmlContent)
     }
 
-    showToast('Raumbuchung abgelehnt und E-Mail versendet', 'success')
+    showSuccess('Raumbuchung abgelehnt und E-Mail versendet')
     closeRejectDialog()
     await refreshData()
   } catch (err: any) {
-    showToast(`Fehler: ${err.message}`, 'error')
+    showError(`Fehler: ${err.message}`)
   }
 }
 
@@ -638,11 +680,11 @@ const confirmDelete = async () => {
 
   try {
     await deleteBookingApi(deletingBooking.value.id)
-    showToast('Raumbuchung gelöscht', 'success')
+    showSuccess('Raumbuchung gelöscht')
     closeDeleteDialog()
     await refreshData()
   } catch (err: any) {
-    showToast(`Fehler: ${err.message}`, 'error')
+    showError(`Fehler: ${err.message}`)
   }
 }
 
@@ -662,11 +704,11 @@ const confirmBulkApprove = async () => {
   try {
     const ids = Array.from(selectedBookingIds.value)
     await bulkApprove(ids)
-    showToast(`${ids.length} Raumbuchungen genehmigt`, 'success')
+    showSuccess(`${ids.length} Raumbuchungen genehmigt`)
     clearSelection()
     await refreshData()
   } catch (err: any) {
-    showToast(`Fehler: ${err.message}`, 'error')
+    showError(`Fehler: ${err.message}`)
   } finally {
     isBulkProcessing.value = false
   }
@@ -690,11 +732,11 @@ const confirmBulkReject = async () => {
   try {
     const ids = Array.from(selectedBookingIds.value)
     await bulkReject(ids, bulkRejectReason.value)
-    showToast(`${ids.length} Raumbuchungen abgelehnt`, 'success')
+    showSuccess(`${ids.length} Raumbuchungen abgelehnt`)
     clearSelection()
     await refreshData()
   } catch (err: any) {
-    showToast(`Fehler: ${err.message}`, 'error')
+    showError(`Fehler: ${err.message}`)
   } finally {
     isBulkProcessing.value = false
   }

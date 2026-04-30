@@ -235,12 +235,11 @@ export function useRoomBookings() {
 
   /**
    * Approve booking(s)
+   * Uses dedicated answer endpoint: PUT /bookings/{bookingId}/approve
    */
   const approveBooking = async (bookingId: number) => {
     try {
-      const response = await churchtoolsClient.put(`/bookings/${bookingId}`, {
-        statusId: BOOKING_STATUS.APPROVED,
-      })
+      const response = await churchtoolsClient.put(`/bookings/${bookingId}/approve`, {})
       // Refresh list
       if (filter.resourceIds.length > 0) {
         await fetchBookings(filter.resourceIds, filter.statusIds)
@@ -254,13 +253,13 @@ export function useRoomBookings() {
 
   /**
    * Reject booking with remarks
+   * Uses dedicated answer endpoint: PUT /bookings/{bookingId}/reject
+   * Note: The remarks are conveyed via the rejection email (sendRejectionEmail);
+   * the answer endpoint itself does not accept a body.
    */
-  const rejectBooking = async (bookingId: number, remarks: string) => {
+  const rejectBooking = async (bookingId: number, _remarks: string) => {
     try {
-      const response = await churchtoolsClient.put(`/bookings/${bookingId}`, {
-        statusId: BOOKING_STATUS.CANCELED,
-        description: remarks,
-      })
+      const response = await churchtoolsClient.put(`/bookings/${bookingId}/reject`, {})
       // Refresh list
       if (filter.resourceIds.length > 0) {
         await fetchBookings(filter.resourceIds, filter.statusIds)
@@ -297,6 +296,8 @@ export function useRoomBookings() {
         func: 'sendEMailToPersonIds',
       })
 
+      // Use relative URL so the request is same-origin in production and is routed
+      // through the Vite proxy (configured in vite.config.ts) in development.
       const response = await fetch('/index.php?q=churchdb/ajax', {
         method: 'POST',
         headers: {

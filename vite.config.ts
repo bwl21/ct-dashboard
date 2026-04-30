@@ -20,6 +20,15 @@ export default ({ mode }) => {
       watch: {
         ignored: ['**/.env', '**/.env.*', '**/node_modules/**', '/usr/local/gitpod/secrets/**'],
       },
+      // Proxy legacy ChurchTools endpoints (e.g. /index.php?q=churchdb/ajax) so they
+      // are same-origin in dev mode (avoids CORS / missing-cookie issues).
+      proxy: {
+        '/index.php': {
+          target: process.env.VITE_BASE_URL,
+          changeOrigin: true,
+          secure: false,
+        },
+      },
     },
   })
 }
