@@ -187,9 +187,17 @@ export function useRoomBookings() {
         }))
 
         if (!base.repeatId || base.repeatId === 0) {
-          validConflicts = validConflicts.filter((conflict: any) =>
-            isActualConflict(base, conflict)
-          )
+          validConflicts = validConflicts.filter((conflict: any) => {
+            // If the conflict is itself a series, trust the API:
+            // The conflict's startDate/endDate is only the first occurrence,
+            // but later recurrences (within the viewed range) may overlap with
+            // this single booking. Without knowing all occurrence times we
+            // cannot validate via simple time-range overlap, so keep it.
+            if ((conflict.repeatId || 0) > 0) {
+              return true
+            }
+            return isActualConflict(base, conflict)
+          })
         }
 
         return {
