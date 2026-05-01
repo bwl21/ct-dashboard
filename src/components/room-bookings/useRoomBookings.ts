@@ -118,10 +118,17 @@ export function useRoomBookings() {
 
   /**
    * Fetch bookings for given resource IDs
+   *
+   * @param resourceIds Resource IDs to fetch bookings for
+   * @param statusIds   Status IDs to filter (empty array = all statuses)
+   * @param from        Optional ISO date (YYYY-MM-DD) - lower bound for booking dates
+   * @param to          Optional ISO date (YYYY-MM-DD) - upper bound for booking dates
    */
   const fetchBookings = async (
     resourceIds: number[],
-    statusIds: number[] = [BOOKING_STATUS.PENDING]
+    statusIds: number[] = [BOOKING_STATUS.PENDING],
+    from?: string,
+    to?: string
   ) => {
     if (resourceIds.length === 0) {
       console.warn('No resource IDs provided for booking fetch')
@@ -132,11 +139,17 @@ export function useRoomBookings() {
     error.value = null
 
     try {
-      const response = (await churchtoolsClient.get('/bookings', {
+      const params: Record<string, any> = {
         'resource_ids[]': resourceIds,
-        'status_ids[]': statusIds,
         'include[]': ['conflicts', 'involvedPersonsDomainObjects'],
-      })) as any[]
+      }
+      if (statusIds.length > 0) {
+        params['status_ids[]'] = statusIds
+      }
+      if (from) params.from = from
+      if (to) params.to = to
+
+      const response = (await churchtoolsClient.get('/bookings', params)) as any[]
 
       const data = Array.isArray(response) ? response : []
 
@@ -286,7 +299,7 @@ export function useRoomBookings() {
       const response = await churchtoolsClient.put(`/bookings/${bookingId}/approve`, {})
       // Refresh list
       if (filter.resourceIds.length > 0) {
-        await fetchBookings(filter.resourceIds, filter.statusIds)
+        await fetchBookings(filter.resourceIds, filter.statusIds, filter.dateFrom, filter.dateTo)
       }
       return response
     } catch (err: any) {
@@ -306,7 +319,7 @@ export function useRoomBookings() {
       const response = await churchtoolsClient.put(`/bookings/${bookingId}/reject`, {})
       // Refresh list
       if (filter.resourceIds.length > 0) {
-        await fetchBookings(filter.resourceIds, filter.statusIds)
+        await fetchBookings(filter.resourceIds, filter.statusIds, filter.dateFrom, filter.dateTo)
       }
       return response
     } catch (err: any) {
@@ -373,7 +386,7 @@ export function useRoomBookings() {
       })
       // Refresh list
       if (filter.resourceIds.length > 0) {
-        await fetchBookings(filter.resourceIds, filter.statusIds)
+        await fetchBookings(filter.resourceIds, filter.statusIds, filter.dateFrom, filter.dateTo)
       }
       return response
     } catch (err: any) {

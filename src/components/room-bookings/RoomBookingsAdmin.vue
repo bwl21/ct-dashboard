@@ -92,6 +92,7 @@
             v-model="filter.dateFrom"
             type="date"
             class="ct-input filter-select"
+            @change="refreshData"
           />
 
           <!-- Date To Filter -->
@@ -101,6 +102,7 @@
             v-model="filter.dateTo"
             type="date"
             class="ct-input filter-select"
+            @change="refreshData"
           />
 
           <!-- Conflict Filter -->
@@ -124,6 +126,7 @@
             @change="updateStatusFilter"
             class="ct-select filter-select"
           >
+            <option :value="0">Alle</option>
             <option :value="BOOKING_STATUS.PENDING">Ausstehend</option>
             <option :value="BOOKING_STATUS.APPROVED">Genehmigt</option>
             <option :value="BOOKING_STATUS.CANCELED">Abgelehnt</option>
@@ -210,6 +213,13 @@
           </div>
           <div class="time">{{ formatTime(row.startDate) }} - {{ formatTime(row.endDate) }}</div>
         </div>
+      </template>
+
+      <!-- Status Column -->
+      <template #status="{ item: row }">
+        <span class="status-badge" :class="statusBadgeClass(row.statusId)">
+          {{ statusLabel(row.statusId) }}
+        </span>
       </template>
 
       <!-- Created Date Column -->
@@ -458,6 +468,14 @@ const tableColumns = [
   },
   { key: 'title', label: 'Titel', width: 200, sortable: true, resizable: true },
   {
+    key: 'statusId',
+    label: 'Status',
+    width: 110,
+    sortable: true,
+    resizable: true,
+    cellSlot: 'status',
+  },
+  {
     key: 'createdDate',
     label: 'Erstellt',
     width: 130,
@@ -489,7 +507,7 @@ onMounted(async () => {
     await fetchResources()
     if (resources.value.length > 0) {
       const resourceIds = resources.value.map((r: any) => r.id)
-      await fetchBookings(resourceIds, [selectedStatus.value])
+      await fetchBookings(resourceIds, filter.statusIds, filter.dateFrom, filter.dateTo)
     }
   } catch (err) {
     console.error('Error initializing:', err)
@@ -508,11 +526,41 @@ const formatTime = (dateStr: string): string => {
   return date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
 }
 
+const statusLabel = (statusId: number): string => {
+  switch (statusId) {
+    case BOOKING_STATUS.PENDING:
+      return 'Ausstehend'
+    case BOOKING_STATUS.APPROVED:
+      return 'Genehmigt'
+    case BOOKING_STATUS.CANCELED:
+      return 'Abgelehnt'
+    case BOOKING_STATUS.DELETED:
+      return 'Gelöscht'
+    default:
+      return 'Unbekannt'
+  }
+}
+
+const statusBadgeClass = (statusId: number): string => {
+  switch (statusId) {
+    case BOOKING_STATUS.PENDING:
+      return 'status-pending'
+    case BOOKING_STATUS.APPROVED:
+      return 'status-approved'
+    case BOOKING_STATUS.CANCELED:
+      return 'status-canceled'
+    case BOOKING_STATUS.DELETED:
+      return 'status-deleted'
+    default:
+      return 'status-unknown'
+  }
+}
+
 const refreshData = async () => {
   try {
     if (resources.value.length > 0) {
       const resourceIds = resources.value.map((r: any) => r.id)
-      await fetchBookings(resourceIds, filter.statusIds)
+      await fetchBookings(resourceIds, filter.statusIds, filter.dateFrom, filter.dateTo)
     }
   } catch (err) {
     showError('Fehler beim Laden der Raumbuchungen')
@@ -520,7 +568,8 @@ const refreshData = async () => {
 }
 
 const updateStatusFilter = () => {
-  filter.statusIds = [selectedStatus.value]
+  // selectedStatus = 0 => "Alle" => empty array => no status filter applied to API
+  filter.statusIds = selectedStatus.value === 0 ? [] : [selectedStatus.value]
   refreshData()
 }
 
@@ -920,6 +969,41 @@ const confirmBulkReject = async () => {
 
 .no-conflict {
   color: #ccc;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.status-pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-approved {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-canceled {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.status-deleted {
+  background: #e2e3e5;
+  color: #6c757d;
+  text-decoration: line-through;
+}
+
+.status-unknown {
+  background: #e2e3e5;
+  color: #383d41;
 }
 
 .person-info {
