@@ -24,6 +24,9 @@ export interface RoomBookingConflict {
   repeatOption?: number | null
   repeatUntil?: string | null
   isRecurring?: boolean
+  // Audit fields (optional, depending on API response)
+  createdDate?: string
+  modifiedDate?: string
 }
 
 export interface RoomBooking {
@@ -44,6 +47,9 @@ export interface RoomBooking {
   repeatOption: number | null
   repeatUntil: string | null
   isRecurring: boolean
+  // Audit fields
+  createdDate?: string
+  modifiedDate?: string
 }
 
 export interface RoomBookingsFilter {
@@ -167,6 +173,17 @@ export function useRoomBookings() {
           repeatOption: conflict.repeatOption,
           repeatUntil: conflict.repeatUntil,
           isRecurring: (conflict.repeatId || 0) > 0,
+          // Audit fields
+          createdDate:
+            conflict.meta?.createdDate ||
+            conflict.meta?.createdAt ||
+            conflict.createdDate ||
+            conflict.createdAt,
+          modifiedDate:
+            conflict.meta?.modifiedDate ||
+            conflict.meta?.modifiedAt ||
+            conflict.modifiedDate ||
+            conflict.modifiedAt,
         }))
 
         if (!base.repeatId || base.repeatId === 0) {
@@ -205,6 +222,25 @@ export function useRoomBookings() {
           repeatOption: base.repeatOption || null,
           repeatUntil: base.repeatUntil || null,
           isRecurring: (base.repeatId || 0) > 0,
+          // Audit fields (try various locations in API response)
+          createdDate:
+            base.meta?.createdDate ||
+            base.meta?.createdAt ||
+            booking.meta?.createdDate ||
+            booking.meta?.createdAt ||
+            item.meta?.createdDate ||
+            item.meta?.createdAt ||
+            base.createdDate ||
+            base.createdAt,
+          modifiedDate:
+            base.meta?.modifiedDate ||
+            base.meta?.modifiedAt ||
+            booking.meta?.modifiedDate ||
+            booking.meta?.modifiedAt ||
+            item.meta?.modifiedDate ||
+            item.meta?.modifiedAt ||
+            base.modifiedDate ||
+            base.modifiedAt,
         }
       })
 
@@ -347,6 +383,8 @@ export function useRoomBookings() {
   ): Promise<{
     createdBy: RoomBookingPerson | null
     onBehalfOf: RoomBookingPerson | null
+    createdDate?: string
+    modifiedDate?: string
   } | null> => {
     try {
       const response = (await churchtoolsClient.get(`/bookings/${conflictBookingId}`, {
@@ -366,9 +404,34 @@ export function useRoomBookings() {
       const createdBy = involvedPersons?.createdBy
       const onBehalfOf = involvedPersons?.onBehalfOf
 
+      // Audit fields (try various locations in API response)
+      const createdDate =
+        base?.meta?.createdDate ||
+        base?.meta?.createdAt ||
+        booking?.meta?.createdDate ||
+        booking?.meta?.createdAt ||
+        response?.meta?.createdDate ||
+        response?.meta?.createdAt ||
+        base?.createdDate ||
+        base?.createdAt
+      const modifiedDate =
+        base?.meta?.modifiedDate ||
+        base?.meta?.modifiedAt ||
+        booking?.meta?.modifiedDate ||
+        booking?.meta?.modifiedAt ||
+        response?.meta?.modifiedDate ||
+        response?.meta?.modifiedAt ||
+        base?.modifiedDate ||
+        base?.modifiedAt
+
       if (!createdBy) {
         console.warn(`No creator found for conflict booking ${conflictBookingId}`)
-        return null
+        return {
+          createdBy: null,
+          onBehalfOf: null,
+          createdDate,
+          modifiedDate,
+        }
       }
 
       return {
@@ -384,6 +447,8 @@ export function useRoomBookings() {
               email: onBehalfOf.email,
             }
           : null,
+        createdDate,
+        modifiedDate,
       }
     } catch (err: any) {
       console.warn(`Error resolving conflict creator ${conflictBookingId}:`, err)

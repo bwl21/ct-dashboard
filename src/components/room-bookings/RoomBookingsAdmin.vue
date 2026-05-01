@@ -211,6 +211,24 @@
           <div class="time">{{ formatTime(row.startDate) }} - {{ formatTime(row.endDate) }}</div>
         </div>
       </template>
+
+      <!-- Created Date Column -->
+      <template #createdDate="{ item: row }">
+        <div v-if="row.createdDate" class="datetime-info">
+          <div>{{ formatDate(row.createdDate) }}</div>
+          <div class="time">{{ formatTime(row.createdDate) }}</div>
+        </div>
+        <div v-else class="no-conflict">-</div>
+      </template>
+
+      <!-- Modified Date Column -->
+      <template #modifiedDate="{ item: row }">
+        <div v-if="row.modifiedDate" class="datetime-info">
+          <div>{{ formatDate(row.modifiedDate) }}</div>
+          <div class="time">{{ formatTime(row.modifiedDate) }}</div>
+        </div>
+        <div v-else class="no-conflict">-</div>
+      </template>
     </AdminTable>
 
     <!-- Reject Dialog -->
@@ -431,7 +449,7 @@ const tableColumns = [
   },
   {
     key: 'person',
-    label: 'Person',
+    label: 'Erstelller',
     width: 200,
     sortable: true,
     resizable: true,
@@ -439,6 +457,22 @@ const tableColumns = [
     sortKey: 'onBehalfOf.name',
   },
   { key: 'title', label: 'Titel', width: 200, sortable: true, resizable: true },
+  {
+    key: 'createdDate',
+    label: 'Erstellt',
+    width: 130,
+    sortable: true,
+    resizable: true,
+    cellSlot: 'createdDate',
+  },
+  {
+    key: 'modifiedDate',
+    label: 'Geändert',
+    width: 130,
+    sortable: true,
+    resizable: true,
+    cellSlot: 'modifiedDate',
+  },
   {
     key: 'actions',
     label: 'Aktionen',
@@ -561,13 +595,18 @@ const approveSingleBooking = async (bookingId: number) => {
 // (once when opening the dialog to pre-fill the reason, once when sending the email).
 const conflictCreatorsCache = new Map<
   number,
-  { createdBy: { id: number; name: string; email?: string } | null; onBehalfOf: { id: number; name: string; email?: string } | null } | null
+  {
+    createdBy: { id: number; name: string; email?: string } | null
+    onBehalfOf: { id: number; name: string; email?: string } | null
+  } | null
 >()
 
-const formatPersonsSuffix = (persons: {
-  createdBy: { name: string } | null
-  onBehalfOf: { name: string } | null
-} | null): string => {
+const formatPersonsSuffix = (
+  persons: {
+    createdBy: { name: string } | null
+    onBehalfOf: { name: string } | null
+  } | null
+): string => {
   if (!persons) return ''
   const parts: string[] = []
   if (persons.onBehalfOf?.name) parts.push(persons.onBehalfOf.name)

@@ -65,6 +65,17 @@
           <span v-else>unbegrenzt</span>
         </span>
       </div>
+
+      <!-- Audit Info -->
+      <div v-if="effectiveCreatedDate" class="meta-row">
+        <strong>Erstellt am:</strong>
+        <span>{{ formatDateTime(effectiveCreatedDate) }}</span>
+      </div>
+
+      <div v-if="effectiveModifiedDate" class="meta-row">
+        <strong>Geändert am:</strong>
+        <span>{{ formatDateTime(effectiveModifiedDate) }}</span>
+      </div>
     </div>
 
     <!-- Action Buttons -->
@@ -123,8 +134,18 @@ const { resolveConflictCreator, navigateToEditBooking } = useRoomBookings()
 const creatorInfo = ref<{
   createdBy: RoomBookingPerson | null
   onBehalfOf: RoomBookingPerson | null
+  createdDate?: string
+  modifiedDate?: string
 } | null>(null)
 const isLoadingCreator = ref(false)
+
+// Use audit info from booking, falling back to async-loaded creatorInfo
+const effectiveCreatedDate = computed(
+  () => (props.booking as any).createdDate || creatorInfo.value?.createdDate
+)
+const effectiveModifiedDate = computed(
+  () => (props.booking as any).modifiedDate || creatorInfo.value?.modifiedDate
+)
 
 // Get booking ID - handle both RoomBooking (id) and RoomBookingConflict (bookingId)
 const bookingId = computed(() => {
@@ -191,6 +212,20 @@ const formatDate = (dateString: string): string => {
 const formatTime = (dateString: string): string => {
   try {
     return new Date(dateString).toLocaleTimeString('de-DE', {
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return dateString
+  }
+}
+
+const formatDateTime = (dateString: string): string => {
+  try {
+    return new Date(dateString).toLocaleString('de-DE', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
     })
