@@ -164,6 +164,15 @@
           <button
             v-if="row && row.statusId !== BOOKING_STATUS.PENDING"
             type="button"
+            @click="resetSingleBookingToPending(row.id)"
+            class="ct-btn ct-btn-sm ct-btn-warning"
+            title="Auf Angefragt zurücksetzen"
+          >
+            ↩️
+          </button>
+          <button
+            v-if="row && row.statusId !== BOOKING_STATUS.PENDING"
+            type="button"
             @click="showDeleteConfirm(row)"
             class="ct-btn ct-btn-sm ct-btn-delete"
             title="Löschen"
@@ -393,6 +402,7 @@ const {
   approveBooking: approveBookingApi,
   rejectBooking: rejectBookingApi,
   deleteBooking: deleteBookingApi,
+  resetBookingToPending: resetBookingToPendingApi,
   sendRejectionEmail,
   resolveConflictCreator,
   updateFilter,
@@ -633,6 +643,17 @@ const approveSingleBooking = async (bookingId: number) => {
   try {
     await approveBookingApi(bookingId)
     showSuccess('Raumbuchung genehmigt')
+    await refreshData()
+  } catch (err: any) {
+    showError(`Fehler: ${err.message}`)
+  }
+}
+
+// Reset to pending
+const resetSingleBookingToPending = async (bookingId: number) => {
+  try {
+    await resetBookingToPendingApi(bookingId)
+    showSuccess('Raumbuchung auf "Angefragt" zurückgesetzt')
     await refreshData()
   } catch (err: any) {
     showError(`Fehler: ${err.message}`)
@@ -1157,6 +1178,12 @@ const confirmBulkReject = async () => {
   background: #9c27b0;
   color: white;
   border-color: #9c27b0;
+}
+
+.ct-btn-warning {
+  background: #ff9800;
+  color: white;
+  border-color: #ff9800;
 }
 
 .ct-btn:disabled {

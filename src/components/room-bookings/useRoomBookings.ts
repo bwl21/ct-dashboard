@@ -377,6 +377,23 @@ export function useRoomBookings() {
   }
 
   /**
+   * Reset booking status back to PENDING (Angefragt)
+   */
+  const resetBookingToPending = async (bookingId: number) => {
+    try {
+      const response = await churchtoolsClient.put(`/bookings/${bookingId}/reset`, )
+      // Refresh list
+      if (filter.resourceIds.length > 0) {
+        await fetchBookings(filter.resourceIds, filter.statusIds, filter.dateFrom, filter.dateTo)
+      }
+      return response
+    } catch (err: any) {
+      console.error(`Error resetting booking ${bookingId} to pending:`, err)
+      throw new Error('Fehler beim Zurücksetzen der Buchung auf "Angefragt"')
+    }
+  }
+
+  /**
    * Delete booking (soft delete: set status to DELETED)
    */
   const deleteBooking = async (bookingId: number) => {
@@ -809,6 +826,7 @@ export function useRoomBookings() {
     approveBooking,
     rejectBooking,
     deleteBooking,
+    resetBookingToPending,
     sendRejectionEmail,
     resolveConflictCreator,
 
