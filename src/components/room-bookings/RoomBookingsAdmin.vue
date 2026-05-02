@@ -214,7 +214,11 @@
     </AdminTable>
 
     <!-- Reject Dialog -->
-    <div v-if="showRejectDialogFlag" class="modal-overlay reject-dialog-overlay" @click.self="closeRejectDialog">
+    <div
+      v-if="showRejectDialogFlag"
+      class="modal-overlay reject-dialog-overlay"
+      @click.self="closeRejectDialog"
+    >
       <div class="modal-content">
         <h3>Raumbuchung ablehnen</h3>
         <p class="booking-title">{{ rejectingBooking?.title }}</p>
@@ -308,7 +312,11 @@
     </div>
 
     <!-- Delete Confirmation Dialog -->
-    <div v-if="showDeleteDialogFlag" class="modal-overlay delete-dialog-overlay" @click.self="closeDeleteDialog">
+    <div
+      v-if="showDeleteDialogFlag"
+      class="modal-overlay delete-dialog-overlay"
+      @click.self="closeDeleteDialog"
+    >
       <div class="modal-content modal-small">
         <h3>Raumbuchung löschen?</h3>
         <p class="booking-title">{{ deletingBooking?.title }}</p>
@@ -346,6 +354,18 @@
       @reject-booking="handleRejectFromModal"
       @reset-booking="handleResetFromModal"
       @delete-booking="handleDeleteFromModal"
+      @open-conflict-mail="handleOpenConflictMail"
+    />
+
+    <!-- Conflict Mail Modal -->
+    <ConflictMailModal
+      :is-open="showConflictMailFlag"
+      :booking="conflictMailBooking"
+      :recipients="conflictMailRecipients"
+      :parties="conflictMailParties"
+      :is-loading="conflictMailLoading"
+      @close="handleCloseConflictMail"
+      @send="handleSendConflictMail"
     />
   </div>
 </template>
@@ -355,9 +375,16 @@ import { ref, computed, onMounted } from 'vue'
 import AdminTable from '../common/AdminTable.vue'
 import RoomBookingDetailsModal from './RoomBookingDetailsModal.vue'
 import ConflictDetailsModal from './ConflictDetailsModal.vue'
+import ConflictMailModal from './ConflictMailModal.vue'
 import BookingActionBar from './BookingActionBar.vue'
 import type { BookingActionId } from './useRoomBookingActions'
-import { useRoomBookings, BOOKING_STATUS, type RoomBooking } from './useRoomBookings'
+import {
+  useRoomBookings,
+  BOOKING_STATUS,
+  type RoomBooking,
+  type ConflictMailRecipient,
+  type ConflictParty,
+} from './useRoomBookings'
 import { useToast } from '@/composables/useToast'
 
 const { showSuccess, showError } = useToast()
@@ -378,6 +405,8 @@ const {
   resetBookingToPending: resetBookingToPendingApi,
   sendRejectionEmail,
   resolveConflictCreator,
+  collectConflictRecipients,
+  sendConflictMail,
   updateFilter,
   setSort,
   bulkApprove,
@@ -417,6 +446,13 @@ const deletingBooking = ref<RoomBooking | null>(null)
 // Conflict details modal
 const showConflictDetailsFlag = ref(false)
 const conflictBooking = ref<RoomBooking | null>(null)
+
+// Conflict mail modal
+const showConflictMailFlag = ref(false)
+const conflictMailBooking = ref<RoomBooking | null>(null)
+const conflictMailRecipients = ref<ConflictMailRecipient[]>([])
+const conflictMailParties = ref<ConflictParty[]>([])
+const conflictMailLoading = ref(false)
 
 // Processing flag
 const isBulkProcessing = ref(false)
@@ -810,6 +846,59 @@ const confirmReject = async () => {
 const showConflictDetails = (booking: RoomBooking) => {
   conflictBooking.value = booking
   showConflictDetailsFlag.value = true
+}
+
+// Conflict mail
+const handleOpenConflictMail = async (booking: RoomBooking) => {
+  console.log('RoomBookingsAdmin: handleOpenConflictMail called', booking)
+  if (!booking) {
+    showError('Keine Buchung vorhanden')
+    return
+  }
+  conflictMailBooking.value = booking
+  conflictMailLoading.value = true
+  try {
+    const result = await collectConflictRecipients(booking)
+    console.log('Collected recipients:', result.recipients.length, result.parties.length)
+    conflictMailRecipients.value = result.recipients
+    conflictMailParties.value = result.parties
+    showConflictMailFlag.value = true
+    console.log('ConflictMailModal opened')
+  } catch (err: any) {
+    console.error('collectConflictRecipients error:', err)
+    showError(`Fehler beim Laden der Empfänger: ${err.message}`)
+  } finally {
+    conflictMailLoading.value = false
+  }
+}
+
+const handleCloseConflictMail = () => {
+  showConflictMailFlag.value = false
+  conflictMailBooking.value = null
+  conflictMailRecipients.value = []
+  conflictMailParties.value = []
+}
+
+const handleSendConflictMail = async (draft: {
+  recipients: ConflictMailRecipient[]
+  subject: string
+  bodyHtml: string
+  bccSelf: boolean
+}) => {
+  try {
+    await sendConflictMail({
+      bookingId: conflictMailBooking.value!.id,
+      recipients: draft.recipients,
+      parties: conflictMailParties.value,
+      subject: draft.subject,
+      bodyHtml: draft.bodyHtml,
+      bccSelf: draft.bccSelf,
+    })
+    showSuccess('E-Mail an Konflikt-Beteiligte gesendet')
+    handleCloseConflictMail()
+  } catch (err: any) {
+    showError(`Fehler: ${err.message}`)
+  }
 }
 
 // Delete dialog

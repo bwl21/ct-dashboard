@@ -66,6 +66,55 @@ export interface RoomBookingsSort {
   direction: 'asc' | 'desc'
 }
 
+// ============================================================================
+// CONFLICT MAIL TYPES
+// ============================================================================
+
+export type ConflictMailRole = 'requester' | 'conflictCreator' | 'onBehalfOf'
+
+export interface ConflictParty {
+  bookingId: number
+  title: string
+  startDate: string
+  endDate: string
+  statusId: number
+  createdDate?: string
+  /** 1 = highest priority (first come, first served) */
+  priorityRank: number
+  kind: 'existing' | 'request'
+}
+
+export interface ConflictMailRecipient {
+  personId: number
+  name: string
+  email?: string
+  role: ConflictMailRole
+  party: ConflictParty
+  selected: boolean
+}
+
+export interface ConflictPartyEntry {
+  bookingId: number
+  title: string
+  startDate: string
+  endDate: string
+  statusId: number
+  createdDate?: string
+  creatorName: string
+  priorityRank: number
+  kind: 'existing' | 'request'
+}
+
+export interface ConflictMailDraft {
+  bookingId: number
+  recipients: ConflictMailRecipient[]
+  parties: ConflictParty[]
+  subject: string
+  bodyHtml: string
+  bccSelf: boolean
+  templateId?: number
+}
+
 // Status Constants
 export const BOOKING_STATUS = {
   PENDING: 1,
@@ -378,6 +427,193 @@ export function useRoomBookings() {
       console.error('Error sending rejection email:', err)
       throw new Error('Fehler beim Versenden der Ablehnungs-E-Mail')
     }
+  }
+
+  // ========================================================================
+  // CONFLICT MAIL HELPERS
+  // ========================================================================
+
+  /**
+   * Compute priority ranks for a set of conflict parties.
+   * Lower rank = higher priority (first come, first served).
+   * Sort criteria: 1. statusId (APPROVED before PENDING)
+   *                2. createdDate (older first)
+   *                3. bookingId (smaller first, tie-breaker)
+   */
+  const computePriorityRank = (parties: Omit<ConflictParty, 'priorityRank'>[]): ConflictParty[] => {
+    return [...parties]
+      .sort((a, b) => {
+        if (a.statusId !== b.statusId) {
+          if (a.statusId === BOOKING_STATUS.APPROVED) return -1
+          if (b.statusId === BOOKING_STATUS.APPROVED) return 1
+        }
+        if (a.createdDate && b.createdDate && a.createdDate !== b.createdDate) {
+          return a.createdDate < b.createdDate ? -1 : 1
+        }
+        return a.bookingId - b.bookingId
+      })
+      .map((p, idx) => ({ ...p, priorityRank: idx + 1 }))
+  }
+
+  /**
+   * Build prioritized party entries with creator names from bookings.
+   * Uses inline createdBy/onBehalfOf for the main booking and resolves
+   * conflict creators via API.
+   */
+  const buildConflictPartiesWithCreators = async (
+    booking: RoomBooking
+  ): Promise<ConflictPartyEntry[]> => {
+    const creatorName = (
+      b: RoomBooking | RoomBookingConflict,
+      info?: { createdBy?: RoomBookingPerson | null; onBehalfOf?: RoomBookingPerson | null } | null
+    ): string => {
+      const onBehalfOf = info?.onBehalfOf ?? (b as any).onBehalfOf
+      const createdBy = info?.createdBy ?? (b as any).createdBy
+      if (onBehalfOf?.name) return `${onBehalfOf.name} (i.A. von ${createdBy?.name ?? '?'})`
+      return createdBy?.name ?? 'Unbekannt'
+    }
+
+    const requestInfo = await resolveConflictCreator(booking.id)
+    const requestEntry: Omit<ConflictPartyEntry, 'priorityRank'> = {
+      bookingId: booking.id,
+      title: booking.title,
+      startDate: booking.startDate,
+      endDate: booking.endDate,
+      statusId: booking.statusId,
+      createdDate: booking.createdDate,
+      creatorName: creatorName(booking, requestInfo),
+      kind: 'request',
+    }
+
+    const conflictEntries: Omit<ConflictPartyEntry, 'priorityRank'>[] = []
+    if (booking.conflicts) {
+      for (const c of booking.conflicts) {
+        const info = await resolveConflictCreator(c.bookingId)
+        conflictEntries.push({
+          bookingId: c.bookingId,
+          title: c.title,
+          startDate: c.startDate,
+          endDate: c.endDate,
+          statusId: c.statusId,
+          createdDate: info?.createdDate,
+          creatorName: creatorName(c, info),
+          kind: 'existing',
+        })
+      }
+    }
+
+    const ranked = computePriorityRank([requestEntry, ...conflictEntries])
+    return ranked.map((p) => {
+      const source = [requestEntry, ...conflictEntries].find((e) => e.bookingId === p.bookingId)!
+      return { ...p, creatorName: source.creatorName }
+    })
+  }
+
+  /**
+   * Collect all involved persons for a booking + its conflicts.
+   * Uses buildConflictPartiesWithCreators() for parties and builds
+   * recipients from the same resolved creator info.
+   */
+  const collectConflictRecipients = async (
+    booking: RoomBooking
+  ): Promise<{
+    recipients: ConflictMailRecipient[]
+    parties: ConflictPartyEntry[]
+  }> => {
+    const parties = await buildConflictPartiesWithCreators(booking)
+    const partyByBookingId = new Map<number, ConflictPartyEntry>()
+    parties.forEach((p) => partyByBookingId.set(p.bookingId, p))
+
+    const recipientMap = new Map<number, ConflictMailRecipient>()
+
+    const addPerson = (
+      person: RoomBookingPerson | null | undefined,
+      partyBookingId: number,
+      role: ConflictMailRole
+    ) => {
+      if (!person) return
+      if (recipientMap.has(person.id)) return
+      const party = partyByBookingId.get(partyBookingId)
+      if (!party) return
+      recipientMap.set(person.id, {
+        personId: person.id,
+        name: person.name,
+        email: person.email,
+        role,
+        party: {
+          bookingId: party.bookingId,
+          title: party.title,
+          startDate: party.startDate,
+          endDate: party.endDate,
+          statusId: party.statusId,
+          createdDate: party.createdDate,
+          priorityRank: party.priorityRank,
+          kind: party.kind,
+        },
+        selected: true,
+      })
+    }
+
+    // Requester - resolve creator info
+    const requesterInfo = await resolveConflictCreator(booking.id)
+    if (requesterInfo) {
+      addPerson(requesterInfo.createdBy, booking.id, 'requester')
+      addPerson(requesterInfo.onBehalfOf, booking.id, 'onBehalfOf')
+    } else {
+      addPerson(booking.createdBy, booking.id, 'requester')
+      addPerson(booking.onBehalfOf, booking.id, 'onBehalfOf')
+    }
+
+    // Conflict creators
+    if (booking.conflicts) {
+      for (const conflict of booking.conflicts) {
+        const info = await resolveConflictCreator(conflict.bookingId)
+        if (info) {
+          addPerson(info.createdBy, conflict.bookingId, 'conflictCreator')
+          addPerson(info.onBehalfOf, conflict.bookingId, 'onBehalfOf')
+        }
+      }
+    }
+
+    // Sort recipients by party priorityRank
+    const recipients = [...recipientMap.values()].sort(
+      (a, b) => a.party.priorityRank - b.party.priorityRank
+    )
+
+    return { recipients, parties }
+  }
+
+  /**
+   * Send conflict notification email to selected recipients.
+   * All recipients are placed in To: so they can reply-all.
+   */
+  const sendConflictMail = async (draft: ConflictMailDraft) => {
+    const personIds = draft.recipients
+      .filter((r) => r.selected && r.email)
+      .map((r) => r.personId)
+
+    if (draft.bccSelf) {
+      try {
+        const whoami = await churchtoolsClient.get('/whoami')
+        const currentUserId = (whoami as any)?.id
+        if (currentUserId && !personIds.includes(currentUserId)) {
+          personIds.push(currentUserId)
+        }
+      } catch (err) {
+        console.warn('Could not determine current user for BCC:', err)
+      }
+    }
+
+    if (personIds.length === 0) {
+      throw new Error('Keine Empfänger mit E-Mail-Adresse ausgewählt')
+    }
+
+    return sendRejectionEmail(
+      personIds,
+      draft.subject,
+      draft.bodyHtml,
+      draft.templateId ?? 11
+    )
   }
 
   /**
@@ -833,6 +1069,10 @@ export function useRoomBookings() {
     resetBookingToPending,
     sendRejectionEmail,
     resolveConflictCreator,
+    computePriorityRank,
+    buildConflictPartiesWithCreators,
+    collectConflictRecipients,
+    sendConflictMail,
 
     // Helper Methods
     setSort,

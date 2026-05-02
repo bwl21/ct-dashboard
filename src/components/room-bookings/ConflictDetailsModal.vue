@@ -59,6 +59,13 @@
       </div>
 
       <div class="modal-footer">
+        <button
+          type="button"
+          @click="handleOpenMail"
+          class="ct-btn ct-btn-primary conflict-mail-btn"
+        >
+          📧 Beteiligte informieren
+        </button>
         <button type="button" @click="closeModal" class="ct-btn ct-btn-outline">Schließen</button>
       </div>
     </div>
@@ -89,6 +96,7 @@ const emit = defineEmits<{
   'reject-booking': [booking: RoomBooking]
   'reset-booking': [bookingId: number]
   'delete-booking': [bookingId: number]
+  'open-conflict-mail': [booking: RoomBooking]
 }>()
 
 const mainBooking = computed(() => props.booking!)
@@ -96,6 +104,11 @@ const { navigateToEditBooking } = useRoomBookings()
 
 const closeModal = () => {
   emit('close')
+}
+
+const handleOpenMail = () => {
+  console.log('ConflictDetailsModal: open-conflict-mail clicked', mainBooking.value)
+  emit('open-conflict-mail', mainBooking.value)
 }
 
 const handleNavigateCalendar = (conflict: RoomBookingConflict) => {
@@ -248,6 +261,21 @@ const handleNavigateDetails = (bookingId: number) => {
 .ct-btn-outline:hover {
   background: #f5f5f5;
   border-color: #999;
+}
+
+.ct-btn-primary {
+  background: #2196f3;
+  color: white;
+  border-color: #2196f3;
+}
+
+.ct-btn-primary:hover {
+  background: #1976d2;
+  border-color: #1976d2;
+}
+
+.conflict-mail-btn {
+  margin-right: auto;
 }
 
 @media (max-width: 600px) {
