@@ -87,7 +87,7 @@ export function useRoomBookings() {
 
   // Filter & Sort State
   const filter = reactive<RoomBookingsFilter>({
-    statusIds: [BOOKING_STATUS.PENDING],
+    statusIds: [],
     resourceIds: [],
     conflictStatus: 'all',
     searchQuery: '',
@@ -143,8 +143,12 @@ export function useRoomBookings() {
         'resource_ids[]': resourceIds,
         'include[]': ['conflicts', 'involvedPersonsDomainObjects'],
       }
+      // Empty statusIds = "Alle" => explicitly send all visible status IDs
+      // so that rejected (CANCELED) bookings are included in the response.
       if (statusIds.length > 0) {
         params['status_ids[]'] = statusIds
+      } else {
+        params['status_ids[]'] = [BOOKING_STATUS.PENDING, BOOKING_STATUS.APPROVED, BOOKING_STATUS.CANCELED]
       }
       if (from) params.from = from
       if (to) params.to = to

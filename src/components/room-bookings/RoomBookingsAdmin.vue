@@ -214,7 +214,7 @@
     </AdminTable>
 
     <!-- Reject Dialog -->
-    <div v-if="showRejectDialogFlag" class="modal-overlay" @click.self="closeRejectDialog">
+    <div v-if="showRejectDialogFlag" class="modal-overlay reject-dialog-overlay" @click.self="closeRejectDialog">
       <div class="modal-content">
         <h3>Raumbuchung ablehnen</h3>
         <p class="booking-title">{{ rejectingBooking?.title }}</p>
@@ -308,7 +308,7 @@
     </div>
 
     <!-- Delete Confirmation Dialog -->
-    <div v-if="showDeleteDialogFlag" class="modal-overlay" @click.self="closeDeleteDialog">
+    <div v-if="showDeleteDialogFlag" class="modal-overlay delete-dialog-overlay" @click.self="closeDeleteDialog">
       <div class="modal-content modal-small">
         <h3>Raumbuchung löschen?</h3>
         <p class="booking-title">{{ deletingBooking?.title }}</p>
@@ -329,6 +329,10 @@
       @close="closeDetailsModal"
       @navigate-calendar="handleNavigateToCalendar"
       @navigate-details="handleNavigateToDetails"
+      @approve-booking="handleApproveFromModal"
+      @reject-booking="handleRejectFromModal"
+      @reset-booking="handleResetFromModal"
+      @delete-booking="handleDeleteFromModal"
     />
 
     <!-- Conflict Details Modal -->
@@ -338,6 +342,10 @@
       @close="showConflictDetailsFlag = false"
       @navigate-calendar="handleNavigateToCalendar"
       @navigate-details="handleNavigateToDetails"
+      @approve-booking="handleApproveFromModal"
+      @reject-booking="handleRejectFromModal"
+      @reset-booking="handleResetFromModal"
+      @delete-booking="handleDeleteFromModal"
     />
   </div>
 </template>
@@ -397,7 +405,7 @@ const bulkRejectReason = ref('')
 const showBulkApproveConfirmFlag = ref(false)
 
 // Status filter
-const selectedStatus = ref(BOOKING_STATUS.PENDING)
+const selectedStatus = ref(0)
 
 // Room filter
 const selectedRoomId = ref(0)
@@ -603,6 +611,41 @@ const closeDetailsModal = () => {
   selectedBookingForDetails.value = null
 }
 
+const handleApproveFromModal = async (bookingId: number) => {
+  try {
+    await approveBookingApi(bookingId)
+    showSuccess('Raumbuchung genehmigt')
+    await refreshData()
+    const updated = bookings.value.find((b) => b.id === bookingId)
+    if (updated) selectedBookingForDetails.value = updated
+  } catch (err: any) {
+    showError(`Fehler: ${err.message}`)
+  }
+}
+
+const handleRejectFromModal = (booking: RoomBooking) => {
+  showRejectDialog(booking)
+}
+
+const handleResetFromModal = async (bookingId: number) => {
+  try {
+    await resetBookingToPendingApi(bookingId)
+    showSuccess('Raumbuchung auf "Angefragt" zurückgesetzt')
+    await refreshData()
+    const updated = bookings.value.find((b) => b.id === bookingId)
+    if (updated) selectedBookingForDetails.value = updated
+  } catch (err: any) {
+    showError(`Fehler: ${err.message}`)
+  }
+}
+
+const handleDeleteFromModal = async (bookingId: number) => {
+  closeDetailsModal()
+  const booking = bookings.value.find((b) => b.id === bookingId)
+  if (!booking) return
+  showDeleteConfirm(booking)
+}
+
 // Single approve
 const approveSingleBooking = async (bookingId: number) => {
   try {
@@ -750,9 +793,14 @@ const confirmReject = async () => {
       await sendRejectionEmail(emailIds, subject, htmlContent)
     }
 
+    const rejectedBookingId = rejectingBooking.value?.id
     showSuccess('Raumbuchung abgelehnt und E-Mail versendet')
     closeRejectDialog()
     await refreshData()
+    const updated = bookings.value.find((b) => b.id === rejectedBookingId)
+    if (updated && showDetailsModalFlag.value) {
+      selectedBookingForDetails.value = updated
+    }
   } catch (err: any) {
     showError(`Fehler: ${err.message}`)
   }
@@ -1057,6 +1105,14 @@ const confirmBulkReject = async () => {
   align-items: center;
   justify-content: center;
   z-index: 1000;
+}
+
+.reject-dialog-overlay {
+  z-index: 1002;
+}
+
+.delete-dialog-overlay {
+  z-index: 1002;
 }
 
 .modal-content {

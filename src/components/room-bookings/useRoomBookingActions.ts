@@ -10,7 +10,7 @@
  */
 
 import type { UiButtonVariant } from '../common/uiButtonTypes'
-import { BOOKING_STATUS, type RoomBooking } from './useRoomBookings'
+import { BOOKING_STATUS, type RoomBooking, type RoomBookingConflict } from './useRoomBookings'
 
 export type BookingActionId =
   | 'details'
@@ -22,8 +22,24 @@ export type BookingActionId =
 
 export type BookingActionScope = 'row' | 'bulk' | 'detail'
 
+export interface BookingActionShape {
+  id: number
+  statusId: number
+  createdDate?: string
+}
+
+export function toBookingActionShape(b: RoomBooking | RoomBookingConflict): BookingActionShape {
+  return {
+    id: 'id' in b ? b.id : b.bookingId,
+    statusId: b.statusId,
+    createdDate: b.createdDate,
+  }
+}
+
+export type ActionBooking = RoomBooking | RoomBookingConflict
+
 export interface ActionContext {
-  bookings: RoomBooking[]
+  bookings: ActionBooking[]
   scope: BookingActionScope
 }
 
@@ -40,9 +56,9 @@ export interface BookingActionDescriptor {
   isDisabled?: (ctx: ActionContext) => boolean
 }
 
-const isPending = (b: RoomBooking | undefined | null): boolean =>
+const isPending = (b: ActionBooking | undefined | null): boolean =>
   Boolean(b) && b!.statusId === BOOKING_STATUS.PENDING
-const someNotPending = (bookings: RoomBooking[]): boolean =>
+const someNotPending = (bookings: ActionBooking[]): boolean =>
   bookings.length > 0 && bookings.some((b) => Boolean(b) && !isPending(b))
 
 export const BOOKING_ACTIONS: BookingActionDescriptor[] = [

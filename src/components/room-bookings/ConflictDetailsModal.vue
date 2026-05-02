@@ -17,6 +17,10 @@
             :show-action-buttons="true"
             @navigate-calendar="$emit('navigate-calendar', mainBooking.id)"
             @navigate-details="$emit('navigate-details', mainBooking.id)"
+            @approve="$emit('approve-booking', mainBooking.id)"
+            @reject="$emit('reject-booking', mainBooking)"
+            @reset="$emit('reset-booking', mainBooking.id)"
+            @delete="$emit('delete-booking', mainBooking.id)"
           />
         </div>
 
@@ -36,6 +40,9 @@
               :load-creator-info="true"
               @navigate-calendar="handleNavigateCalendar(conflict)"
               @navigate-details="handleNavigateDetails(conflict.bookingId)"
+              @approve="$emit('approve-booking', conflict.bookingId)"
+              @reset="$emit('reset-booking', conflict.bookingId)"
+              @delete="$emit('delete-booking', conflict.bookingId)"
             />
           </div>
         </div>
@@ -78,6 +85,10 @@ const emit = defineEmits<{
   close: []
   'navigate-calendar': [bookingId: number]
   'navigate-details': [bookingId: number]
+  'approve-booking': [bookingId: number]
+  'reject-booking': [booking: RoomBooking]
+  'reset-booking': [bookingId: number]
+  'delete-booking': [bookingId: number]
 }>()
 
 const mainBooking = computed(() => props.booking!)

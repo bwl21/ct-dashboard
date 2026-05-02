@@ -22,11 +22,12 @@ import {
   resolveActions,
   type BookingActionId,
   type BookingActionScope,
+  type ActionBooking,
 } from './useRoomBookingActions'
 import type { RoomBooking } from './useRoomBookings'
 
 interface Props {
-  bookings: RoomBooking[]
+  bookings: ActionBooking[]
   scope: BookingActionScope
   /** Whitelist of action IDs to render (and their order). Defaults to all. */
   show?: BookingActionId[]
@@ -47,14 +48,14 @@ defineEmits<{
    * what to do (open dialog, run API call, etc.). Payload contains the
    * relevant bookings and the originating scope.
    */
-  action: [id: BookingActionId, payload: { bookings: RoomBooking[]; scope: BookingActionScope }]
+  action: [id: BookingActionId, payload: { bookings: ActionBooking[]; scope: BookingActionScope }]
 }>()
 
 // Defensive: AdminTable may pass undefined row entries during render passes
 // (e.g. group headers, empty placeholders), so filter them out.
 const safeBookings = computed(() =>
   (props.bookings || []).filter(
-    (b): b is RoomBooking => Boolean(b) && typeof (b as any).statusId === 'number'
+    (b): b is ActionBooking => Boolean(b) && typeof (b as any).statusId === 'number'
   )
 )
 

@@ -13,9 +13,16 @@
             :booking="booking"
             variant="primary"
             :show-status="true"
-            :show-action-buttons="true"
+            :show-action-buttons="false"
             @navigate-calendar="$emit('navigate-calendar', booking.id)"
             @navigate-details="() => {}"
+          />
+          <BookingActionBar
+            v-if="booking"
+            :bookings="[booking]"
+            scope="detail"
+            :show="['approve', 'reject', 'reset', 'delete', 'edit-calendar']"
+            @action="handleDetailAction"
           />
         </div>
 
@@ -26,19 +33,29 @@
         >
           <h4>⚠️ Konflikte ({{ booking.conflicts.length }})</h4>
           <div class="conflicts-list">
-            <BookingDetails
+            <div
               v-for="(conflict, index) in booking.conflicts"
               :key="conflict.bookingId"
-              :booking="conflict"
-              variant="conflict"
-              :show-status="true"
-              :show-index="true"
-              :index="`Konflikt ${index + 1}`"
-              :show-action-buttons="true"
-              :load-creator-info="true"
-              @navigate-calendar="$emit('navigate-calendar', conflict.bookingId)"
-              @navigate-details="handleNavigateDetails(conflict.bookingId)"
-            />
+              class="conflict-item"
+            >
+              <BookingDetails
+                :booking="conflict"
+                variant="conflict"
+                :show-status="true"
+                :show-index="true"
+                :index="`Konflikt ${index + 1}`"
+                :show-action-buttons="false"
+                :load-creator-info="true"
+                @navigate-calendar="$emit('navigate-calendar', conflict.bookingId)"
+                @navigate-details="handleNavigateDetails(conflict.bookingId)"
+              />
+              <BookingActionBar
+                :bookings="[conflict as any]"
+                scope="detail"
+                :show="['approve', 'reject', 'reset', 'delete', 'edit-calendar']"
+                @action="handleConflictAction"
+              />
+            </div>
           </div>
         </div>
 
@@ -59,6 +76,8 @@ import { computed } from 'vue'
 import type { RoomBooking } from './useRoomBookings'
 import { BOOKING_STATUS } from './useRoomBookings'
 import BookingDetails from './BookingDetails.vue'
+import BookingActionBar from './BookingActionBar.vue'
+import type { BookingActionId, ActionBooking } from './useRoomBookingActions'
 
 interface Props {
   booking: RoomBooking | null
@@ -72,6 +91,10 @@ const emit = defineEmits<{
   close: []
   'navigate-calendar': [bookingId: number]
   'navigate-details': [bookingId: number]
+  'approve-booking': [bookingId: number]
+  'reject-booking': [booking: RoomBooking]
+  'reset-booking': [bookingId: number]
+  'delete-booking': [bookingId: number]
 }>()
 
 const closeModal = () => {
@@ -81,6 +104,33 @@ const closeModal = () => {
 const handleNavigateDetails = (bookingId: number) => {
   console.log('RoomBookingDetailsModal: navigate-details clicked, bookingId=', bookingId)
   emit('navigate-details', bookingId)
+}
+
+const handleDetailAction = (id: BookingActionId, payload: { bookings: ActionBooking[] }) => {
+  const b = payload.bookings[0]
+  if (!b) return
+  const bookingId = 'id' in b ? b.id : b.bookingId
+  switch (id) {
+    case 'approve':
+      emit('approve-booking', bookingId)
+      break
+    case 'reject':
+      emit('reject-booking', b as RoomBooking)
+      break
+    case 'reset':
+      emit('reset-booking', bookingId)
+      break
+    case 'delete':
+      emit('delete-booking', bookingId)
+      break
+    case 'edit-calendar':
+      emit('navigate-calendar', bookingId)
+      break
+  }
+}
+
+const handleConflictAction = (id: BookingActionId, payload: { bookings: ActionBooking[] }) => {
+  handleDetailAction(id, payload)
 }
 </script>
 
@@ -186,6 +236,12 @@ const handleNavigateDetails = (bookingId: number) => {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.conflict-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .no-conflicts {

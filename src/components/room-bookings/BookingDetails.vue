@@ -80,22 +80,12 @@
 
     <!-- Action Buttons -->
     <div v-if="showActionButtons" class="card-actions">
-      <button
-        type="button"
-        @click="handleNavigateCalendar"
-        class="action-btn action-btn-small"
-        title="Termin im Kalender bearbeiten"
-      >
-        📅 Bearbeiten
-      </button>
-      <button
-        type="button"
-        @click="handleNavigateDetails"
-        class="action-btn action-btn-small"
-        title="Buchungsdetails anzeigen"
-      >
-        ℹ️ Details
-      </button>
+      <BookingActionBar
+        :bookings="[booking as any]"
+        scope="detail"
+        :show="isConflict ? ['approve', 'reset', 'delete', 'edit-calendar'] : ['approve', 'reject', 'reset', 'delete', 'edit-calendar']"
+        @action="handleAction"
+      />
     </div>
   </div>
 </template>
@@ -104,6 +94,8 @@
 import { computed, ref, watch, onMounted } from 'vue'
 import type { RoomBooking, RoomBookingPerson, RoomBookingConflict } from './useRoomBookings'
 import { BOOKING_STATUS, useRoomBookings } from './useRoomBookings'
+import BookingActionBar from './BookingActionBar.vue'
+import type { BookingActionId, ActionBooking } from './useRoomBookingActions'
 
 interface Props {
   booking: RoomBooking | RoomBookingConflict
@@ -126,6 +118,10 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   'navigate-calendar': []
   'navigate-details': []
+  approve: []
+  reject: []
+  reset: []
+  delete: []
 }>()
 
 const { resolveConflictCreator, navigateToEditBooking } = useRoomBookings()
@@ -151,6 +147,12 @@ const effectiveModifiedDate = computed(
 const bookingId = computed(() => {
   const booking = props.booking as any
   return booking.id || booking.bookingId
+})
+
+// Detect if booking is a conflict (RoomBookingConflict has bookingId instead of id)
+const isConflict = computed(() => {
+  const booking = props.booking as any
+  return 'bookingId' in booking && !('id' in booking)
 })
 
 // Load creator info if needed
@@ -243,6 +245,26 @@ const handleNavigateCalendar = () => {
 const handleNavigateDetails = () => {
   console.log('BookingDetails: navigate-details clicked', bookingId.value)
   emit('navigate-details')
+}
+
+const handleAction = (id: BookingActionId, _payload: { bookings: ActionBooking[] }) => {
+  switch (id) {
+    case 'approve':
+      emit('approve')
+      break
+    case 'reject':
+      emit('reject')
+      break
+    case 'reset':
+      emit('reset')
+      break
+    case 'delete':
+      emit('delete')
+      break
+    case 'edit-calendar':
+      handleNavigateCalendar()
+      break
+  }
 }
 </script>
 
@@ -405,30 +427,6 @@ const handleNavigateDetails = () => {
   flex-wrap: wrap;
 }
 
-.action-btn {
-  padding: 4px 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.8em;
-  font-weight: 500;
-  transition: all 0.2s;
-  background: white;
-  color: #333;
-  pointer-events: auto;
-  position: relative;
-  z-index: 10;
-}
-
-.action-btn-small {
-  padding: 4px 8px;
-}
-
-.action-btn:hover {
-  background: #f5f5f5;
-  border-color: #999;
-}
-
 @media (max-width: 600px) {
   .card-header {
     flex-direction: column;
@@ -449,11 +447,6 @@ const handleNavigateDetails = () => {
 
   .card-actions {
     flex-direction: column;
-  }
-
-  .action-btn {
-    width: 100%;
-    text-align: center;
   }
 }
 </style>
