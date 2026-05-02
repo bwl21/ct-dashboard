@@ -381,7 +381,7 @@ export function useRoomBookings() {
    */
   const resetBookingToPending = async (bookingId: number) => {
     try {
-      const response = await churchtoolsClient.put(`/bookings/${bookingId}/reset`, )
+      const response = await churchtoolsClient.put(`/bookings/${bookingId}/reset`, {})
       // Refresh list
       if (filter.resourceIds.length > 0) {
         await fetchBookings(filter.resourceIds, filter.statusIds, filter.dateFrom, filter.dateTo)

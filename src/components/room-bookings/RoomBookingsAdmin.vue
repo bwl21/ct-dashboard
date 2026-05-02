@@ -136,50 +136,13 @@
 
       <!-- Row Actions Column -->
       <template #actions="{ item: row }">
-        <div class="row-actions">
-          <button
-            type="button"
-            @click="showDetailsModal(row)"
-            class="ct-btn ct-btn-sm ct-btn-info"
-            title="Details anzeigen"
-          >
-            ℹ️
-          </button>
-          <button
-            type="button"
-            @click="approveSingleBooking(row.id)"
-            class="ct-btn ct-btn-sm ct-btn-success"
-            title="Genehmigen"
-          >
-            ✅
-          </button>
-          <button
-            type="button"
-            @click="showRejectDialog(row)"
-            class="ct-btn ct-btn-sm ct-btn-danger"
-            title="Ablehnen"
-          >
-            ❌
-          </button>
-          <button
-            v-if="row && row.statusId !== BOOKING_STATUS.PENDING"
-            type="button"
-            @click="resetSingleBookingToPending(row.id)"
-            class="ct-btn ct-btn-sm ct-btn-warning"
-            title="Auf Angefragt zurücksetzen"
-          >
-            ↩️
-          </button>
-          <button
-            v-if="row && row.statusId !== BOOKING_STATUS.PENDING"
-            type="button"
-            @click="showDeleteConfirm(row)"
-            class="ct-btn ct-btn-sm ct-btn-delete"
-            title="Löschen"
-          >
-            🗑️
-          </button>
-        </div>
+        <BookingActionBar
+          :bookings="[row]"
+          scope="row"
+          density="compact"
+          :show="['details', 'approve', 'reject', 'reset', 'delete']"
+          @action="handleRowAction"
+        />
       </template>
 
       <!-- Conflict Indicator Cell -->
@@ -384,6 +347,8 @@ import { ref, computed, onMounted } from 'vue'
 import AdminTable from '../common/AdminTable.vue'
 import RoomBookingDetailsModal from './RoomBookingDetailsModal.vue'
 import ConflictDetailsModal from './ConflictDetailsModal.vue'
+import BookingActionBar from './BookingActionBar.vue'
+import type { BookingActionId } from './useRoomBookingActions'
 import { useRoomBookings, BOOKING_STATUS, type RoomBooking } from './useRoomBookings'
 import { useToast } from '@/composables/useToast'
 
@@ -657,6 +622,32 @@ const resetSingleBookingToPending = async (bookingId: number) => {
     await refreshData()
   } catch (err: any) {
     showError(`Fehler: ${err.message}`)
+  }
+}
+
+// Dispatcher for row-level <BookingActionBar> events
+const handleRowAction = (id: BookingActionId, payload: { bookings: RoomBooking[] }) => {
+  const row = payload.bookings[0]
+  if (!row) return
+  switch (id) {
+    case 'details':
+      showDetailsModal(row)
+      break
+    case 'approve':
+      approveSingleBooking(row.id)
+      break
+    case 'reject':
+      showRejectDialog(row)
+      break
+    case 'reset':
+      resetSingleBookingToPending(row.id)
+      break
+    case 'delete':
+      showDeleteConfirm(row)
+      break
+    case 'edit-calendar':
+      // Not used in row scope, but kept for completeness
+      break
   }
 }
 
