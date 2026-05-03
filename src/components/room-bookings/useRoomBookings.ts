@@ -203,7 +203,6 @@ export function useRoomBookings() {
       if (to) params.to = to
 
       const response = (await churchtoolsClient.get('/bookings', params)) as any[]
-
       const data = Array.isArray(response) ? response : []
 
       // Helper function to check if conflicts actually overlap in time
@@ -321,7 +320,20 @@ export function useRoomBookings() {
       bookings.value = transformed
       return transformed
     } catch (err: any) {
-      const msg = err.message || 'Fehler beim Laden der Raumbuchungen'
+      // Extract backend error details if available
+      let msg = 'Fehler beim Laden der Raumbuchungen'
+      const responseData = err?.response?.data
+      if (responseData) {
+        // ChurchTools REST API error format
+        if (responseData.message) msg = responseData.message
+        else if (responseData.errors && Array.isArray(responseData.errors)) {
+          msg = responseData.errors.map((e: any) => e.message || String(e)).join('\n')
+        }
+        else if (typeof responseData === 'string') msg = responseData
+      }
+      if (err?.message && !msg.includes(err.message)) {
+        msg = `${err.message}\n${msg}`
+      }
       error.value = msg
       console.error('Error fetching bookings:', err)
       throw new Error(msg)
@@ -764,15 +776,10 @@ export function useRoomBookings() {
       )
     }
 
-    // Filter by date range
-    if (filter.dateFrom || filter.dateTo) {
-      result = result.filter((b) => {
-        const bookingDate = new Date(b.startDate).toISOString().split('T')[0]
-        if (filter.dateFrom && bookingDate < filter.dateFrom) return false
-        if (filter.dateTo && bookingDate > filter.dateTo) return false
-        return true
-      })
-    }
+    // Filter by date range — DELEGATED TO API
+    // The ChurchTools /bookings REST API handles from/to filtering server-side.
+    // Removing the client-side filter avoids false negatives where a booking
+    // starts before the selected range but extends into it.
 
     // Filter by resource IDs
     if (filter.resourceIds.length > 0) {

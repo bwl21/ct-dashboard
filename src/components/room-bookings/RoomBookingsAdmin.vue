@@ -92,7 +92,8 @@
             v-model="filter.dateFrom"
             type="date"
             class="ct-input filter-select"
-            @change="refreshData"
+            :class="{ 'input-error': isDateRangeInvalid }"
+            @change="onDateFilterChange"
           />
 
           <!-- Date To Filter -->
@@ -102,7 +103,8 @@
             v-model="filter.dateTo"
             type="date"
             class="ct-input filter-select"
-            @change="refreshData"
+            :class="{ 'input-error': isDateRangeInvalid }"
+            @change="onDateFilterChange"
           />
 
           <!-- Conflict Filter -->
@@ -458,6 +460,14 @@ const conflictMailLoading = ref(false)
 // Processing flag
 const isBulkProcessing = ref(false)
 
+// Date filter validation
+const isDateRangeInvalid = computed(() => {
+  if (filter.dateFrom && filter.dateTo) {
+    return filter.dateTo < filter.dateFrom
+  }
+  return false
+})
+
 // Table columns
 const tableColumns = [
   {
@@ -529,9 +539,9 @@ onMounted(async () => {
       const resourceIds = resources.value.map((r: any) => r.id)
       await fetchBookings(resourceIds, filter.statusIds, filter.dateFrom, filter.dateTo)
     }
-  } catch (err) {
+  } catch (err: any) {
     console.error('Error initializing:', err)
-    showError('Fehler beim Laden der Raumbuchungen')
+    showError(err.message || 'Fehler beim Laden der Raumbuchungen')
   }
 })
 
@@ -577,14 +587,23 @@ const statusBadgeClass = (statusId: number): string => {
 }
 
 const refreshData = async () => {
+  if (isDateRangeInvalid.value) return
   try {
     if (resources.value.length > 0) {
       const resourceIds = resources.value.map((r: any) => r.id)
       await fetchBookings(resourceIds, filter.statusIds, filter.dateFrom, filter.dateTo)
     }
-  } catch (err) {
-    showError('Fehler beim Laden der Raumbuchungen')
+  } catch (err: any) {
+    showError(err.message || 'Fehler beim Laden der Raumbuchungen')
   }
+}
+
+const onDateFilterChange = () => {
+  if (isDateRangeInvalid.value) {
+    showError('Das Enddatum muss nach dem Startdatum liegen.')
+    return
+  }
+  refreshData()
 }
 
 const updateStatusFilter = () => {
@@ -1086,6 +1105,10 @@ const confirmBulkReject = async () => {
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 0.9em;
+}
+
+.input-error {
+  border-color: #f44336 !important;
 }
 
 .row-actions {
