@@ -407,6 +407,7 @@ const {
   resolveConflictCreator,
   collectConflictRecipients,
   sendConflictMail,
+  navigateToEditBooking,
   updateFilter,
   setSort,
   bulkApprove,
