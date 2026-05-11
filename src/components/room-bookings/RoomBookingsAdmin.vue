@@ -162,6 +162,20 @@
         <div v-else class="no-conflict">-</div>
       </template>
 
+      <!-- Title Column with Series Icon -->
+      <template #title="{ item: row }">
+        <div class="title-with-series">
+          <span>{{ row.title }}</span>
+          <span
+            v-if="row.isRecurring"
+            class="series-badge"
+            :title="`Serie bis ${row.repeatUntil || 'unbegrenzt'}`"
+          >
+            🔄
+          </span>
+        </div>
+      </template>
+
       <!-- Person Column (created by / on behalf of) -->
       <template #person="{ item: row }">
         <div class="person-info">
@@ -488,6 +502,14 @@ const tableColumns = [
     cellSlot: 'startDate',
   },
   {
+    key: 'title',
+    label: 'Titel',
+    width: 200,
+    sortable: true,
+    resizable: true,
+    cellSlot: 'title',
+  },
+  {
     key: 'person',
     label: 'Erstelller',
     width: 200,
@@ -496,7 +518,6 @@ const tableColumns = [
     cellSlot: 'person',
     sortKey: 'onBehalfOf.name',
   },
-  { key: 'title', label: 'Titel', width: 200, sortable: true, resizable: true },
   {
     key: 'statusId',
     label: 'Status',
@@ -1204,6 +1225,12 @@ const confirmBulkReject = async () => {
   margin-left: 6px;
   font-size: 0.9em;
   cursor: help;
+}
+
+.title-with-series {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 /* Modal Styles */
