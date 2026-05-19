@@ -23,11 +23,7 @@
                 class="recipient-item"
                 :class="{ disabled: !recipient.email }"
               >
-                <input
-                  type="checkbox"
-                  v-model="recipient.selected"
-                  :disabled="!recipient.email"
-                />
+                <input type="checkbox" v-model="recipient.selected" :disabled="!recipient.email" />
                 <span class="recipient-priority">
                   {{ priorityBadge(recipient.party.priorityRank) }}
                 </span>
@@ -36,14 +32,12 @@
                 <span class="recipient-email" v-if="recipient.email">
                   {{ recipient.email }}
                 </span>
-                <span class="recipient-email missing" v-else>
-                  (keine E-Mail)
-                </span>
+                <span class="recipient-email missing" v-else>(keine E-Mail)</span>
               </label>
             </div>
             <p class="priority-info">
-              ⓘ Priorität nach „first come, first served" – ältere / bereits
-              genehmigte Buchungen haben Vorrang.
+              ⓘ Priorität nach „first come, first served" – ältere / bereits genehmigte Buchungen
+              haben Vorrang.
             </p>
           </div>
 
@@ -56,11 +50,7 @@
               class="ct-select"
               @change="applyTemplate"
             >
-              <option
-                v-for="template in templates"
-                :key="template.id"
-                :value="template.id"
-              >
+              <option v-for="template in templates" :key="template.id" :value="template.id">
                 {{ template.label }}
               </option>
             </select>
@@ -78,16 +68,21 @@
             />
           </div>
 
-          <!-- Message -->
+          <!-- Message (Markdown editor + live preview) -->
           <div class="section">
-            <label for="messageTextarea" class="form-label">Nachricht:</label>
-            <textarea
-              id="messageTextarea"
-              v-model="draft.bodyHtml"
-              class="ct-textarea"
-              rows="10"
-              placeholder="Nachricht eingeben..."
-            ></textarea>
+            <label for="messageTextarea" class="form-label">
+              Nachricht (Markdown – unterstützt **fett**, Absätze und Listen mit "- "):
+            </label>
+            <div class="editor-split">
+              <textarea
+                id="messageTextarea"
+                v-model="draft.bodyMarkdown"
+                class="ct-textarea editor-pane"
+                rows="12"
+                placeholder="Nachricht in Markdown eingeben..."
+              ></textarea>
+              <div class="preview-pane" aria-label="HTML-Vorschau" v-html="previewHtml"></div>
+            </div>
           </div>
 
           <!-- BCC -->
@@ -136,6 +131,7 @@ import {
   getTemplateById,
   type ConflictMailTemplateId,
 } from './conflictMailTemplates'
+import { renderMarkdown } from './markdown'
 
 interface Props {
   isOpen: boolean
@@ -159,9 +155,9 @@ const emit = defineEmits<{
     draft: {
       recipients: ConflictMailRecipient[]
       subject: string
-      bodyHtml: string
+      bodyMarkdown: string
       bccSelf: boolean
-    }
+    },
   ]
 }>()
 
@@ -175,12 +171,14 @@ const localParties = ref<ConflictParty[]>([])
 
 const draft = ref({
   subject: '',
-  bodyHtml: '',
+  bodyMarkdown: '',
   bccSelf: false,
 })
 
+const previewHtml = computed(() => renderMarkdown(draft.value.bodyMarkdown))
+
 const canSend = computed(() => {
-  const hasRecipients = localRecipients.value.some((r) => r.selected && r.email)
+  const hasRecipients = localRecipients.value.some((r) => r.selected)
   const hasSubject = draft.value.subject.trim().length > 0
   return hasRecipients && hasSubject
 })
@@ -213,7 +211,7 @@ const applyTemplate = () => {
   if (!props.booking) return
   const template = getTemplateById(selectedTemplateId.value)
   draft.value.subject = template.buildSubject(props.booking)
-  draft.value.bodyHtml = template.buildBody(
+  draft.value.bodyMarkdown = template.buildBody(
     props.booking,
     localRecipients.value,
     localParties.value
@@ -227,7 +225,7 @@ const sendMail = () => {
   emit('send', {
     recipients: localRecipients.value,
     subject: draft.value.subject,
-    bodyHtml: draft.value.bodyHtml,
+    bodyMarkdown: draft.value.bodyMarkdown,
     bccSelf: draft.value.bccSelf,
   })
 }
@@ -237,7 +235,7 @@ watch(
   () => ({ isOpen: props.isOpen, rLen: props.recipients.length, pLen: props.parties.length }),
   ({ isOpen, rLen, pLen }) => {
     if (isOpen && rLen > 0 && pLen > 0) {
-      localRecipients.value = props.recipients.map((r) => ({ ...r, selected: r.selected }))
+      localRecipients.value = props.recipients.map((r) => ({ ...r, selected: true }))
       localParties.value = props.parties
       applyTemplate()
     }
@@ -251,7 +249,7 @@ watch(
     if (!open) {
       localRecipients.value = []
       localParties.value = []
-      draft.value = { subject: '', bodyHtml: '', bccSelf: false }
+      draft.value = { subject: '', bodyMarkdown: '', bccSelf: false }
       selectedTemplateId.value = 'clarify-priority'
       errorMessage.value = ''
       isSending.value = false
@@ -287,7 +285,7 @@ watch(
 }
 
 .modal-large {
-  max-width: 750px;
+  max-width: 960px;
 }
 
 .modal-header {
@@ -459,6 +457,51 @@ watch(
   resize: vertical;
 }
 
+.editor-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.editor-pane {
+  min-height: 240px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+}
+
+.preview-pane {
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 10px 14px;
+  background: #fafafa;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  overflow-y: auto;
+  min-height: 240px;
+}
+
+.preview-pane :deep(p) {
+  margin: 0 0 0.75em 0;
+}
+
+.preview-pane :deep(p:last-child) {
+  margin-bottom: 0;
+}
+
+.preview-pane :deep(strong) {
+  font-weight: 700;
+}
+
+.preview-pane :deep(ul) {
+  margin: 0 0 0.75em 0;
+  padding-left: 1.5em;
+}
+
+.preview-pane :deep(li) {
+  margin: 0.15em 0;
+}
+
 .form-label {
   display: block;
   margin-bottom: 6px;
@@ -487,12 +530,12 @@ watch(
 }
 
 .ct-btn {
-  padding: 8px 16px;
+  padding: 10px 18px;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 0.9em;
-  font-weight: 500;
+  font-size: 0.95em;
+  font-weight: 600;
   transition: all 0.2s;
 }
 
@@ -512,14 +555,15 @@ watch(
 }
 
 .ct-btn-primary {
-  background: #2196f3;
+  background: #1976d2;
   color: white;
-  border-color: #2196f3;
+  border-color: #1976d2;
+  font-weight: 700;
 }
 
 .ct-btn-primary:hover:not(:disabled) {
-  background: #1976d2;
-  border-color: #1976d2;
+  background: #1565c0;
+  border-color: #1565c0;
 }
 
 @media (max-width: 600px) {
@@ -547,6 +591,10 @@ watch(
   .recipient-email {
     max-width: none;
     width: 100%;
+  }
+
+  .editor-split {
+    grid-template-columns: 1fr;
   }
 }
 </style>

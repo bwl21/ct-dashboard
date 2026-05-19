@@ -1,6 +1,7 @@
 import { ref, computed, reactive } from 'vue'
 import { churchtoolsClient } from '@churchtools/churchtools-client'
 import { getChurchtoolsBaseUrl, openDetailInTab } from '../../services/churchtools'
+import { renderMarkdown } from './markdown'
 
 // ============================================================================
 // TYPES
@@ -103,6 +104,8 @@ export interface ConflictPartyEntry {
   creatorName: string
   priorityRank: number
   kind: 'existing' | 'request'
+  /** Absolute ChurchTools URL to edit this booking/event */
+  editUrl?: string
 }
 
 export interface ConflictMailDraft {
@@ -110,7 +113,8 @@ export interface ConflictMailDraft {
   recipients: ConflictMailRecipient[]
   parties: ConflictParty[]
   subject: string
-  bodyHtml: string
+  /** Markdown body (subset: paragraphs + **bold**); converted to HTML before sending. */
+  bodyMarkdown: string
   bccSelf: boolean
   templateId?: number
 }
@@ -197,13 +201,36 @@ export function useRoomBookings() {
       if (statusIds.length > 0) {
         params['status_ids[]'] = statusIds
       } else {
-        params['status_ids[]'] = [BOOKING_STATUS.PENDING, BOOKING_STATUS.APPROVED, BOOKING_STATUS.CANCELED]
+        params['status_ids[]'] = [
+          BOOKING_STATUS.PENDING,
+          BOOKING_STATUS.APPROVED,
+          BOOKING_STATUS.CANCELED,
+        ]
       }
       if (from) params.from = from
       if (to) params.to = to
 
       const response = (await churchtoolsClient.get('/bookings', params)) as any[]
       const data = Array.isArray(response) ? response : []
+
+      // DEBUG: inspect raw API shape (incl. potential new alpha-backend schema)
+      const firstWithConflicts = data.find(
+        (it: any) =>
+          (it.conflicts && it.conflicts.length) ||
+          (it.booking?.conflicts && it.booking.conflicts.length)
+      )
+      console.groupCollapsed(`[fetchBookings] /bookings → ${data.length} items`)
+      console.log('First item with conflicts (full):', firstWithConflicts)
+      console.log(' └─ item.booking keys:', Object.keys(firstWithConflicts?.booking ?? {}))
+      console.log(' └─ item.base keys:', Object.keys(firstWithConflicts?.base ?? {}))
+      console.log(' └─ item.calculated keys:', Object.keys(firstWithConflicts?.calculated ?? {}))
+      console.log(' └─ item.conflicts[0]:', firstWithConflicts?.conflicts?.[0])
+      console.log(
+        ' └─ item.conflicts[0] keys:',
+        Object.keys(firstWithConflicts?.conflicts?.[0] ?? {})
+      )
+      console.log(' └─ item["@deprecated"] keys:', Object.keys(firstWithConflicts?.['@deprecated'] ?? {}))
+      console.groupEnd()
 
       // Helper function to check if conflicts actually overlap in time
       const isActualConflict = (booking: any, conflict: any): boolean => {
@@ -328,8 +355,7 @@ export function useRoomBookings() {
         if (responseData.message) msg = responseData.message
         else if (responseData.errors && Array.isArray(responseData.errors)) {
           msg = responseData.errors.map((e: any) => e.message || String(e)).join('\n')
-        }
-        else if (typeof responseData === 'string') msg = responseData
+        } else if (typeof responseData === 'string') msg = responseData
       }
       if (err?.message && !msg.includes(err.message)) {
         msg = `${err.message}\n${msg}`
@@ -401,7 +427,7 @@ export function useRoomBookings() {
     personIds: number[],
     subject: string,
     htmlContent: string,
-    templateId: number = 11
+    templateId: number = -1
   ) => {
     if (personIds.length === 0) {
       console.warn('No person IDs provided for email')
@@ -409,35 +435,38 @@ export function useRoomBookings() {
     }
 
     try {
-      // Use raw fetch for legacy AJAX endpoint
-      const params = new URLSearchParams({
+      // Use old API (handles CSRF token automatically)
+      const response = await churchtoolsClient.oldApi('churchhome/ajax', 'sendEMailToPersonIds', {
         ids: personIds.join(','),
         betreff: subject,
         inhalt: htmlContent,
-        template_id: templateId.toString(),
-        func: 'sendEMailToPersonIds',
+        attachments: null,
+        domain_id: null,
+        group_id: null,
+        template_id: templateId == -1 ? null : templateId,
       })
-
-      // Use relative URL so the request is same-origin in production and is routed
-      // through the Vite proxy (configured in vite.config.ts) in development.
-      const response = await fetch('/index.php?q=churchdb/ajax', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'X-Requested-With': 'XMLHttpRequest',
-        },
-        credentials: 'include', // Send cookies
-        body: params.toString(),
-      })
-
-      if (!response.ok) {
-        throw new Error(`Email send failed: ${response.statusText}`)
-      }
 
       return response
     } catch (err: any) {
+      // Old API returns {"status":"success","data":null} on success
+      console.log('Response data raw:', err?.response?.data)
+      console.log('Response data type:', typeof err?.response?.data)
+
+      // Check if response has success status
+      const responseData =
+        typeof err?.response?.data === 'string'
+          ? JSON.parse(err?.response?.data)
+          : err?.response?.data
+
+      if (err?.response?.status === 200 && responseData?.status === 'success') {
+        console.log('Email sent successfully')
+        return { success: true }
+      }
+
       console.error('Error sending rejection email:', err)
-      throw new Error('Fehler beim Versenden der Ablehnungs-E-Mail')
+      const errorMessage =
+        err?.message || responseData?.message || 'Fehler beim Versenden der Ablehnungs-E-Mail'
+      throw new Error(errorMessage)
     }
   }
 
@@ -495,6 +524,7 @@ export function useRoomBookings() {
       createdDate: booking.createdDate,
       creatorName: creatorName(booking, requestInfo),
       kind: 'request',
+      editUrl: buildEditBookingUrl(booking, booking.resourceId),
     }
 
     const conflictEntries: Omit<ConflictPartyEntry, 'priorityRank'>[] = []
@@ -510,6 +540,8 @@ export function useRoomBookings() {
           createdDate: info?.createdDate,
           creatorName: creatorName(c, info),
           kind: 'existing',
+          // Conflicts inherit resourceId from the main booking (same room)
+          editUrl: buildEditBookingUrl(c, booking.resourceId),
         })
       }
     }
@@ -517,7 +549,7 @@ export function useRoomBookings() {
     const ranked = computePriorityRank([requestEntry, ...conflictEntries])
     return ranked.map((p) => {
       const source = [requestEntry, ...conflictEntries].find((e) => e.bookingId === p.bookingId)!
-      return { ...p, creatorName: source.creatorName }
+      return { ...p, creatorName: source.creatorName, editUrl: source.editUrl }
     })
   }
 
@@ -600,9 +632,7 @@ export function useRoomBookings() {
    * All recipients are placed in To: so they can reply-all.
    */
   const sendConflictMail = async (draft: ConflictMailDraft) => {
-    const personIds = draft.recipients
-      .filter((r) => r.selected && r.email)
-      .map((r) => r.personId)
+    const personIds = draft.recipients.filter((r) => r.selected && r.email).map((r) => r.personId)
 
     if (draft.bccSelf) {
       try {
@@ -623,7 +653,7 @@ export function useRoomBookings() {
     return sendRejectionEmail(
       personIds,
       draft.subject,
-      draft.bodyHtml,
+      renderMarkdown(draft.bodyMarkdown),
       draft.templateId ?? 11
     )
   }
@@ -668,6 +698,21 @@ export function useRoomBookings() {
    * Resolve conflict creator details
    * Fetches the creator of a conflicting booking
    */
+  // Fetch person email from persons API
+  const getPersonEmail = async (personId: number): Promise<string | undefined> => {
+    try {
+      const response = (await churchtoolsClient.get(`/persons/${personId}`)) as any
+
+      const person = response?.person || response
+      const email = person?.email
+
+      return email || undefined
+    } catch (err: any) {
+      console.warn(`Error fetching email for person ${personId}:`, err)
+      return undefined
+    }
+  }
+
   const resolveConflictCreator = async (
     conflictBookingId: number
   ): Promise<{
@@ -683,7 +728,7 @@ export function useRoomBookings() {
 
       // Try different response structures
       const booking = response?.booking || response
-      const base = booking?.base || booking
+      const base = item.base || item.booking?.base || item.booking || item
 
       // Try to find persons at different levels
       const involvedPersons =
@@ -724,17 +769,23 @@ export function useRoomBookings() {
         }
       }
 
+      // Fetch emails from contacts API
+      const createdByEmail = await getPersonEmail(parseInt(createdBy.domainIdentifier))
+      const onBehalfOfEmail = onBehalfOf
+        ? await getPersonEmail(parseInt(onBehalfOf.domainIdentifier))
+        : undefined
+
       return {
         createdBy: {
           id: parseInt(createdBy.domainIdentifier),
           name: createdBy.title,
-          email: createdBy.email,
+          email: createdByEmail,
         },
         onBehalfOf: onBehalfOf
           ? {
               id: parseInt(onBehalfOf.domainIdentifier),
               name: onBehalfOf.title,
-              email: onBehalfOf.email,
+              email: onBehalfOfEmail,
             }
           : null,
         createdDate,
@@ -872,6 +923,52 @@ export function useRoomBookings() {
   }
 
   /**
+   * Build the resource booking view URL in ChurchTools
+   * Pattern: ?q=churchresource&curdate=YYYY-MM-DD&filterIds=RESOURCE_ID#WeekView/
+   */
+  const buildResourceViewUrl = (
+    booking: RoomBooking | RoomBookingConflict,
+    resourceId: number
+  ): string => {
+    const startDate = (booking as any).startDate
+
+    let dateStr = ''
+    try {
+      const date = new Date(startDate)
+      dateStr = date.toISOString().split('T')[0]
+    } catch {
+      dateStr = startDate.split('T')[0]
+    }
+
+    const baseUrl = getChurchtoolsBaseUrl()
+    const url = new URL(baseUrl)
+    url.searchParams.set('q', 'churchresource')
+    url.searchParams.set('curdate', dateStr)
+    url.searchParams.set('filterIds', resourceId.toString())
+    url.hash = 'WeekView/'
+    return url.toString()
+  }
+
+  /**
+   * Build the appropriate edit URL for a booking:
+   * - calendar event editor if linked to a calendar event (repeatId > 0)
+   * - resource view (week) otherwise
+   * Returns undefined if no URL can be built (e.g. missing resourceId).
+   */
+  const buildEditBookingUrl = (
+    booking: RoomBooking | RoomBookingConflict,
+    resourceId?: number
+  ): string | undefined => {
+    const repeatId = (booking as any).repeatId || 0
+    if (repeatId > 0) {
+      return buildEditEventUrl(booking)
+    }
+    const bookingResourceId = resourceId ?? (booking as any).resourceId
+    if (!bookingResourceId) return undefined
+    return buildResourceViewUrl(booking, bookingResourceId)
+  }
+
+  /**
    * Navigate to calendar event editor in ChurchTools
    * Opens the booking in a reusable calendar editor tab
    * Clicking multiple times updates the same tab instead of opening new ones
@@ -930,35 +1027,16 @@ export function useRoomBookings() {
     } else {
       // Open resource booking view
       console.log('→ Opening resource booking view for booking', bookingId)
-      const bookingResourceId = resourceId || (booking as any).resourceId
-      const startDate = (booking as any).startDate
-
-      if (!bookingResourceId) {
+      const url = buildEditBookingUrl(booking, resourceId)
+      if (!url) {
         console.error(
           '→ ERROR: Cannot navigate to resource booking - no resourceId provided or found in booking',
-          { bookingId, resourceId, bookingResourceId }
+          { bookingId, resourceId }
         )
         return
       }
-
-      // Parse start date to get YYYY-MM-DD format
-      let dateStr = ''
-      try {
-        const date = new Date(startDate)
-        dateStr = date.toISOString().split('T')[0]
-      } catch {
-        dateStr = startDate.split('T')[0]
-      }
-
-      const baseUrl = getChurchtoolsBaseUrl()
-      const url = new URL(baseUrl)
-      url.searchParams.set('q', 'churchresource')
-      url.searchParams.set('curdate', dateStr)
-      url.searchParams.set('filterIds', bookingResourceId.toString())
-      url.hash = 'WeekView/'
-      console.log('→ Navigation URL:', url.toString())
-      // Open in reusable resource view tab
-      openDetailInTab(url.toString(), 'ct-resource-view')
+      console.log('→ Navigation URL:', url)
+      openDetailInTab(url, 'ct-resource-view')
     }
   }
 
@@ -1085,6 +1163,7 @@ export function useRoomBookings() {
     setSort,
     updateFilter,
     buildEditEventUrl,
+    buildEditBookingUrl,
     navigateToEditEvent,
     navigateToEditEventNewTab,
     navigateToEditBooking,

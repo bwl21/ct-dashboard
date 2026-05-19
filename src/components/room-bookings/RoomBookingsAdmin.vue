@@ -923,7 +923,7 @@ const handleCloseConflictMail = () => {
 const handleSendConflictMail = async (draft: {
   recipients: ConflictMailRecipient[]
   subject: string
-  bodyHtml: string
+  bodyMarkdown: string
   bccSelf: boolean
 }) => {
   try {
@@ -932,7 +932,7 @@ const handleSendConflictMail = async (draft: {
       recipients: draft.recipients,
       parties: conflictMailParties.value,
       subject: draft.subject,
-      bodyHtml: draft.bodyHtml,
+      bodyMarkdown: draft.bodyMarkdown,
       bccSelf: draft.bccSelf,
     })
     showSuccess('E-Mail an Konflikt-Beteiligte gesendet')
