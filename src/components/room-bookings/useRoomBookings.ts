@@ -230,18 +230,12 @@ export function useRoomBookings() {
         Object.keys(firstWithConflicts?.conflicts?.[0] ?? {})
       )
       console.log(' └─ item["@deprecated"] keys:', Object.keys(firstWithConflicts?.['@deprecated'] ?? {}))
+      // Date format check (opencode hypothesis: date-only strings instead of full ISO)
+      const dbase = firstWithConflicts?.base ?? firstWithConflicts?.booking?.base ?? firstWithConflicts?.booking ?? {}
+      const dconf = firstWithConflicts?.conflicts?.[0] ?? {}
+      console.log(' └─ DATE base.startDate:', dbase.startDate, '| base.endDate:', dbase.endDate)
+      console.log(' └─ DATE conflict.startDate:', dconf.startDate, '| conflict.endDate:', dconf.endDate)
       console.groupEnd()
-
-      // Helper function to check if conflicts actually overlap in time
-      const isActualConflict = (booking: any, conflict: any): boolean => {
-        const bookingStart = new Date(booking.startDate).getTime()
-        const bookingEnd = new Date(booking.endDate).getTime()
-        const conflictStart = new Date(conflict.startDate).getTime()
-        const conflictEnd = new Date(conflict.endDate).getTime()
-
-        // Check if time ranges overlap
-        return bookingStart < conflictEnd && bookingEnd > conflictStart
-      }
 
       // Transform API response to RoomBooking format
       const transformed = data.map((item: any) => {
@@ -251,9 +245,8 @@ export function useRoomBookings() {
         const involvedPersons =
           item.involvedPersonsDomainObjects || base.involvedPersonsDomainObjects
 
-        // For recurring bookings: don't filter conflicts because API returns conflicts for all occurrences
-        // For single bookings: filter to only actual time overlaps
-        let validConflicts = (item.conflicts || []).map((conflict: any) => ({
+        // Trust the API: if it reports conflicts, they are valid
+        const validConflicts = (item.conflicts || []).map((conflict: any) => ({
           bookingId: conflict.bookingId,
           title: conflict.title || '',
           startDate: conflict.startDate,
@@ -277,20 +270,6 @@ export function useRoomBookings() {
             conflict.modifiedDate ||
             conflict.modifiedAt,
         }))
-
-        if (!base.repeatId || base.repeatId === 0) {
-          validConflicts = validConflicts.filter((conflict: any) => {
-            // If the conflict is itself a series, trust the API:
-            // The conflict's startDate/endDate is only the first occurrence,
-            // but later recurrences (within the viewed range) may overlap with
-            // this single booking. Without knowing all occurrence times we
-            // cannot validate via simple time-range overlap, so keep it.
-            if ((conflict.repeatId || 0) > 0) {
-              return true
-            }
-            return isActualConflict(base, conflict)
-          })
-        }
 
         return {
           id: base.id,
@@ -870,12 +849,12 @@ export function useRoomBookings() {
   })
 
   /**
-   * Count bookings by conflict status
+   * Count bookings by conflict status (grouped by series)
    */
   const bookingStats = computed(() => ({
-    total: bookings.value.length,
-    withConflicts: bookings.value.filter((b) => b.conflicts && b.conflicts.length > 0).length,
-    withoutConflicts: bookings.value.filter((b) => !b.conflicts || b.conflicts.length === 0).length,
+    total: filteredBookings.value.length,
+    withConflicts: filteredBookings.value.filter((b) => b.conflicts && b.conflicts.length > 0).length,
+    withoutConflicts: filteredBookings.value.filter((b) => !b.conflicts || b.conflicts.length === 0).length,
   }))
 
   /**
