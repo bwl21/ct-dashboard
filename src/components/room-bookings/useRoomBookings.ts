@@ -707,7 +707,7 @@ export function useRoomBookings() {
 
       // Try different response structures
       const booking = response?.booking || response
-      const base = item.base || item.booking?.base || item.booking || item
+      const base = booking?.base || booking
 
       // Try to find persons at different levels
       const involvedPersons =
