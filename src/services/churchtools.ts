@@ -16,22 +16,22 @@ const detailTabs = new Map<string, Window | null>()
 
 /**
  * Open a URL in a reusable browser tab
- * 
+ *
  * If a tab with the given name already exists and is open:
  * - Loads the new URL in that tab
  * - Brings the tab to focus
- * 
+ *
  * If the tab doesn't exist or has been closed:
  * - Opens a new tab with the given name
- * 
+ *
  * @param url - The URL to open
  * @param tabName - The name of the tab (e.g., "detail-view", "calendar-editor")
  * @returns The opened/reused window reference, or null if popup was blocked
- * 
+ *
  * @example
  * // Open calendar editor - reuses existing "calendar" tab
  * openDetailInTab('/calendar?id=123', 'calendar')
- * 
+ *
  * // Open another event - same "calendar" tab is updated
  * openDetailInTab('/calendar?id=456', 'calendar')
  */
@@ -68,7 +68,7 @@ export function openDetailInTab(url: string, tabName: string): Window | null {
 /**
  * Close and forget a detail tab
  * Useful for cleanup
- * 
+ *
  * @param tabName - The name of the tab to close
  */
 export function closeDetailTab(tabName: string): void {

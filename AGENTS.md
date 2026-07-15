@@ -46,20 +46,18 @@ churchtoolsClient.get("/api/endpoint", { params: { param1: "value1" } })
 ✅ **Correct** (in `src/services/churchtools.ts`):
 
 ```typescript
-import { getChurchtoolsBaseUrl } from '../../services/churchtools'
+import { getChurchtoolsBaseUrl } from "../../services/churchtools"
 
 const baseUrl = getChurchtoolsBaseUrl()
 const url = new URL(baseUrl)
-url.searchParams.set('q', 'churchcal')
+url.searchParams.set("q", "churchcal")
 // ... build URL
 ```
 
 ❌ **Wrong** (repeating logic):
 
 ```typescript
-const baseUrl = import.meta.env.DEV
-  ? import.meta.env.VITE_BASE_URL
-  : window.location.origin
+const baseUrl = import.meta.env.DEV ? import.meta.env.VITE_BASE_URL : window.location.origin
 ```
 
 **Why**: Centralized function ensures consistency across dev/prod and avoids duplication. Works with `npm run dev` (VITE_BASE_URL) and production (window.location.origin).

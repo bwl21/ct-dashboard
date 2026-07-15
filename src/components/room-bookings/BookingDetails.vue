@@ -83,7 +83,11 @@
       <BookingActionBar
         :bookings="[booking as any]"
         scope="detail"
-        :show="isConflict ? ['approve', 'reset', 'delete', 'edit-calendar'] : ['approve', 'reject', 'reset', 'delete', 'edit-calendar']"
+        :show="
+          isConflict
+            ? ['approve', 'reset', 'delete', 'edit-calendar']
+            : ['approve', 'reject', 'reset', 'delete', 'edit-calendar']
+        "
         @action="handleAction"
       />
     </div>

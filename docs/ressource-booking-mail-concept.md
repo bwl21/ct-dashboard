@@ -67,11 +67,11 @@ als "die frühere" gilt – die UI und der Mail-Text greifen auf diesen
 
 ## 3. Use-Cases
 
-| # | Szenario | Empfänger | Trigger |
-|---|----------|-----------|---------|
-| UC-1 | Klärung anfordern | Anfragesteller + alle Konflikt-Ersteller (+ jeweils "i.A. von") | Button "📧 Beteiligte informieren" im `ConflictDetailsModal` |
-| UC-2 | Ablehnung mit Konflikt-Hinweis | Anfragesteller (primär), optional Konflikt-Ersteller in CC | Erweiterung des bestehenden Reject-Dialogs |
-| UC-3 | Einzelne Person anschreiben | Eine Person aus der Beteiligtenliste | Button "✉️" pro `BookingDetails`-Eintrag |
+| #    | Szenario                       | Empfänger                                                       | Trigger                                                      |
+| ---- | ------------------------------ | --------------------------------------------------------------- | ------------------------------------------------------------ |
+| UC-1 | Klärung anfordern              | Anfragesteller + alle Konflikt-Ersteller (+ jeweils "i.A. von") | Button "📧 Beteiligte informieren" im `ConflictDetailsModal` |
+| UC-2 | Ablehnung mit Konflikt-Hinweis | Anfragesteller (primär), optional Konflikt-Ersteller in CC      | Erweiterung des bestehenden Reject-Dialogs                   |
+| UC-3 | Einzelne Person anschreiben    | Eine Person aus der Beteiligtenliste                            | Button "✉️" pro `BookingDetails`-Eintrag                     |
 
 Dieses Konzept fokussiert UC-1 (Klärung) und beschreibt UC-2/UC-3 als optionale Folgeerweiterungen.
 
@@ -162,10 +162,10 @@ Neue Komponente: `src/components/room-bookings/ConflictMailModal.vue`
   - Eine Spalte zeigt die Begründung der Reihenfolge ("genehmigt 01.04." vs. "Anfrage 28.04.").
   - Personen ohne E-Mail werden disabled.
 - **Vorlagen-Dropdown**:
-  - *Klärung mit Priorität* (Default) – formuliert First-come-first-served explizit.
-  - *Anfrage ablehnen wegen Konflikt* – informiert primär den Anfragesteller.
-  - *Vorrang-Bucher um freiwilliges Weichen bitten* – fragt höflich, ob die bestehenden Bucher Platz machen können.
-  - *Frei (leer)*
+  - _Klärung mit Priorität_ (Default) – formuliert First-come-first-served explizit.
+  - _Anfrage ablehnen wegen Konflikt_ – informiert primär den Anfragesteller.
+  - _Vorrang-Bucher um freiwilliges Weichen bitten_ – fragt höflich, ob die bestehenden Bucher Platz machen können.
+  - _Frei (leer)_
 - **Betreff & Nachricht**: vorausgefüllt aus Vorlage + Buchungsdaten, vollständig editierbar.
 - **Live-Preview** (gerendertes HTML) optional als Tab ("Bearbeiten | Vorschau").
 - **Senden**: Button disabled wenn 0 Empfänger oder leerer Betreff. Loading-State während des Sendens. Erfolgs-Toast / Fehler-Banner.
@@ -182,19 +182,19 @@ In [BookingDetails.vue](file:///Users/beweiche/beweiche_noTimeMachine/ct-dashboa
 ### 5.1 Neue Typen (in `useRoomBookings.ts`)
 
 ```typescript
-export type ConflictMailRole = 'requester' | 'conflictCreator' | 'onBehalfOf'
+export type ConflictMailRole = "requester" | "conflictCreator" | "onBehalfOf"
 
 export interface ConflictParty {
   bookingId: number
   title: string
   startDate: string
   endDate: string
-  statusId: number          // APPROVED, PENDING, …
-  createdAt?: string        // ISO – wenn von API geliefert
+  statusId: number // APPROVED, PENDING, …
+  createdAt?: string // ISO – wenn von API geliefert
   /** 1 = höchste Priorität (Vorrang) */
   priorityRank: number
   /** Klassifikation: bestehende Buchung oder neue Anfrage */
-  kind: 'existing' | 'request'
+  kind: "existing" | "request"
 }
 
 export interface ConflictMailRecipient {
@@ -210,8 +210,8 @@ export interface ConflictMailRecipient {
 
 export interface ConflictMailDraft {
   bookingId: number
-  recipients: ConflictMailRecipient[]   // bereits sortiert nach priorityRank
-  parties: ConflictParty[]              // sortiert, für Body-Rendering
+  recipients: ConflictMailRecipient[] // bereits sortiert nach priorityRank
+  parties: ConflictParty[] // sortiert, für Body-Rendering
   subject: string
   bodyHtml: string
   bccSelf: boolean
@@ -281,13 +281,13 @@ First-come-first-served-Priorität explizit aus.
 
 ```typescript
 interface MailTemplate {
-  id: 'clarify-priority' | 'reject-request' | 'ask-priority-yield' | 'blank'
+  id: "clarify-priority" | "reject-request" | "ask-priority-yield" | "blank"
   label: string
   buildSubject: (b: RoomBooking) => string
   buildBody: (
     b: RoomBooking,
     recipients: ConflictMailRecipient[],
-    parties: ConflictParty[]   // sortiert, [0] = Vorrang
+    parties: ConflictParty[] // sortiert, [0] = Vorrang
   ) => string // HTML
 }
 ```

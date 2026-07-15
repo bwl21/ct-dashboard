@@ -229,12 +229,24 @@ export function useRoomBookings() {
         ' └─ item.conflicts[0] keys:',
         Object.keys(firstWithConflicts?.conflicts?.[0] ?? {})
       )
-      console.log(' └─ item["@deprecated"] keys:', Object.keys(firstWithConflicts?.['@deprecated'] ?? {}))
+      console.log(
+        ' └─ item["@deprecated"] keys:',
+        Object.keys(firstWithConflicts?.['@deprecated'] ?? {})
+      )
       // Date format check (opencode hypothesis: date-only strings instead of full ISO)
-      const dbase = firstWithConflicts?.base ?? firstWithConflicts?.booking?.base ?? firstWithConflicts?.booking ?? {}
+      const dbase =
+        firstWithConflicts?.base ??
+        firstWithConflicts?.booking?.base ??
+        firstWithConflicts?.booking ??
+        {}
       const dconf = firstWithConflicts?.conflicts?.[0] ?? {}
       console.log(' └─ DATE base.startDate:', dbase.startDate, '| base.endDate:', dbase.endDate)
-      console.log(' └─ DATE conflict.startDate:', dconf.startDate, '| conflict.endDate:', dconf.endDate)
+      console.log(
+        ' └─ DATE conflict.startDate:',
+        dconf.startDate,
+        '| conflict.endDate:',
+        dconf.endDate
+      )
       console.groupEnd()
 
       // Transform API response to RoomBooking format
@@ -853,8 +865,10 @@ export function useRoomBookings() {
    */
   const bookingStats = computed(() => ({
     total: filteredBookings.value.length,
-    withConflicts: filteredBookings.value.filter((b) => b.conflicts && b.conflicts.length > 0).length,
-    withoutConflicts: filteredBookings.value.filter((b) => !b.conflicts || b.conflicts.length === 0).length,
+    withConflicts: filteredBookings.value.filter((b) => b.conflicts && b.conflicts.length > 0)
+      .length,
+    withoutConflicts: filteredBookings.value.filter((b) => !b.conflicts || b.conflicts.length === 0)
+      .length,
   }))
 
   /**
