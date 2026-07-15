@@ -176,7 +176,7 @@
           rel="noopener noreferrer"
           class="ct-btn ct-btn-primary"
         >
-          In ChurchTools öffnen
+          Serie bearbeiten
         </a>
         <button class="ct-btn ct-btn-outline" @click="selectedAppointment = null">Schließen</button>
       </div>

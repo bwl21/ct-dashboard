@@ -285,13 +285,15 @@ export function getGroupUrl(groupId: number): string {
  * Generates a URL to open an appointment in ChurchTools
  */
 export function getAppointmentUrl(appointment: Appointment): string {
-  const churchtoolsBaseUrl = import.meta.env.DEV
-    ? import.meta.env.VITE_BASE_URL
-    : window.location.origin
+  const base = 'base' in appointment ? appointment.base : appointment
+  const url = new URL(getChurchtoolsBaseUrl())
 
-  const startDate = 'base' in appointment ? appointment.base.startDate : appointment.startDate
-  const calendarId = 'base' in appointment ? appointment.base.calendar.id : appointment.calendar.id
-  // const appointmentId= 'base' in appointment ? appointment.base.id : appointment.id
-  // todo: @jmr wie kann ich den LInk zur Bearbeitung der Serie bekommen
-  return `${churchtoolsBaseUrl}?q=churchcal&category_id=${calendarId}&startdate=${startDate}#CalView/`
+  url.searchParams.set('q', 'churchcal')
+  url.searchParams.set('editScope', 'series')
+  url.searchParams.set('startdate', base.startDate.split('T')[0])
+  url.searchParams.set('category_id', base.calendar.id.toString())
+  url.searchParams.set('id', base.id.toString())
+  url.hash = 'CalView'
+
+  return url.toString()
 }
